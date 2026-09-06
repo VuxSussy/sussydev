@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUpRight, Check, Copy, Menu, X } from "lucide-react";
 import { portfolio } from "@/data/portfolio";
+import { ModelStage } from "@/components/model-stage";
 
 const navigation = [
   { label: "Giới thiệu", href: "#gioi-thieu" }, { label: "Dự án", href: "#du-an" },
@@ -75,7 +76,7 @@ export function PortfolioPage() {
         <div className="hero-copy"><p className="eyebrow">{portfolio.role} · {portfolio.location}</p><h1 id="hero-title">Thiết kế rõ ràng.<br />Xây dựng có chủ đích.</h1><p className="hero-intro">{portfolio.shortIntro}</p>
           <div className="hero-actions"><a className="button button-dark" href="#du-an">Xem dự án <ArrowDown aria-hidden="true" size={17} /></a><a className="button button-light" href={`mailto:${portfolio.email}`}>Liên hệ với tôi</a></div>
         </div>
-        <div className="hero-mark" aria-hidden="true"><span>01</span><strong>{portfolio.initials}</strong><p>Clarity<br />over noise</p></div>
+        <div className="hero-model"><ModelStage models={portfolio.models3d} /></div>
         <div className="hero-footer"><span>{portfolio.availability}</span><span>Cuộn để khám phá</span></div>
       </section>
 

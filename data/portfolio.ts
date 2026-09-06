@@ -15,6 +15,13 @@ export type Experience = {
   description: string;
 };
 
+export type Model3D = {
+  name: string;
+  caption: string;
+  src?: string;
+  variant: "orbital" | "fold" | "signal";
+};
+
 export const portfolio = {
   name: "Tên của bạn",
   initials: "TB",
@@ -36,6 +43,11 @@ export const portfolio = {
     behance: "",
     dribbble: "",
   },
+  models3d: [
+    { name: "Orbital", caption: "Khối chuyển động cho phần mở đầu", variant: "orbital" },
+    { name: "Fold", caption: "Cấu trúc mô-đun cho dự án sản phẩm", variant: "fold" },
+    { name: "Signal", caption: "Điểm nhấn không gian cho case study", variant: "signal" },
+  ] satisfies Model3D[],
   skillGroups: [
     { title: "Tư duy", items: ["Product strategy", "User research", "Information architecture"] },
     { title: "Thiết kế", items: ["UX/UI design", "Design systems", "Prototyping"] },
