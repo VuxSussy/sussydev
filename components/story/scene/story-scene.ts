@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
@@ -130,7 +131,7 @@ export class StoryScene {
     const tick = () => this.options.onProgress?.(++done / total);
     const fetchJson = <T,>(url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(url); return r.json() as Promise<T>; }).then((j) => { tick(); return j; });
     const [gltf, index, run, idle] = await Promise.all([
-      new GLTFLoader().loadAsync("/models/sussy/sussy-r6.glb").then((g) => { tick(); return g; }),
+      new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/sussy/sussy-r6.glb").then((g) => { tick(); return g; }),
       fetchJson<{ motors: Record<string, Motor> }>("/anims/index.json"),
       fetchJson<ClipJson>("/anims/run-v4.json"),
       fetchJson<ClipJson>("/anims/idle-v2.json"),
