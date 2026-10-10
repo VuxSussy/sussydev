@@ -12,21 +12,28 @@ function lz4(src: Uint8Array, size: number): Uint8Array {
   const out = new Uint8Array(size);
   let i = 0;
   let o = 0;
+  const byte = () => {
+    if (i >= src.length) throw new Error("Truncated LZ4 block");
+    return src[i++];
+  };
   while (i < src.length) {
-    const token = src[i++];
+    const token = byte();
     let literal = token >> 4;
-    if (literal === 15) for (let b = 255; b === 255; ) { b = src[i++]; literal += b; }
+    if (literal === 15) for (let b = 255; b === 255; ) { b = byte(); literal += b; }
+    if (i + literal > src.length || o + literal > size) throw new Error("Invalid LZ4 literal length");
     out.set(src.subarray(i, i + literal), o);
     i += literal;
     o += literal;
     if (i >= src.length) break;
-    const offset = src[i] | (src[i + 1] << 8);
-    i += 2;
+    const offset = byte() | (byte() << 8);
+    if (!offset || offset > o) throw new Error("Invalid LZ4 match offset");
     let match = token & 15;
-    if (match === 15) for (let b = 255; b === 255; ) { b = src[i++]; match += b; }
+    if (match === 15) for (let b = 255; b === 255; ) { b = byte(); match += b; }
     match += 4;
+    if (o + match > size) throw new Error("Invalid LZ4 match length");
     for (let k = 0; k < match; k++, o++) out[o] = out[o - offset];
   }
+  if (o !== size) throw new Error("LZ4 size mismatch");
   return out;
 }
 
@@ -35,12 +42,14 @@ class Reader {
   buf: Uint8Array;
   view: DataView;
   constructor(buf: Uint8Array) { this.buf = buf; this.view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength); }
-  u8() { return this.buf[this.pos++]; }
-  u32() { const v = this.view.getUint32(this.pos, true); this.pos += 4; return v; }
-  f32() { const v = this.view.getFloat32(this.pos, true); this.pos += 4; return v; }
-  str() { const n = this.u32(); const s = new TextDecoder().decode(this.buf.subarray(this.pos, this.pos + n)); this.pos += n; return s; }
+  ensure(n: number) { if (this.pos + n > this.buf.length) throw new Error("Truncated RBXM data"); }
+  u8() { this.ensure(1); return this.buf[this.pos++]; }
+  u32() { this.ensure(4); const v = this.view.getUint32(this.pos, true); this.pos += 4; return v; }
+  f32() { this.ensure(4); const v = this.view.getFloat32(this.pos, true); this.pos += 4; return v; }
+  str() { const n = this.u32(); this.ensure(n); const s = new TextDecoder().decode(this.buf.subarray(this.pos, this.pos + n)); this.pos += n; return s; }
   // Interleaved big-endian 32-bit words, as used by ints, floats, enums and referents.
   words(count: number): number[] {
+    this.ensure(count * 4);
     const out = Array.from({ length: count }, (_, k) =>
       ((this.buf[this.pos + k] << 24) | (this.buf[this.pos + count + k] << 16) | (this.buf[this.pos + 2 * count + k] << 8) | this.buf[this.pos + 3 * count + k]) >>> 0);
     this.pos += count * 4;
@@ -66,15 +75,18 @@ function basicRotation(id: number): number[] {
 export function parseRbxm(file: Uint8Array): Map<number, Instance> {
   const head = new TextDecoder().decode(file.subarray(0, 8));
   if (head !== "<roblox!") throw new Error("Not a binary Roblox file");
+  if (file.length < 32) throw new Error("Truncated RBXM header");
   const instances = new Map<number, Instance>();
   const classes = new Map<number, { name: string; refs: number[] }>();
   let pos = 32;
   while (pos < file.length) {
+    if (pos + 16 > file.length) throw new Error("Truncated RBXM chunk header");
     const name = new TextDecoder().decode(file.subarray(pos, pos + 4));
     const view = new DataView(file.buffer, file.byteOffset + pos + 4, 8);
     const compressed = view.getUint32(0, true);
     const size = view.getUint32(4, true);
     pos += 16;
+    if (pos + (compressed || size) > file.length) throw new Error("Truncated RBXM chunk");
     const raw = file.subarray(pos, pos + (compressed || size));
     pos += compressed || size;
     if (name === "END\0") break;
@@ -88,7 +100,8 @@ export function parseRbxm(file: Uint8Array): Map<number, Instance> {
       classes.set(classId, { name: className, refs });
       for (const ref of refs) instances.set(ref, { ref, className, props: {}, parent: -1, children: [] });
     } else if (name === "PROP") {
-      const cls = classes.get(r.u32())!;
+      const cls = classes.get(r.u32());
+      if (!cls) throw new Error("Unknown RBXM property class");
       const prop = r.str();
       const type = r.u8();
       const n = cls.refs.length;
