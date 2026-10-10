@@ -225,6 +225,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               <h1 id="intro-title">{profile.headline[0]}<br />{profile.headline[1]}</h1>
               <p className="lede">{profile.intro}</p>
               <p className="meta">{profile.role} · {portfolio.location}</p>
+              <p className="meta hint">Mẹo: bấm vào {portfolio.character} để nhảy.</p>
             </div>
           </div>
         </section>
