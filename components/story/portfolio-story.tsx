@@ -463,8 +463,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}
         </button>
         <p className="hud-readout"><span>STORY</span><span ref={readoutRef}>000%</span></p>
+        <p className="sr-only">© {new Date().getFullYear()} {portfolio.name}. {t.footnote(portfolio.character)}</p>
       </footer>
-      <p className="sr-only">© {new Date().getFullYear()} {portfolio.name}. {t.footnote(portfolio.character)}</p>
     </div>
   );
 }
