@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#202326">
+  <meta name="description" content="sussydev — portfolio cá nhân. Roblox, học vấn tại UIT và những công cụ mình dùng để xây dựng ý tưởng.">
+  <title>sussydev — portfolio</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.185.1/examples/jsm/"}}</script>
+</head>
+<body>
+  <a class="skip" href="#roblox">Đến nội dung portfolio</a>
+  <div class="stage" aria-hidden="true"><canvas id="scene"></canvas></div>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="chapter-number" aria-hidden="true">01</div>
+  <header>
+    <a class="brand" href="#roblox" aria-label="sussydev, về đầu trang"><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M5 9V5h20v4M5 21v4h20v-4M10 11l-4 4 4 4m10-8 4 4-4 4m-3-9-4 12" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>sussydev<span class="brand-dot">.</span></a>
+    <nav class="top-nav" aria-label="Các phần portfolio"><a href="#roblox" aria-current="location">Roblox</a><a href="#education">Học vấn</a><a href="#toolkit">Công cụ</a><a href="#about">Về mình</a></nav>
+    <button id="motion" type="button" aria-pressed="false" aria-label="Giảm chuyển động"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5v10M13 5v10" stroke="currentColor" stroke-width="1.5"/></svg><span>Giảm chuyển động</span></button>
+  </header>
+  <main>
+    <section class="chapter" id="roblox" aria-labelledby="roblox-title">
+      <div class="copy is-active">
+        <p class="eyebrow"><span>01 / ROBLOX</span><i></i>PLAYER & BUILDER</p>
+        <h1 id="roblox-title"><span class="intro">Hey, I'm</span>sussydev<span class="accent">.</span></h1>
+        <p class="description">Một chút game, một chút code.<br>Đây là góc nhỏ của mình trên internet.</p>
+        <div class="tags"><span>Roblox</span><span>Web</span><span>Linux</span></div>
+        <a class="button primary" href="#education">Khám phá portfolio <span aria-hidden="true">↘</span></a>
+      </div>
+      <div class="fallback-art"><img src="assets/avatar-preview.png" alt="Avatar Roblox Sussy với mũ đen, kính pixel và khăn choàng."></div>
+    </section>
+    <section class="chapter" id="education" aria-labelledby="education-title">
+      <div class="copy">
+        <p class="eyebrow"><span>02 / HỌC VẤN</span><i></i>UIT · VNU-HCM</p>
+        <h2 id="education-title">Học ở UIT.<br><span class="blue">Làm để hiểu.</span></h2>
+        <p class="description">Trường Đại học Công nghệ Thông tin<br>Đại học Quốc gia TP.HCM</p>
+        <p class="note">Kiến thức là điểm bắt đầu.<br>Những thứ tự tay xây dựng là cách mình tiếp tục.</p>
+        <a class="text-link" href="https://www.uit.edu.vn/" target="_blank" rel="noopener noreferrer">Khám phá UIT <span aria-hidden="true">↗</span></a>
+      </div>
+      <div class="fallback-art"><img src="assets/uit.png" alt="Logo UIT màu xanh."></div>
+    </section>
+    <section class="chapter" id="toolkit" aria-labelledby="toolkit-title">
+      <div class="copy">
+        <p class="eyebrow"><span>03 / CÔNG CỤ</span><i></i>THE TOOLKIT</p>
+        <h2 id="toolkit-title">Ý tưởng nhỏ.<br><span class="accent">Bung ra lớn.</span></h2>
+        <p class="description">Từ giao diện web đến thế giới 3D.<br>Mỗi công cụ mở ra một cách thử mới.</p>
+        <ul class="tool-list" aria-label="Công cụ mình sử dụng"><li>JavaScript</li><li>HTML</li><li>CSS</li><li>Linux</li><li>Git</li><li>Blender</li><li>Roblox Studio</li></ul>
+        <p class="note">Cuộn để mở rộng bộ công cụ.</p>
+      </div>
+      <div class="fallback-art fallback-tools" aria-hidden="true"><img src="assets/javascript.svg" alt=""><img src="assets/html5.svg" alt=""><img src="assets/linux.svg" alt=""><img src="assets/blender.svg" alt=""></div>
+    </section>
+    <section class="chapter" id="about" aria-labelledby="about-title">
+      <div class="copy">
+        <p class="eyebrow"><span>04 / VỀ MÌNH</span><i></i>STILL BUILDING</p>
+        <h2 id="about-title">Chưa hết đâu.<br><span class="accent">Còn đang làm.</span></h2>
+        <p class="description">Mình thích biến những thứ tò mò thành thứ có thể chạm vào, chơi được và dùng được.</p>
+        <p class="note">Game. Web. Một ý tưởng mới.<br>Hẹn gặp bạn ở lần thử tiếp theo.</p>
+        <a class="button primary" href="https://www.roblox.com/users/1265476893/profile" target="_blank" rel="noopener noreferrer">Tìm mình trên Roblox <span aria-hidden="true">↗</span></a>
+        <a class="text-link back" href="#roblox">Xem lại từ đầu <span aria-hidden="true">↑</span></a>
+      </div>
+      <div class="fallback-art"><img src="assets/avatar-preview.png" alt="Avatar của sussydev."></div>
+    </section>
+  </main>
+  <nav class="chapter-nav" aria-label="Điều hướng nhanh"><a href="#roblox" aria-label="01, Roblox" aria-current="location"><span>Roblox</span>01<i></i></a><a href="#education" aria-label="02, Học vấn"><span>Học vấn</span>02<i></i></a><a href="#toolkit" aria-label="03, Công cụ"><span>Công cụ</span>03<i></i></a><a href="#about" aria-label="04, Về mình"><span>Về mình</span>04<i></i></a></nav>
+  <div class="model-caption" aria-hidden="true"><span class="caption-mark">↗</span><div><strong id="caption-title">SUSSYDEV / ROBLOX AVATAR</strong><span id="caption-subtitle">Một nhân vật. Một chút cá tính.</span></div></div>
+  <footer><span class="edition">SUSSYDEV <span>PORTFOLIO / 2026</span></span><a id="scroll-cue" href="#education"><span id="scroll-label">Cuộn để khám phá</span><span id="scroll-arrow" aria-hidden="true">↓</span></a><span class="page-count"><output id="chapter-count">01</output><span>/ 04</span></span><div class="progress" aria-hidden="true"><i></i></div></footer>
+  <div class="status" role="status" id="status">Đang mở portfolio 3D…</div>
+  <noscript><style>.status,.stage,.model-caption,.chapter-number,#motion{display:none}.fallback-art{display:flex}</style></noscript>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

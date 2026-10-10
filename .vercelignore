@@ -1,0 +1,15 @@
+*.blend
+*.blend1
+README.MD
+VERIFICATION.md
+*preview.jpg
+*mobile.jpg
+*education.jpg
+*toolkit.jpg
+*about.jpg
+*deployed.png
+.env*
+.gitignore
+.vercel
+*.jpg
+verify-assets.py
