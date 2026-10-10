@@ -121,4 +121,15 @@ describe("portfolio route switch", () => {
     expect(navigation.push).not.toHaveBeenCalled();
     expect(scene.dispose).toHaveBeenCalledTimes(1);
   });
+
+  it("releases a failed scene and exposes the poster fallback", async () => {
+    await act(async () => { root.render(null); });
+    scene.dispose.mockClear();
+    scene.load.mockRejectedValueOnce(new Error("Asset unavailable"));
+    await renderRoute("/");
+    await act(async () => { await vi.advanceTimersByTimeAsync(32); });
+    expect(scene.dispose).toHaveBeenCalledTimes(1);
+    expect(host.querySelector(".stage")?.classList.contains("is-fallback")).toBe(true);
+    expect(host.querySelector(".stage-poster")).not.toBeNull();
+  });
 });
