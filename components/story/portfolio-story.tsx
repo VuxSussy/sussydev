@@ -161,14 +161,17 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           onTechSelect: (index) => selectSceneTech(index),
         });
         sceneRef.current = scene;
-        if (process.env.NODE_ENV !== "production") (window as unknown as { __sussyScene?: StoryScene }).__sussyScene = scene;
+        if (process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("debug")) (window as unknown as { __sussyScene?: StoryScene }).__sussyScene = scene;
         scene.setStory(storyFromSections(sectionRefs.current, window.innerHeight));
         await scene.load();
+        if (disposed) return;
         const wait = Math.max(0, 700 - (performance.now() - start));
         readyTimer = window.setTimeout(() => !disposed && setReady(true), wait);
       })
       .catch(() => {
         if (disposed) return;
+        scene?.dispose();
+        sceneRef.current = null;
         setWebglFailed(true);
         setReady(true);
       });
@@ -177,6 +180,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       window.clearTimeout(readyTimer);
       scene?.dispose();
       sceneRef.current = null;
+      const debug = window as unknown as { __sussyScene?: StoryScene };
+      if (debug.__sussyScene === scene) delete debug.__sussyScene;
     };
   }, []);
 

@@ -13,6 +13,7 @@ Use **GPT-6.1-Sol with extra-high reasoning** (`model = "gpt-6.1-sol"`, `model_r
 npm install
 npm run dev            # http://localhost:3000 (vinext dev, Cloudflare worker runtime)
 npm run lint           # oxlint — must be clean (0 errors)
+npm test               # Vitest regression + scene/route lifecycle tests
 npx tsc --noEmit       # must be clean
 npm run build          # vinext build — must succeed
 npm run extract:anims -- "<file.rbxm>" public/anims
@@ -25,8 +26,9 @@ If the dev server reports "Network connection lost" after adding a route, restar
 
 - Vinext 1.0 beta (Next.js App Router compatible), React 19, TypeScript, Tailwind 4 (tokens in `app/globals.css`),
   three.js r185 (vanilla, no R3F), simple-icons for tech logos, lucide-react for UI icons.
-- Routes: `/` = Dev portfolio, `/roblox` = Roblox Dev portfolio. Both render `components/story/portfolio-story.tsx`
-  with `mode`. Content lives only in `data/portfolio.ts` (`portfolio.profiles.dev|roblox` + shared contacts).
+- Routes: `/` = Dev portfolio, `/roblox` = Roblox Dev portfolio. The shared root layout's `PortfolioShell` renders
+  `components/story/portfolio-story.tsx` with `mode`, preserving its canvas across routes. Content lives only in
+  `data/portfolio.ts` (`portfolio.profiles.dev|roblox` + shared contacts).
 - `components/story/scene/*` is the WebGL layer, code-split via dynamic import. One renderer, fixed canvas.
 - `lib/story.ts` holds the scroll math shared by DOM and scene (story value 0..4, tech slideshow, sunset/sit mixes).
 - `lib/rbx/rig.ts` builds the R6 rig: `Part1 = Part0 * C0 * Transform * C1⁻¹`. Animated nodes are `<Part>Joint`.
@@ -45,12 +47,13 @@ If the dev server reports "Network connection lost" after adding a route, restar
 
 ## Verifying visually
 
-The scene pauses while `document.hidden` (hidden browser panes too). In dev, `window.__sussyScene` exposes the
+The scene pauses while `document.hidden` (hidden browser panes too). In dev, add `?debug`; `window.__sussyScene` exposes the
 `StoryScene`; to inspect a frame from a hidden pane:
 
 ```js
 Object.defineProperty(document, "hidden", { configurable: true, get: () => false });
 const s = window.__sussyScene; let T = performance.now() + 5000;
+s.setReducedMotion(false);
 s.storyTarget = s.story = 1.5; for (let i = 0; i < 90; i++) s.frame((T += 16.7));
 s.debugView = { position: [7, 2.5, -1.5], target: [-1.2, 1.6, -1] }; // optional free camera, null to reset
 ```

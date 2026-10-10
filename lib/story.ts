@@ -76,3 +76,10 @@ export const sunsetMix = (story: number) => smoothstep(2.82, 3.4, story);
 export const sitMix = (story: number) => smoothstep(3.4, 3.62, story);
 
 export const chapterIndex = (story: number) => Math.min(CHAPTERS.length - 1, Math.max(0, Math.floor(story + 0.35)));
+
+/** Scrub a chapter hop from scroll progress so the same frame also plays backwards. */
+export function chapterJumpTime(story: number) {
+  const chapter = chapterIndex(story);
+  const local = story - (chapter - 0.35);
+  return chapter > 0 && local >= 0 && local <= 0.18 ? (local / 0.18) * 0.95 : -1;
+}
