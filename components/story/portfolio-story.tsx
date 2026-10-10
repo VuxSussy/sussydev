@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
@@ -351,7 +352,11 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
                   <p className="card-meta"><span>{pad(index + 1)}</span><span>{project.year} · {project.category}</span></p>
                   <h3>{project.title}</h3>
                   <p>{project.summary}</p>
-                  {project.impact && <p className="card-foot">{project.impact}</p>}
+                  {caseStudies[project.slug] ? (
+                    <p className="card-foot"><Link href={`/du-an/${project.slug}`}>Đọc case study →</Link></p>
+                  ) : (
+                    project.impact && <p className="card-foot">{project.impact}</p>
+                  )}
                 </article>
               ))}
             </div>

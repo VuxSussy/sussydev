@@ -23,3 +23,12 @@ it("hides Roblox props outside Roblox mode and sinks them while fading", () => {
   props.update(1, 0.5);
   props.group.children.forEach((child, index) => expect(child.position.y).toBeLessThan(shown[index]));
 });
+
+it("gives every project a unique slug and only writes case studies for real projects", async () => {
+  const { portfolio } = await import("../data/portfolio");
+  const { caseStudies } = await import("../data/case-studies");
+  const slugs = [...portfolio.profiles.dev.projects, ...portfolio.profiles.roblox.projects].map((project) => project.slug);
+  expect(new Set(slugs).size).toBe(slugs.length);
+  for (const slug of Object.keys(caseStudies)) expect(slugs).toContain(slug);
+  for (const study of Object.values(caseStudies)) expect(study.sections.length).toBeGreaterThan(0);
+});

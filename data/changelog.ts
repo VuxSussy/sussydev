@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.0",
+    date: "2026-10-11",
+    title: "Case study",
+    notes: [
+      "Trang /du-an/[slug] cho từng dự án; ba case study đầu tiên: Portfolio 3D này, Sussy và Animation R6 lên web.",
+      "Sửa ghi công: gói Ultimate R6 Movement System là của tác giả Arczi — dự án ở đây là việc đưa animation của gói lên web.",
+    ],
+  },
+  {
     version: "0.9",
     date: "2026-10-11",
     title: "Baseplate có hồn",
