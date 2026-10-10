@@ -6,6 +6,7 @@ import type { TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { chapterJumpTime, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
 import { createBlobShadow, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
+import { Footsteps } from "./footsteps";
 import { TechCarousel } from "./tech-carousel";
 import { disposeObjects } from "./dispose";
 
@@ -74,6 +75,9 @@ export class StoryScene {
   private actions: Record<"run" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
+  private footsteps = new Footsteps();
+  private lastRunTime = 0;
+  private lastHopTime = -1;
   private overCharacter = false;
   private character = new THREE.Group();
   private sky: ReturnType<typeof createSky>;
@@ -229,6 +233,11 @@ export class StoryScene {
     this.needsRender = true;
   }
 
+  /** Footstep audio (off by default; must be enabled from a user gesture). */
+  setSound(enabled: boolean) {
+    this.footsteps.setEnabled(enabled);
+  }
+
   setReducedMotion(value: boolean) {
     this.reducedMotion = value;
     this.needsRender = true;
@@ -372,6 +381,7 @@ export class StoryScene {
     this.actions.run.timeScale = 1 - 0.3 * smoothstep(3.15, 3.42, s);
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
+    if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
 
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
@@ -418,8 +428,25 @@ export class StoryScene {
     this.renderer.render(this.scene, this.camera);
   };
 
+  /** Right foot lands near t=0.00s and left near t=0.31s of the 0.63s `run v4` cycle. */
+  private playFootsteps(moving: number, surface: number, hopTime: number) {
+    const run = this.actions!.run;
+    const duration = run.getClip().duration;
+    const t = run.time % duration;
+    const previous = this.lastRunTime;
+    this.lastRunTime = t;
+    if (this.footsteps.isEnabled && moving > 0.6) {
+      const crossed = (mark: number) => (previous <= t ? previous < mark && t >= mark : previous < mark || t >= mark);
+      if (crossed(0.01)) this.footsteps.step(surface, 1, 0.9 * moving);
+      if (crossed(0.31)) this.footsteps.step(surface, -1, 0.9 * moving);
+    }
+    if (this.lastHopTime >= 0 && this.lastHopTime < 0.6 && (hopTime >= 0.6 || hopTime < 0)) this.footsteps.step(surface, 0, 1.4);
+    this.lastHopTime = hopTime;
+  }
+
   dispose() {
     if (this.disposed) return;
+    this.footsteps.dispose();
     this.disposed = true;
     this.loadAbort.abort();
     this.renderer.setAnimationLoop(null);
