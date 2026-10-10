@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "0.8",
+    date: "2026-10-11",
+    title: "Tiếng bước chân",
+    notes: [
+      "Nút âm thanh trong header (tắt mặc định): tiếng bước chân tổng hợp bằng Web Audio, khớp nhịp clip run v4.",
+      "Sàn studio nghe cứng, đồi cỏ lúc hoàng hôn nghe mềm; tiếp đất sau cú nhảy có tiếng chạm.",
+    ],
+  },
+  {
     version: "0.7",
     date: "2026-10-11",
     title: "Mượt hơn khi đổi chế độ",

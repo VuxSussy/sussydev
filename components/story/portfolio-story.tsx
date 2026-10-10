@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { currentVersion } from "@/data/changelog";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
@@ -71,6 +71,13 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const [techIndex, setTechIndex] = useState(0);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
+  // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
+  const [sound, setSound] = useState(false);
+  const toggleSound = () => {
+    const next = !sound;
+    setSound(next);
+    sceneRef.current?.setSound(next);
+  };
   const [switchingMode, setSwitchingMode] = useState<Mode | null>(null);
 
   useEffect(() => {
@@ -243,6 +250,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           ))}
         </nav>
         <div className="hud-actions">
+          <button type="button" className="motion-toggle" aria-pressed={sound} onClick={toggleSound} title="Tiếng bước chân">
+            {sound ? <Volume2 aria-hidden="true" size={15} /> : <VolumeX aria-hidden="true" size={15} />}
+            <span>{sound ? "Tắt âm thanh" : "Bật âm thanh"}</span>
+          </button>
           <button type="button" className="motion-toggle" aria-pressed={reducedMotion} onClick={toggleMotion}>
             {reducedMotion ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
             <span>{reducedMotion ? "Bật chuyển động" : "Giảm chuyển động"}</span>

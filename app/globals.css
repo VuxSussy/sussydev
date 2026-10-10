@@ -214,6 +214,11 @@ button, a[href] { cursor: pointer; }
 @keyframes fade-in { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Responsive ---------- */
+@media (max-width: 1240px) {
+  .motion-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .hud-actions { gap: 1rem; }
+  .motion-toggle { min-width: 44px; justify-content: center; }
+}
 @media (max-width: 900px) {
   .chapter-rail, .brand-sub, .brand-divider, .hud-meta { display: none; }
   .mode-switch { position: static; transform: none; }
