@@ -4,6 +4,8 @@ import {
 } from "simple-icons";
 
 export type Project = {
+  /** URL segment for /du-an/[slug]; a case study is shown when `data/case-studies.ts` has an entry. */
+  slug: string;
   title: string;
   year: string;
   category: string;
@@ -107,6 +109,7 @@ export const portfolio = {
       workTitle: ["Những quãng đường", "đã chạy qua."],
       projects: [
         {
+          slug: "nen-tang-van-hanh",
           title: "Nền tảng vận hành",
           year: "2026",
           category: "Frontend · React",
@@ -114,6 +117,7 @@ export const portfolio = {
           impact: "Thông tin kết quả sẽ được cập nhật",
         },
         {
+          slug: "design-system-noi-bo",
           title: "Design system nội bộ",
           year: "2025",
           category: "React · Tailwind",
@@ -121,11 +125,12 @@ export const portfolio = {
           impact: "Case study đang được hoàn thiện",
         },
         {
+          slug: "portfolio-3d",
           title: "Portfolio 3D này",
           year: "2026",
           category: "Three.js · Blender",
           summary: "Nhân vật Roblox R6 chạy theo nhịp cuộn trang, animation trích thẳng từ file .rbxm.",
-          impact: "Bạn đang xem nó",
+          impact: "Đọc case study",
         },
       ],
       experience: [
@@ -174,13 +179,15 @@ export const portfolio = {
       workTitle: ["Những server", "đã từng mở."],
       projects: [
         {
-          title: "Ultimate R6 Movement",
+          slug: "animation-r6-len-web",
+          title: "Animation R6 lên web",
           year: "2026",
-          category: "Luau · Animation",
-          summary: "Chạy, cúi, bò, leo, ragdoll và tiếp đất với camera shake, âm thanh bước chân theo vật liệu.",
-          impact: "Case study đang được hoàn thiện",
+          category: "Luau · Animation · Tooling",
+          summary: "Trích 15 KeyframeSequence từ gói Ultimate R6 Movement System (của Arczi) và phát lại trên rig R6 bằng Three.js.",
+          impact: "Đọc case study",
         },
         {
+          slug: "obby-nhieu-nguoi-choi",
           title: "Obby nhiều người chơi",
           year: "2025",
           category: "Gameplay · UI",
@@ -188,11 +195,12 @@ export const portfolio = {
           impact: "Số liệu người chơi sẽ được cập nhật",
         },
         {
+          slug: "sussy",
           title: "Sussy",
           year: "2026",
           category: "Avatar · Blender",
           summary: "Nhân vật đại diện, đưa từ Roblox Studio sang Blender rồi lên web với rig R6.",
-          impact: "Đang chạy ngay trên trang này",
+          impact: "Đọc case study",
         },
       ],
       experience: [
