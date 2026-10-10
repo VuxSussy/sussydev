@@ -4,7 +4,7 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import type { TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
-import { damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
+import { chapterIndex, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
 import { createBlobShadow, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
 import { TechCarousel } from "./tech-carousel";
 
@@ -65,7 +65,10 @@ export class StoryScene {
   private camera = new THREE.PerspectiveCamera(32, 1, 0.1, 600);
   private timer = new THREE.Timer();
   private mixer?: THREE.AnimationMixer;
-  private actions: Record<"run" | "idle" | "sit", THREE.AnimationAction> | null = null;
+  private actions: Record<"run" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
+  /** Roblox mode: seconds since the last chapter-change jump (-1 = not jumping). */
+  private jumpTime = -1;
+  private lastChapter = -1;
   private character = new THREE.Group();
   private sky: ReturnType<typeof createSky>;
   private floor: ReturnType<typeof createStudioFloor>;
@@ -134,14 +137,16 @@ export class StoryScene {
   /** Load the character + animation clips, then start rendering. */
   async load() {
     let done = 0;
-    const total = 4;
+    const total = 6;
     const tick = () => this.options.onProgress?.(++done / total);
     const fetchJson = <T,>(url: string) => fetch(url).then((r) => { if (!r.ok) throw new Error(url); return r.json() as Promise<T>; }).then((j) => { tick(); return j; });
-    const [gltf, index, run, idle] = await Promise.all([
+    const [gltf, index, run, idle, jump, land] = await Promise.all([
       new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/sussy/sussy-r6.glb").then((g) => { tick(); return g; }),
       fetchJson<{ motors: Record<string, Motor> }>("/anims/index.json"),
       fetchJson<ClipJson>("/anims/run-v4.json"),
       fetchJson<ClipJson>("/anims/idle-v2.json"),
+      fetchJson<ClipJson>("/anims/jump.json"),
+      fetchJson<ClipJson>("/anims/normal-land.json"),
     ]);
     if (this.disposed) return;
     gltf.scene.traverse((o) => {
@@ -160,7 +165,15 @@ export class StoryScene {
       a.setEffectiveWeight(0);
       return a;
     };
-    this.actions = { run: action(clipFromJson(run)), idle: action(clipFromJson(idle)), sit: action(createSitClip()) };
+    const oneShot = (clip: THREE.AnimationClip) => {
+      const a = action(clip);
+      a.timeScale = 0; // scrubbed manually from jumpTime
+      return a;
+    };
+    this.actions = {
+      run: action(clipFromJson(run)), idle: action(clipFromJson(idle)), sit: action(createSitClip()),
+      jump: oneShot(clipFromJson(jump)), land: oneShot(clipFromJson(land)),
+    };
     this.story = this.storyTarget;
     this.renderer.setAnimationLoop(this.frame);
   }
@@ -232,7 +245,7 @@ export class StoryScene {
   private frame = (timestamp: number) => {
     this.timer.update(timestamp);
     if (document.hidden || !this.actions || !this.mixer) return;
-    const dt = Math.min(this.timer.getDelta(), 0.05);
+    const dt = Math.min(Math.max(this.timer.getDelta(), 0), 0.05);
     const time = this.timer.getElapsed();
     const reduced = this.reducedMotion;
     this.story = reduced ? this.storyTarget : damp(this.story, this.storyTarget, 4.5, dt);
@@ -257,9 +270,30 @@ export class StoryScene {
     const sit = sitMix(s);
     this.character.position.set(key.pos[0], 0, key.pos[1]);
     this.character.rotation.y = key.yaw;
-    const rootY = ROOT_STANDING + (ROOT_SEATED - ROOT_STANDING) * sit;
+    // Roblox mode: hop between chapters with the pack's jump + land clips.
+    const chapter = chapterIndex(s);
+    if (chapter !== this.lastChapter) {
+      if (this.lastChapter >= 0 && this.options.theme === "roblox" && !reduced && s < 2.85) this.jumpTime = 0;
+      this.lastChapter = chapter;
+    }
+    let hop = 0;
+    let jumpW = 0;
+    let landW = 0;
+    if (this.jumpTime >= 0) {
+      this.jumpTime += dt;
+      const t = this.jumpTime;
+      hop = Math.sin(Math.PI * Math.min(t / 0.62, 1)) * 1.4;
+      jumpW = smoothstep(0, 0.06, t) * (1 - smoothstep(0.5, 0.64, t));
+      landW = smoothstep(0.56, 0.64, t) * (1 - smoothstep(0.78, 0.92, t));
+      this.actions.jump.time = Math.min(t, this.actions.jump.getClip().duration);
+      this.actions.land.time = Math.min(Math.max(t - 0.62, 0), this.actions.land.getClip().duration);
+      if (t > 0.95) this.jumpTime = -1;
+    }
+    const rootY = ROOT_STANDING + (ROOT_SEATED - ROOT_STANDING) * sit + hop;
     this.character.children[0].position.y = rootY;
-    const moving = 1 - sit;
+    const moving = (1 - sit) * (1 - jumpW - landW);
+    this.actions.jump.setEffectiveWeight(jumpW);
+    this.actions.land.setEffectiveWeight(landW);
     this.actions.run.setEffectiveWeight(reduced ? 0 : moving);
     this.actions.idle.setEffectiveWeight(reduced ? moving : 0);
     this.actions.sit.setEffectiveWeight(sit);
@@ -278,7 +312,8 @@ export class StoryScene {
     this.floor.mesh.visible = sunset < 0.999;
     this.shadow.mesh.position.set(key.pos[0], 0.02, key.pos[1]);
     this.shadow.mesh.rotation.z = key.yaw;
-    this.shadow.material.opacity = 1 - 0.25 * sit;
+    this.shadow.material.opacity = (1 - 0.25 * sit) * (1 - 0.18 * hop);
+    this.shadow.mesh.scale.setScalar(1 - 0.12 * hop);
 
     // Tech conveyor.
     const visibility = techVisibility(s);
