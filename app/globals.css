@@ -72,6 +72,12 @@ button, a[href] { cursor: pointer; }
 .mode-switch a:hover { color: var(--text-primary); }
 .mode-switch a[aria-current="page"] { color: var(--background); background: var(--text-primary); }
 .site[data-mode="roblox"] .mode-switch a[aria-current="page"] { background: var(--accent); color: #06101f; }
+.mode-curtain { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 1.1rem; background: var(--background); opacity: 0; pointer-events: none; transition: opacity 240ms var(--ease-out); }
+.mode-curtain.is-active { opacity: 1; pointer-events: auto; }
+.mode-curtain .loader-head { animation-play-state: paused; }
+.mode-curtain.is-active .loader-head { animation-play-state: running; }
+.site[data-reduced-motion="true"] .mode-curtain { transition: none; }
+.site[data-reduced-motion="true"] .loader-head, .site[data-reduced-motion="true"] .loader-shadow { animation: none; }
 
 /* ---------- Stage ---------- */
 .stage { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 50% 40%, var(--bg-raise), var(--background) 70%); }

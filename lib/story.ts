@@ -35,6 +35,16 @@ export function storyFromSections(sections: (HTMLElement | null)[], viewportHeig
   return story;
 }
 
+/** Inverse scroll mapping, also used when the destination portfolio has different section heights. */
+export function scrollTopForStory(story: number, sections: (HTMLElement | null)[], viewportHeight: number, scrollY: number) {
+  const value = clamp01(story / CHAPTERS.length) * CHAPTERS.length;
+  const index = Math.min(CHAPTERS.length - 1, Math.floor(value));
+  const section = sections[index];
+  if (!section) return null;
+  const rect = section.getBoundingClientRect();
+  return Math.max(0, scrollY + rect.top + (value - index) * rect.height - viewportHeight * 0.5);
+}
+
 /** Window of the tech chapter in which the conveyor slides between items. */
 const TECH_START = 1.08;
 const TECH_END = 1.9;
