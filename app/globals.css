@@ -225,6 +225,12 @@ button, a[href] { cursor: pointer; }
 .case-others a span:nth-child(2) { color: var(--text-muted); font-size: 0.8125rem; }
 @media (max-width: 760px) { .case-section { grid-template-columns: 1fr; gap: 0.8rem; } .case-others a { grid-template-columns: 1fr auto; } .case-others a span:nth-child(2) { display: none; } }
 
+/* ---------- 404 ---------- */
+.lost-main { min-height: 100vh; min-height: 100svh; display: grid; place-content: center; justify-items: center; text-align: center; gap: 1.3rem; padding: 2rem var(--gutter); }
+.lost-main h1 { font-size: clamp(2.4rem, 6vw, 4.6rem); font-weight: 500; letter-spacing: -0.045em; line-height: 0.98; }
+.lost-main .lede { margin-inline: auto; }
+.lost-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 0.6rem; }
+
 /* ---------- Loader ---------- */
 .loader { position: fixed; inset: 0; z-index: 90; display: grid; place-content: center; justify-items: center; gap: 1.1rem; background: radial-gradient(ellipse at 50% 45%, var(--bg-raise), var(--background) 70%); transition: opacity 800ms var(--ease-out), visibility 800ms; }
 .loader.is-done { opacity: 0; visibility: hidden; }

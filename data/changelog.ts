@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.1",
+    date: "2026-10-11",
+    title: "Trang lạc đường",
+    notes: ["Trang 404 riêng: đầu Sussy xoay và lối quay về hai portfolio hoặc nhật ký."],
+  },
+  {
     version: "1.0",
     date: "2026-10-11",
     title: "Case study",
