@@ -1,3 +1,8 @@
+import {
+  siBlender, siCplusplus, siGit, siLua, siNextdotjs, siNodedotjs, siPython,
+  siReact, siRobloxstudio, siTailwindcss, siThreedotjs, siTypescript,
+} from "simple-icons";
+
 export type Project = {
   title: string;
   year: string;
@@ -15,79 +20,98 @@ export type Experience = {
   description: string;
 };
 
-export type Model3D = {
+/** A tech shown on the 3D conveyor. `icon` is a 24×24 SVG path (simple-icons, CC0). */
+export type TechStack = {
   name: string;
-  caption: string;
-  src?: string;
-  variant: "orbital" | "fold" | "signal";
+  category: string;
+  blurb: string;
+  color: string;
+  icon: string;
 };
+
+export type ContactLink = {
+  kind: "phone" | "gmail" | "linkedin" | "facebook" | "github" | "roblox";
+  label: string;
+  /** Leave empty until the real value is known — the UI shows it as "Đang cập nhật". */
+  value: string;
+};
+
+const tech = (name: string, category: string, blurb: string, icon: { path: string; hex: string }, color?: string): TechStack => ({
+  name, category, blurb, icon: icon.path, color: color ?? `#${icon.hex}`,
+});
 
 export const portfolio = {
   name: "Tên của bạn",
   initials: "TB",
-  role: "Product Designer & Frontend Developer",
+  /** The Roblox character starring on the site (R15_SussySuspector in Roblox Studio). */
+  character: "Sussy",
+  role: "Frontend Developer & Roblox Developer",
   location: "Thành phố Hồ Chí Minh, Việt Nam",
   availability: "Sẵn sàng cho những dự án phù hợp",
   shortIntro:
-    "Tôi thiết kế những trải nghiệm số rõ ràng, có chủ đích và dễ sử dụng — nơi thẩm mỹ luôn phục vụ kết quả.",
+    "Tôi xây giao diện web rõ ràng và những thế giới Roblox có nhịp chạy riêng — nơi code gọn, chuyển động mượt và trải nghiệm là trọng tâm.",
   about: [
-    "Tôi là một nhà thiết kế sản phẩm kiêm lập trình viên frontend, tập trung vào việc biến những bài toán phức tạp thành trải nghiệm đơn giản và hữu ích.",
-    "Tôi thích làm việc sát với người dùng và đội ngũ sản phẩm: đặt đúng câu hỏi, thử nghiệm sớm, rồi hoàn thiện từng chi tiết cho đến khi sản phẩm vừa dễ dùng, vừa dễ duy trì.",
+    "Tôi là một lập trình viên frontend kiêm Roblox developer, thích biến những ý tưởng phức tạp thành trải nghiệm đơn giản, có cảm xúc và chạy nhanh.",
+    "Tôi làm việc sát với người dùng và đội ngũ: đặt đúng câu hỏi, thử nghiệm sớm, rồi hoàn thiện từng chi tiết cho đến khi sản phẩm vừa dễ dùng, vừa dễ duy trì.",
   ],
-  email: "hello@example.com",
-  phone: "",
   resumeUrl: "",
-  socials: {
-    linkedin: "https://www.linkedin.com/",
-    github: "https://github.com/",
-    behance: "",
-    dribbble: "",
-  },
-  models3d: [
-    { name: "Orbital", caption: "Khối chuyển động cho phần mở đầu", variant: "orbital" },
-    { name: "Fold", caption: "Cấu trúc mô-đun cho dự án sản phẩm", variant: "fold" },
-    { name: "Signal", caption: "Điểm nhấn không gian cho case study", variant: "signal" },
-  ] satisfies Model3D[],
-  skillGroups: [
-    { title: "Tư duy", items: ["Product strategy", "User research", "Information architecture"] },
-    { title: "Thiết kế", items: ["UX/UI design", "Design systems", "Prototyping"] },
-    { title: "Phát triển", items: ["React & TypeScript", "Responsive UI", "Accessibility"] },
-  ],
+  contacts: [
+    { kind: "phone", label: "Điện thoại", value: "" },
+    { kind: "gmail", label: "Gmail", value: "" },
+    { kind: "linkedin", label: "LinkedIn", value: "" },
+    { kind: "facebook", label: "Facebook", value: "" },
+    { kind: "github", label: "GitHub", value: "" },
+    { kind: "roblox", label: "Roblox", value: "https://www.roblox.com/users/11732948357/profile" },
+  ] satisfies ContactLink[],
+  techStack: [
+    tech("TypeScript", "Ngôn ngữ", "Kiểu dữ liệu chặt chẽ cho mọi giao diện và công cụ tôi viết.", siTypescript),
+    tech("React", "Giao diện", "Component rõ ràng, trạng thái dễ đoán, trải nghiệm mượt.", siReact),
+    tech("Next.js", "Framework", "App Router, server components và hiệu năng tải trang.", siNextdotjs, "#e8e6e1"),
+    tech("Three.js", "3D Web", "Cảnh 3D, shader và chuyển động ngay trong trình duyệt.", siThreedotjs, "#e8e6e1"),
+    tech("Tailwind CSS", "Styling", "Hệ token nhất quán, dựng layout nhanh mà vẫn gọn.", siTailwindcss),
+    tech("Node.js", "Runtime", "Script build, công cụ nội bộ và API nhẹ.", siNodedotjs),
+    tech("Python", "Ngôn ngữ", "Tự động hoá, xử lý dữ liệu và pipeline cho asset.", siPython),
+    tech("C++", "Ngôn ngữ", "Thuật toán, cấu trúc dữ liệu và tư duy hiệu năng.", siCplusplus),
+    tech("Luau", "Roblox", "Gameplay, hệ thống di chuyển và UI cho trải nghiệm Roblox.", siLua, "#7d8bff"),
+    tech("Roblox Studio", "Game engine", "Dựng map, animation R6/R15 và kiểm thử nhiều người chơi.", siRobloxstudio),
+    tech("Blender", "3D", "Mô hình, UV và xuất GLB tối ưu cho web lẫn Roblox.", siBlender),
+    tech("Git", "Cộng tác", "Nhánh gọn, commit nhỏ và lịch sử dễ đọc.", siGit),
+  ] satisfies TechStack[],
   projects: [
     {
       title: "Nền tảng vận hành",
       year: "2026",
-      category: "Product design · Frontend",
+      category: "Frontend · React",
       summary: "Đơn giản hóa một quy trình nhiều bước thành không gian làm việc rõ ràng cho đội ngũ vận hành.",
       impact: "Thông tin kết quả sẽ được cập nhật",
     },
     {
-      title: "Trải nghiệm thương mại",
-      year: "2025",
-      category: "UX/UI design",
-      summary: "Thiết kế lại hành trình khám phá và lựa chọn sản phẩm với trọng tâm là tốc độ và sự tự tin.",
+      title: "Hệ thống di chuyển R6",
+      year: "2026",
+      category: "Roblox · Luau",
+      summary: "Chạy, cúi, bò, leo và tiếp đất với animation, âm thanh bước chân và camera mượt.",
       impact: "Case study đang được hoàn thiện",
     },
     {
-      title: "Hệ thống thiết kế",
-      year: "2025",
-      category: "Design system · Engineering",
-      summary: "Xây nền tảng giao diện nhất quán, dễ mở rộng cho nhiều nhóm sản phẩm cùng sử dụng.",
-      impact: "Chi tiết dự án sẽ được cập nhật",
+      title: "Portfolio 3D này",
+      year: "2026",
+      category: "Three.js · Blender",
+      summary: "Nhân vật Roblox R6 chạy theo nhịp cuộn trang, animation trích thẳng từ file .rbxm.",
+      impact: "Bạn đang xem nó",
     },
   ] satisfies Project[],
   experience: [
     {
       period: "2024 — nay",
       company: "Tên công ty hiện tại",
-      role: "Product Designer",
-      description: "Phụ trách trải nghiệm đầu-cuối và phối hợp cùng kỹ thuật để đưa sản phẩm vào thực tế.",
+      role: "Frontend Developer",
+      description: "Phụ trách giao diện đầu-cuối và phối hợp cùng thiết kế để đưa sản phẩm vào thực tế.",
     },
     {
       period: "2022 — 2024",
-      company: "Tên công ty trước đây",
-      role: "UI/UX Designer",
-      description: "Thiết kế luồng cốt lõi, prototype và hệ thống thành phần cho các sản phẩm số.",
+      company: "Dự án Roblox cá nhân",
+      role: "Roblox Developer",
+      description: "Lập trình gameplay bằng Luau, dựng map và tối ưu trải nghiệm trên mobile.",
     },
   ] satisfies Experience[],
 } as const;
