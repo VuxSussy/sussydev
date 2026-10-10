@@ -359,48 +359,51 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
   };
 }
 
-/** Stud texture for classic Roblox parts: soft round studs on a neutral tile (tinted by material colour). */
-function studTexture() {
-  const size = 64;
+/** Canvas-drawn texture; falls back to a blank texture where 2D canvas is unavailable (tests, old browsers). */
+function drawnTexture(size: number, draw: (ctx: CanvasRenderingContext2D, size: number) => void) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#d8d8d8";
-  ctx.fillRect(0, 0, size, size);
-  const gradient = ctx.createRadialGradient(size * 0.45, size * 0.42, 2, size / 2, size / 2, size * 0.32);
-  gradient.addColorStop(0, "#ffffff");
-  gradient.addColorStop(0.7, "#e2e2e2");
-  gradient.addColorStop(1, "#bdbdbd");
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
-  ctx.fill();
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new THREE.Texture();
+  draw(ctx, size);
   const texture = new THREE.CanvasTexture(canvas);
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+/** Stud texture for classic Roblox parts: soft round studs on a neutral tile (tinted by material colour). */
+function studTexture() {
+  const texture = drawnTexture(64, (ctx, size) => {
+    ctx.fillStyle = "#d8d8d8";
+    ctx.fillRect(0, 0, size, size);
+    const gradient = ctx.createRadialGradient(size * 0.45, size * 0.42, 2, size / 2, size / 2, size * 0.32);
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(0.7, "#e2e2e2");
+    gradient.addColorStop(1, "#bdbdbd");
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   return texture;
 }
 
 /** SpawnLocation emblem: Roblox's spawn ring drawn on the pad's top face. */
 function spawnTexture() {
-  const size = 256;
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  ctx.fillStyle = "#3d4656";
-  ctx.fillRect(0, 0, size, size);
-  ctx.strokeStyle = "#cfd8e6";
-  ctx.lineWidth = 14;
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = "#cfd8e6";
-  ctx.beginPath();
-  ctx.arc(size / 2, size / 2, size * 0.12, 0, Math.PI * 2);
-  ctx.fill();
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
+  return drawnTexture(256, (ctx, size) => {
+    ctx.fillStyle = "#3d4656";
+    ctx.fillRect(0, 0, size, size);
+    ctx.strokeStyle = "#cfd8e6";
+    ctx.lineWidth = 14;
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "#cfd8e6";
+    ctx.beginPath();
+    ctx.arc(size / 2, size / 2, size * 0.12, 0, Math.PI * 2);
+    ctx.fill();
+  });
 }
 
 /**
