@@ -69,6 +69,7 @@ export class StoryScene {
   /** Roblox mode: seconds since the last chapter-change jump (-1 = not jumping). */
   private jumpTime = -1;
   private lastChapter = -1;
+  private overCharacter = false;
   private character = new THREE.Group();
   private sky: ReturnType<typeof createSky>;
   private floor: ReturnType<typeof createStudioFloor>;
@@ -203,12 +204,21 @@ export class StoryScene {
   private onPointerMove = (event: PointerEvent) => {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
+    // Sussy is clickable (hop easter egg); raycast on pointer move only, not every frame.
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    this.overCharacter = this.canHop() && this.raycaster.intersectObject(this.character, true).length > 0;
+    if (this.hovered < 0) this.renderer.domElement.style.cursor = this.overCharacter ? "pointer" : "";
   };
+
+  private canHop() {
+    return !this.reducedMotion && sitMix(this.story) < 0.05 && this.jumpTime < 0;
+  }
 
   private onPointerLeave = () => this.pointer.set(-10, -10);
 
   private onClick = () => {
     if (this.hovered >= 0) this.options.onTechSelect?.(this.hovered);
+    else if (this.overCharacter && this.canHop()) this.jumpTime = 0;
   };
 
   private updateHover(visibility: number) {
@@ -220,7 +230,7 @@ export class StoryScene {
     }
     if (hovered !== this.hovered) {
       this.hovered = hovered;
-      this.renderer.domElement.style.cursor = hovered >= 0 ? "pointer" : "";
+      this.renderer.domElement.style.cursor = hovered >= 0 || this.overCharacter ? "pointer" : "";
       this.options.onTechHover?.(hovered);
     }
   }
