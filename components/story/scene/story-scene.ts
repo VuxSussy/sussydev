@@ -44,11 +44,15 @@ function sampleKeys(s: number, portrait: boolean) {
   const cam = a.cam.map((v, k) => lerp(v, b.cam[k])) as [number, number, number];
   const target = a.target.map((v, k) => lerp(v, b.target[k])) as [number, number, number];
   if (portrait) {
-    // Centre the character and back off so the full body fits a tall viewport.
+    // Centre the character, back off so the full body fits, and keep it clear of the copy:
+    // below the text in the first chapters, above the contact panel at sunset.
     const shift = target[0];
     cam[0] -= shift;
     target[0] -= shift;
     for (let k = 0; k < 3; k++) cam[k] = target[k] + (cam[k] - target[k]) * 1.45;
+    const lift = 3.8 + 1.6 * techVisibility(s) - 9.8 * smoothstep(2.9, 3.4, s);
+    cam[1] += lift;
+    target[1] += lift;
   }
   return { cam, target, yaw: lerp(a.yaw, b.yaw), pos: [lerp(a.pos[0], b.pos[0]), lerp(a.pos[1], b.pos[1])] as const };
 }

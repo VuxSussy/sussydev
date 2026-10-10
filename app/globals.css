@@ -173,8 +173,20 @@ button, a[href] { cursor: pointer; }
   .chapter-sticky { justify-content: flex-start; padding-top: 6rem; }
   .chapter-intro .chapter-sticky { justify-content: flex-start; }
   .chapter-copy h1 { font-size: clamp(2.6rem, 12vw, 4rem); }
-  .chapter-contact .chapter-sticky { justify-content: flex-end; padding-bottom: 6rem; }
+  .chapter-contact .chapter-sticky { justify-content: flex-end; padding-bottom: 5.5rem; }
+  .contact-panel { gap: 0.9rem; padding: 1.1rem 1.1rem 0.6rem; background: rgba(24, 17, 22, 0.62); }
+  .contact-panel h2 { font-size: 1.7rem; }
+  .contact-panel .lede, .contact-panel .eyebrow { display: none; }
+  .contact-list a, .contact-pending { min-height: 42px; }
   .contact-panel { max-width: none; }
+  .chapter-tech .chapter-sticky { justify-content: flex-start; }
+  .chapter-tech h2 { font-size: clamp(2rem, 9vw, 2.6rem); }
+  .tech-chips { flex-wrap: nowrap; overflow-x: auto; max-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scrollbar-width: none; mask-image: linear-gradient(to right, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent); }
+  .tech-chips::-webkit-scrollbar { display: none; }
+  .tech-chips button { flex: none; }
+  .tech-caption { margin-top: 0.4rem; padding-top: 1rem; }
+  .tech-name { font-size: 2rem; }
+  .tech-blurb { font-size: 0.9rem; }
   .contact-list a, .contact-pending { grid-template-columns: 1.25rem 5.5rem 1fr auto; }
 }
 @media (max-width: 560px) {

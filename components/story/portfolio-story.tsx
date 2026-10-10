@@ -49,6 +49,7 @@ export function PortfolioStory() {
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const sceneRef = useRef<StoryScene | null>(null);
   const readoutRef = useRef<HTMLSpanElement>(null);
+  const chipsRef = useRef<HTMLFieldSetElement>(null);
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, () => false);
   const reducedRef = useRef(reducedMotion);
   const [progress, setProgress] = useState(0);
@@ -149,8 +150,16 @@ export function PortfolioStory() {
     }
   }
 
-  const focusTech = techs[hoveredTech >= 0 ? hoveredTech : techIndex];
   const focusIndex = hoveredTech >= 0 ? hoveredTech : techIndex;
+  const focusTech = techs[focusIndex];
+
+  // Keep the active chip centred when the chip row scrolls horizontally (mobile).
+  useEffect(() => {
+    const row = chipsRef.current;
+    const chip = row?.querySelectorAll("button")[focusIndex];
+    if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
+    row.scrollTo({ left: chip.offsetLeft - row.clientWidth / 2 + chip.offsetWidth / 2, behavior: reducedRef.current ? "auto" : "smooth" });
+  }, [focusIndex]);
   const gmail = portfolio.contacts.find((c) => c.kind === "gmail")?.value ?? "";
   const pad = (n: number) => String(n).padStart(2, "0");
   const atEnd = chapter === CHAPTERS.length - 1;
@@ -212,7 +221,7 @@ export function PortfolioStory() {
             <div className="chapter-copy chapter-copy-top">
               <p className="eyebrow">02 / 04 <span className="eyebrow-line" aria-hidden="true" /> TECH STACK</p>
               <h2 id="tech-title">Những công cụ<br />tôi chạy cùng.</h2>
-              <fieldset className="tech-chips">
+              <fieldset className="tech-chips" ref={chipsRef}>
                 <legend className="sr-only">Chọn tech stack</legend>
                 {techs.map((tech, index) => (
                   <button
