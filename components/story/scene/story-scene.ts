@@ -5,12 +5,13 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
-import { createBlobShadow, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT } from "./environment";
+import { createBlobShadow, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
 import { TechCarousel } from "./tech-carousel";
 
 export type StorySceneOptions = {
   canvas: HTMLCanvasElement;
   techs: readonly TechStack[];
+  theme: SceneTheme;
   reducedMotion: boolean;
   onProgress?: (fraction: number) => void;
   onTechHover?: (index: number) => void;
@@ -66,8 +67,8 @@ export class StoryScene {
   private mixer?: THREE.AnimationMixer;
   private actions: Record<"run" | "idle" | "sit", THREE.AnimationAction> | null = null;
   private character = new THREE.Group();
-  private sky = createSky();
-  private floor = createStudioFloor();
+  private sky: ReturnType<typeof createSky>;
+  private floor: ReturnType<typeof createStudioFloor>;
   private shadow = createBlobShadow();
   private sunset: ReturnType<typeof createSunsetWorld>;
   private carousel: TechCarousel;
@@ -87,12 +88,18 @@ export class StoryScene {
   private disposed = false;
   private quality = { tiers: [1.5, 1.25, 1, 0.8], tier: 0, frames: 0, time: 0 };
   private observer: ResizeObserver;
+  private studioRim = new THREE.Color();
+  private studioFog = new THREE.Color();
   /** Dev-only: pin the camera to inspect the scene from any angle. */
   debugView: { position: [number, number, number]; target: [number, number, number] } | null = null;
 
   constructor(private options: StorySceneOptions) {
     const { canvas } = options;
     this.reducedMotion = options.reducedMotion;
+    this.sky = createSky(options.theme);
+    this.floor = createStudioFloor(options.theme);
+    this.studioRim.set(options.theme === "roblox" ? "#6aa8ff" : "#9fb0ff");
+    this.studioFog.set(options.theme === "roblox" ? "#0a1120" : "#0e0e11");
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.AgXToneMapping;
@@ -111,7 +118,7 @@ export class StoryScene {
     this.rimLight.position.set(-5, 5, -6);
     this.sky.material.depthTest = false;
     this.sunset = createSunsetWorld({ grassCount: coarse ? 1400 : 3200 });
-    this.carousel = new TechCarousel(options.techs);
+    this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
     this.keyLight.target.position.set(0, 2, 0);
 
@@ -287,13 +294,13 @@ export class StoryScene {
     const rise = 1 - Math.pow(1 - sunset, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
     this.sunset.update(time, sunset, this.renderer.getPixelRatio());
-    this.fog.color.set("#0e0e11").lerp(new THREE.Color("#b07a74"), sunset);
+    this.fog.color.copy(this.studioFog).lerp(new THREE.Color("#b07a74"), sunset);
     this.fog.near = 30 - 10 * sunset;
     this.fog.far = 160 + 80 * sunset;
     this.keyLight.color.set("#fff4e8").lerp(new THREE.Color("#ffb27a"), sunset);
     this.keyLight.position.set(4 - 12 * sunset, 7 - 4.5 * sunset, 6 - 18 * sunset);
     this.keyLight.intensity = 2.4 + 0.6 * sunset;
-    this.rimLight.color.set("#9fb0ff").lerp(new THREE.Color("#8f7cff"), sunset);
+    this.rimLight.color.copy(this.studioRim).lerp(new THREE.Color("#8f7cff"), sunset);
     this.rimLight.intensity = 2.2 - 1.2 * sunset;
     this.hemi.color.set("#d9dbe6").lerp(new THREE.Color("#ffc9a8"), sunset);
     this.hemi.groundColor.set("#2a2a30").lerp(new THREE.Color("#3c3048"), sunset);

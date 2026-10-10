@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play } from "lucide-react";
-import { portfolio, type ContactLink } from "@/data/portfolio";
+import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
@@ -30,7 +31,9 @@ function subscribeReducedMotion(callback: () => void) {
     window.removeEventListener(MOTION_EVENT, callback);
   };
 }
-const techs = portfolio.techStack;
+
+const MODES: readonly Mode[] = ["dev", "roblox"];
+const modeHref = (mode: Mode) => (mode === "dev" ? "/" : "/roblox");
 
 function contactHref(contact: ContactLink) {
   if (!contact.value) return undefined;
@@ -44,7 +47,9 @@ function contactText(contact: ContactLink) {
   return contact.value.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
-export function PortfolioStory() {
+export function PortfolioStory({ mode }: { mode: Mode }) {
+  const profile = portfolio.profiles[mode];
+  const techs = profile.techStack;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const sceneRef = useRef<StoryScene | null>(null);
@@ -79,7 +84,7 @@ export function PortfolioStory() {
     window.scrollTo({ top: Math.max(0, top), behavior: reducedRef.current ? "auto" : "smooth" });
   }, []);
 
-  const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory]);
+  const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory, techs.length]);
 
   // Scroll → story value → scene + overlay state.
   useEffect(() => {
@@ -101,7 +106,7 @@ export function PortfolioStory() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, []);
+  }, [techs.length]);
 
   // Mount the WebGL scene (code-split so text renders first).
   useEffect(() => {
@@ -116,6 +121,7 @@ export function PortfolioStory() {
         scene = new StoryScene({
           canvas,
           techs,
+          theme: mode,
           reducedMotion: reducedRef.current,
           onProgress: (value) => !disposed && setProgress(value),
           onTechHover: (index) => !disposed && setHoveredTech(index),
@@ -138,7 +144,7 @@ export function PortfolioStory() {
       scene?.dispose();
       sceneRef.current = null;
     };
-  }, [selectTech]);
+  }, [selectTech, techs, mode]);
 
   async function copyEmail(value: string) {
     try {
@@ -165,8 +171,8 @@ export function PortfolioStory() {
   const atEnd = chapter === CHAPTERS.length - 1;
 
   return (
-    <>
-      <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} />
+    <div className="site" data-mode={mode}>
+      <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
       <a className="skip-link" href="#main">Chuyển đến nội dung chính</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
@@ -177,10 +183,17 @@ export function PortfolioStory() {
       <header className="hud-header">
         <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — về đầu trang`}>
           <span className="brand-mark" aria-hidden="true" />
-          <strong>{portfolio.character.toUpperCase()} / 001</strong>
+          <strong>{portfolio.character.toUpperCase()} / {profile.code}</strong>
           <span className="brand-divider" aria-hidden="true" />
-          <span className="brand-sub">A PORTFOLIO RUN</span>
+          <span className="brand-sub">{profile.brandSub}</span>
         </a>
+        <nav className="mode-switch" aria-label="Chọn portfolio">
+          {MODES.map((item) => (
+            <Link key={item} href={modeHref(item)} aria-current={item === mode ? "page" : undefined}>
+              {portfolio.profiles[item].label}
+            </Link>
+          ))}
+        </nav>
         <div className="hud-actions">
           <button type="button" className="motion-toggle" aria-pressed={reducedMotion} onClick={toggleMotion}>
             {reducedMotion ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
@@ -209,9 +222,9 @@ export function PortfolioStory() {
           <div className="chapter-sticky">
             <div className="chapter-copy">
               <p className="eyebrow">01 / 04 <span className="eyebrow-line" aria-hidden="true" /> {portfolio.character.toUpperCase()}</p>
-              <h1 id="intro-title">Code gọn.<br />Chạy không ngừng.</h1>
-              <p className="lede">{portfolio.shortIntro}</p>
-              <p className="meta">{portfolio.role} · {portfolio.location}</p>
+              <h1 id="intro-title">{profile.headline[0]}<br />{profile.headline[1]}</h1>
+              <p className="lede">{profile.intro}</p>
+              <p className="meta">{profile.role} · {portfolio.location}</p>
             </div>
           </div>
         </section>
@@ -220,7 +233,7 @@ export function PortfolioStory() {
           <div className="chapter-sticky">
             <div className="chapter-copy chapter-copy-top">
               <p className="eyebrow">02 / 04 <span className="eyebrow-line" aria-hidden="true" /> TECH STACK</p>
-              <h2 id="tech-title">Những công cụ<br />tôi chạy cùng.</h2>
+              <h2 id="tech-title">{profile.techTitle[0]}<br />{profile.techTitle[1]}</h2>
               <fieldset className="tech-chips" ref={chipsRef}>
                 <legend className="sr-only">Chọn tech stack</legend>
                 {techs.map((tech, index) => (
@@ -253,9 +266,9 @@ export function PortfolioStory() {
         <section id="du-an" ref={(el) => { sectionRefs.current[2] = el; }} className="chapter chapter-work" aria-labelledby="work-title">
           <div className="work-inner">
             <p className="eyebrow">03 / 04 <span className="eyebrow-line" aria-hidden="true" /> DỰ ÁN & KINH NGHIỆM</p>
-            <h2 id="work-title">Những quãng đường<br />đã chạy qua.</h2>
+            <h2 id="work-title">{profile.workTitle[0]}<br />{profile.workTitle[1]}</h2>
             <div className="work-list">
-              {portfolio.projects.map((project, index) => (
+              {profile.projects.map((project, index) => (
                 <article className="glass-card project-card" key={project.title}>
                   <p className="card-meta"><span>{pad(index + 1)}</span><span>{project.year} · {project.category}</span></p>
                   <h3>{project.title}</h3>
@@ -267,7 +280,7 @@ export function PortfolioStory() {
             <div className="glass-card experience-card">
               <h3 className="card-title">Kinh nghiệm</h3>
               <ol>
-                {portfolio.experience.map((item) => (
+                {profile.experience.map((item) => (
                   <li key={`${item.period}-${item.company}`}>
                     <span className="exp-period">{item.period}</span>
                     <div><strong>{item.role}</strong> · {item.company}<p>{item.description}</p></div>
@@ -277,7 +290,7 @@ export function PortfolioStory() {
             </div>
             <div className="glass-card about-card">
               <h3 className="card-title">Về tôi</h3>
-              {portfolio.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+              {profile.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </div>
           </div>
         </section>
@@ -326,7 +339,7 @@ export function PortfolioStory() {
 
       <footer className="hud-footer">
         <div className="hud-meta">
-          <strong>CODE / ROBLOX / MOTION</strong>
+          <strong>{profile.footerMeta}</strong>
           <span>R6 · {portfolio.character} · run v4</span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
@@ -335,6 +348,6 @@ export function PortfolioStory() {
         <p className="hud-readout"><span>STORY</span><span ref={readoutRef}>000%</span></p>
       </footer>
       <p className="sr-only">© {new Date().getFullYear()} {portfolio.name}. Nhân vật Roblox {portfolio.character} chạy qua portfolio theo nhịp cuộn trang.</p>
-    </>
+    </div>
   );
 }

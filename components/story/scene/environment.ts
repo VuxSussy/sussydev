@@ -6,17 +6,37 @@ export const SUN_DIRECTION = new THREE.Vector3(0.26, 0.05, -1).normalize();
 /** Tree beside Sussy's left shoulder, so the trunk frames the seated silhouette. */
 const TREE_BASE = new THREE.Vector3(SIT_SPOT.x - 1.7, 0, SIT_SPOT.y - 0.35);
 
+export type SceneTheme = "dev" | "roblox";
+
+/** Studio look per portfolio: neutral charcoal for Dev, a night-time Roblox baseplate for Roblox. */
+const THEMES = {
+  dev: {
+    skyBottom: [0.043, 0.043, 0.05], skyTop: [0.085, 0.085, 0.095], skyGlow: [0.07, 0.066, 0.06],
+    floorNear: [0.11, 0.11, 0.122], floorFar: [0.06, 0.06, 0.068], line: [1, 1, 1], lineStrength: 0.06, studs: 0,
+  },
+  roblox: {
+    skyBottom: [0.03, 0.045, 0.075], skyTop: [0.07, 0.105, 0.17], skyGlow: [0.06, 0.12, 0.22],
+    floorNear: [0.1, 0.135, 0.2], floorFar: [0.045, 0.065, 0.105], line: [0.42, 0.66, 1.0], lineStrength: 0.12, studs: 1,
+  },
+} satisfies Record<SceneTheme, Record<string, number[] | number>>;
+
+const vec3 = (v: number[]) => new THREE.Vector3(v[0], v[1], v[2]);
+
 const dither = /* glsl */ `
   float hash12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 `;
 
 /** Sky dome blending the dark studio backdrop into a soft sunset. Colours are display-referred. */
-export function createSky() {
+export function createSky(theme: SceneTheme) {
+  const t = THEMES[theme];
   const material = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
     toneMapped: false,
-    uniforms: { uMix: { value: 0 }, uSunDir: { value: SUN_DIRECTION.clone() } },
+    uniforms: {
+      uMix: { value: 0 }, uSunDir: { value: SUN_DIRECTION.clone() },
+      uBottom: { value: vec3(t.skyBottom) }, uTop: { value: vec3(t.skyTop) }, uGlow: { value: vec3(t.skyGlow) },
+    },
     vertexShader: /* glsl */ `
       varying vec3 vDir;
       void main() {
@@ -25,13 +45,13 @@ export function createSky() {
         gl_Position = p.xyww;
       }`,
     fragmentShader: /* glsl */ `
-      uniform float uMix; uniform vec3 uSunDir; varying vec3 vDir;
+      uniform float uMix; uniform vec3 uSunDir; uniform vec3 uBottom; uniform vec3 uTop; uniform vec3 uGlow; varying vec3 vDir;
       ${dither}
       void main() {
         vec3 d = normalize(vDir);
         float h = d.y;
-        vec3 studio = mix(vec3(0.043, 0.043, 0.05), vec3(0.085, 0.085, 0.095), smoothstep(-0.25, 0.55, h));
-        studio += vec3(0.07, 0.066, 0.06) * pow(max(dot(d, normalize(vec3(0.0, 0.18, -1.0))), 0.0), 5.0);
+        vec3 studio = mix(uBottom, uTop, smoothstep(-0.25, 0.55, h));
+        studio += uGlow * pow(max(dot(d, normalize(vec3(0.0, 0.18, -1.0))), 0.0), 5.0);
 
         vec3 zenith = vec3(0.12, 0.11, 0.22);
         vec3 mid = vec3(0.45, 0.30, 0.42);
@@ -56,17 +76,23 @@ export function createSky() {
 }
 
 /** Unlit studio floor with a soft radial falloff and a grid that scrolls like a treadmill. */
-export function createStudioFloor() {
+export function createStudioFloor(theme: SceneTheme) {
+  const t = THEMES[theme];
   const material = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     toneMapped: false,
-    uniforms: { uOpacity: { value: 1 }, uOffset: { value: new THREE.Vector2() } },
+    uniforms: {
+      uOpacity: { value: 1 }, uOffset: { value: new THREE.Vector2() },
+      uNear: { value: vec3(t.floorNear) }, uFar: { value: vec3(t.floorFar) }, uLine: { value: vec3(t.line) },
+      uLineStrength: { value: t.lineStrength }, uStuds: { value: t.studs },
+    },
     vertexShader: /* glsl */ `
       varying vec2 vPos;
       void main() { vPos = position.xy; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
     fragmentShader: /* glsl */ `
-      uniform float uOpacity; uniform vec2 uOffset; varying vec2 vPos;
+      uniform float uOpacity; uniform vec2 uOffset; uniform vec3 uNear; uniform vec3 uFar; uniform vec3 uLine;
+      uniform float uLineStrength; uniform float uStuds; varying vec2 vPos;
       ${dither}
       float grid(vec2 p, float size, float width) {
         vec2 g = abs(fract(p / size - 0.5) - 0.5) * size;
@@ -77,9 +103,14 @@ export function createStudioFloor() {
       void main() {
         float r = length(vPos * vec2(1.0, 1.25));
         float fade = 1.0 - smoothstep(5.0, 24.0, r);
-        vec3 base = mix(vec3(0.11, 0.11, 0.122), vec3(0.06, 0.06, 0.068), smoothstep(0.0, 16.0, r));
-        float lines = grid(vPos + uOffset, 2.0, 0.025) * 0.06 * (1.0 - smoothstep(3.0, 18.0, r));
-        vec3 col = base + lines + (hash12(gl_FragCoord.xy) - 0.5) / 255.0;
+        vec3 base = mix(uNear, uFar, smoothstep(0.0, 16.0, r));
+        vec2 p = vPos + uOffset;
+        float near = 1.0 - smoothstep(3.0, 18.0, r);
+        float lines = grid(p, uStuds > 0.5 ? 4.0 : 2.0, 0.025) * uLineStrength * near;
+        // Roblox baseplate studs: a soft dot per stud, fading out before it can alias.
+        vec2 cell = fract(p) - 0.5;
+        float stud = (1.0 - smoothstep(0.16, 0.24, length(cell))) * uStuds * 0.035 * (1.0 - smoothstep(2.0, 11.0, r));
+        vec3 col = base + uLine * (lines + stud) + (hash12(gl_FragCoord.xy) - 0.5) / 255.0;
         gl_FragColor = vec4(col, fade * uOpacity);
       }`,
   });

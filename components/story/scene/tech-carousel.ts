@@ -43,7 +43,7 @@ export class TechCarousel {
   private ringGeometry = new THREE.RingGeometry(1.32, 1.4, 64);
   private plinthMaterial = new THREE.MeshStandardMaterial({ color: "#1c1c20", roughness: 0.55, metalness: 0.2 });
 
-  constructor(techs: readonly TechStack[]) {
+  constructor(techs: readonly TechStack[], accent = "#f3b47c") {
     this.group.position.z = LANE_Z;
     techs.forEach((tech, index) => {
       const root = new THREE.Group();
@@ -57,7 +57,7 @@ export class TechCarousel {
       logo.position.y = 1.35;
       logo.rotation.x = -0.12;
       logo.userData.index = index;
-      const ringMaterial = new THREE.MeshBasicMaterial({ color: "#f3b47c", transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
+      const ringMaterial = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
       const ring = new THREE.Mesh(this.ringGeometry, ringMaterial);
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.25;
