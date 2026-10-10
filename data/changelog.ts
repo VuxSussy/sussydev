@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "0.9",
+    date: "2026-10-11",
+    title: "Baseplate có hồn",
+    notes: [
+      "Chế độ Roblox có SpawnLocation sau lưng Sussy và vài khối part cổ điển có stud lơ lửng ở xa.",
+      "Bảng leaderstats: Stage theo chương, Studs đếm quãng đường Sussy đã chạy.",
+    ],
+  },
+  {
     version: "0.8",
     date: "2026-10-11",
     title: "Tiếng bước chân",
