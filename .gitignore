@@ -36,3 +36,8 @@ next-env.d.ts
 /.wrangler/
 /outputs/
 /work/
+
+# blender build intermediates
+/assets-src/**/_rgba_*
+/assets-src/**/_baked_*
+*.blend1

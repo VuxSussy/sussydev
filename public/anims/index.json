@@ -1,0 +1,304 @@
+{
+  "rig": "R6",
+  "motors": {
+    "Root Hip": {
+      "part0": "HumanoidRootPart",
+      "part1": "Torso",
+      "c0": [
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "c1": [
+        0,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    },
+    "Left Hip": {
+      "part0": "Torso",
+      "part1": "Left Leg",
+      "c0": [
+        -1,
+        -1,
+        0,
+        -4.371138828673793e-8,
+        0,
+        -1,
+        0,
+        0.9999999403953552,
+        0,
+        1,
+        0,
+        -4.371138828673793e-8
+      ],
+      "c1": [
+        -0.5,
+        1,
+        0,
+        -4.371138828673793e-8,
+        0,
+        -1,
+        0,
+        0.9999999403953552,
+        0,
+        1,
+        0,
+        -4.371138828673793e-8
+      ]
+    },
+    "Right Hip": {
+      "part0": "Torso",
+      "part1": "Right Leg",
+      "c0": [
+        1,
+        -1,
+        0,
+        -4.371138828673793e-8,
+        0,
+        1,
+        0,
+        0.9999999403953552,
+        0,
+        -1,
+        0,
+        -4.371138828673793e-8
+      ],
+      "c1": [
+        0.5,
+        1,
+        0,
+        -4.371138828673793e-8,
+        0,
+        1,
+        0,
+        0.9999999403953552,
+        0,
+        -1,
+        0,
+        -4.371138828673793e-8
+      ]
+    },
+    "Left Shoulder": {
+      "part0": "Torso",
+      "part1": "Left Arm",
+      "c0": [
+        -1,
+        0.5,
+        0,
+        -4.371138828673793e-8,
+        0,
+        -1,
+        0,
+        0.9999999403953552,
+        0,
+        1,
+        0,
+        -4.371138828673793e-8
+      ],
+      "c1": [
+        0.5,
+        0.5,
+        0,
+        -4.371138828673793e-8,
+        0,
+        -1,
+        0,
+        0.9999999403953552,
+        0,
+        1,
+        0,
+        -4.371138828673793e-8
+      ]
+    },
+    "Right Shoulder": {
+      "part0": "Torso",
+      "part1": "Right Arm",
+      "c0": [
+        1,
+        0.5,
+        0,
+        -4.371138828673793e-8,
+        0,
+        1,
+        0,
+        0.9999999403953552,
+        0,
+        -1,
+        0,
+        -4.371138828673793e-8
+      ],
+      "c1": [
+        -0.5,
+        0.5,
+        0,
+        -4.371138828673793e-8,
+        0,
+        1,
+        0,
+        0.9999999403953552,
+        0,
+        -1,
+        0,
+        -4.371138828673793e-8
+      ]
+    },
+    "Neck": {
+      "part0": "Torso",
+      "part1": "Head",
+      "c0": [
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ],
+      "c1": [
+        0,
+        -0.5,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0
+      ]
+    }
+  },
+  "clips": [
+    {
+      "name": "Crawl",
+      "file": "crawl.json",
+      "loop": true,
+      "duration": 1.5833,
+      "keyframes": 96
+    },
+    {
+      "name": "Climbing",
+      "file": "climbing.json",
+      "loop": true,
+      "duration": 2.1667,
+      "keyframes": 131
+    },
+    {
+      "name": "crawltocrouch",
+      "file": "crawltocrouch.json",
+      "loop": false,
+      "duration": 1,
+      "keyframes": 61
+    },
+    {
+      "name": "CrouchWalk",
+      "file": "crouchwalk.json",
+      "loop": true,
+      "duration": 1.2,
+      "keyframes": 61
+    },
+    {
+      "name": "walk v3",
+      "file": "walk-v3.json",
+      "loop": true,
+      "duration": 0.8333,
+      "keyframes": 51
+    },
+    {
+      "name": "fall",
+      "file": "fall.json",
+      "loop": true,
+      "duration": 1.35,
+      "keyframes": 66
+    },
+    {
+      "name": "run v4",
+      "file": "run-v4.json",
+      "loop": true,
+      "duration": 0.6333,
+      "keyframes": 39
+    },
+    {
+      "name": "jump",
+      "file": "jump.json",
+      "loop": false,
+      "duration": 0.4333,
+      "keyframes": 14
+    },
+    {
+      "name": "Crouch",
+      "file": "crouch.json",
+      "loop": false,
+      "duration": 0.8333,
+      "keyframes": 51
+    },
+    {
+      "name": "CrawlIdle",
+      "file": "crawlidle.json",
+      "loop": false,
+      "duration": 1,
+      "keyframes": 61
+    },
+    {
+      "name": "Crouchtocrawl",
+      "file": "crouchtocrawl.json",
+      "loop": false,
+      "duration": 0.8333,
+      "keyframes": 51
+    },
+    {
+      "name": "Long",
+      "file": "long.json",
+      "loop": false,
+      "duration": 0.6667,
+      "keyframes": 23
+    },
+    {
+      "name": "Short",
+      "file": "short.json",
+      "loop": false,
+      "duration": 0.4667,
+      "keyframes": 23
+    },
+    {
+      "name": "Normal Land",
+      "file": "normal-land.json",
+      "loop": false,
+      "duration": 0.1667,
+      "keyframes": 11
+    },
+    {
+      "name": "idle v2",
+      "file": "idle-v2.json",
+      "loop": true,
+      "duration": 1.8833,
+      "keyframes": 114
+    }
+  ]
+}
