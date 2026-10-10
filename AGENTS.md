@@ -59,7 +59,7 @@ Check desktop 1440×900 and mobile 375×812 for every visual change.
 
 ## Asset pipeline notes
 
-- Sussy is `R15_SussySuspector_1265476893` in the owner's Roblox Studio place. `assets-src/sussy/parts.json` is a
+- Sussy is the R6 model `R6_SussySuspector_1265476893` in the owner's Roblox Studio place. `assets-src/sussy/parts.json` is a
   dump of its part CFrames relative to HumanoidRootPart; meshes in `assets-src/sussy/meshes` are the original
   Roblox meshes (decoded with `scripts/rbxmesh-to-json.mjs`). Auth-locked assets came from Studio's content cache
   (`$TMPDIR/Roblox/rbx-storage`, KTX2 textures → `scripts/ktx2png.mjs`).

@@ -1,7 +1,8 @@
 # Import the "Sussy" Roblox model into Blender, polish it, and export an R6-rigged GLB for the website.
 #
-# Source model: `R15_SussySuspector_1265476893` in Roblox Studio.
-#   assets-src/sussy/parts.json    part transforms/sizes dumped from Studio (relative to HumanoidRootPart)
+# Source model: `R6_SussySuspector_1265476893` in Roblox Studio (classic R6 rig).
+#   assets-src/sussy/parts.json    part transforms, sizes and SpecialMesh data dumped from Studio
+#                                  (relative to HumanoidRootPart)
 #   assets-src/sussy/meshes/*.json original Roblox meshes decoded with scripts/rbxmesh-to-json.mjs
 #                                  (from assetdelivery or Studio's local content cache)
 #   assets-src/sussy/textures/*    original textures (cache KTX2 decoded to PNG) + the face decal
@@ -9,8 +10,8 @@
 # Quality pass only: original geometry is kept; we weld duplicate vertices, rebuild normals with
 # angle-based smoothing (Draco meshes ship without normals), subdivide the head once and assign PBR materials.
 #
-# The 15 R15 parts are merged into the six R6 groups (Torso, Head, RightArm, LeftArm, RightLeg, LeftLeg)
-# so the R6 animation pack drives them. Geometry is authored in Roblox space (Y up, faces -Z, studs)
+# Body parts are the R6 blocks themselves; accessories (SpecialMesh FileMesh, scaled by `mesh.scale`) are
+# merged into the R6 part they hang from, so the R6 animation pack drives everything. Geometry is authored in Roblox space (Y up, faces -Z, studs)
 # relative to each R6 part centre, then converted to Blender space (x, -z, y); the Y-up glTF export
 # lands it back in Roblox space.
 #
@@ -33,9 +34,19 @@ GROUP_CENTER = {
     "RightArm": Vector((1.5, 0, 0)), "LeftArm": Vector((-1.5, 0, 0)),
     "RightLeg": Vector((0.5, -2, 0)), "LeftLeg": Vector((-0.5, -2, 0)),
 }
-# Accessory meshes by Roblox asset id. 4546389367 is an invisible accessory (transparent texture).
-ACCESSORIES = {"3963788594": "Trilby", "4820755895": "Glasses", "123160367470095": "TacBelts", "138076927962847": "Scarf"}
+# Accessory meshes by Roblox asset id -> (mesh file, R6 part it is worn on).
+# 4546389367 is an invisible shell around the head (Studio hides it), so it is skipped.
+ACCESSORIES = {"3963788594": ("Trilby", "Head"), "4820755895": ("Glasses", "Head"),
+               "123160367470095": ("TacBelts", "Torso"), "138076927962847": ("Scarf", "Torso")}
+R6_PARTS = {"Torso": "Torso", "Head": "Head", "Left Arm": "LeftArm", "Right Arm": "RightArm", "Left Leg": "LeftLeg", "Right Leg": "RightLeg"}
 SKIP_MESHES = {"4546389367"}
+# The pixel glasses on the trilby brim come from the HumanoidDescription Face accessory (4820765156): Studio
+# renders it but the R6 model has no instance for it, so its transform is taken from the R15 rig of the same avatar.
+EXTRA_PARTS = [{
+    "name": "GlassesAccessory/Handle", "color": "a3a2a5", "size": [1.45, 0.28, 1.0],
+    "cframe": [0.24518, 2.03945, -0.37459, 0.8702, -0.03913, -0.49114, -0.06168, 0.98035, -0.18738, 0.48882, 0.19335, 0.85069],
+    "mesh": {"id": "rbxassetid://4820755895", "scale": [1.2, 1.2, 1.2], "offset": [0, 0, 0]},
+}]
 SMOOTH_ANGLE = {"Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
 
 
@@ -141,6 +152,15 @@ def tube(points, radius, ring=8):
     return bm
 
 
+def rounded_box(size, bevel):
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=size, verts=bm.verts)
+    bmesh.ops.bevel(bm, geom=list(bm.edges), offset=bevel, segments=3, profile=0.5, affect="EDGES", clamp_overlap=True)
+    bm.loops.layers.uv.new("UVMap")
+    return bm
+
+
 def box(size):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
@@ -199,24 +219,29 @@ def main():
                 coll.remove(item)
     MATS.clear()
 
-    parts = json.load(open(os.path.join(SRC, "parts.json")))["parts"]
+    parts = json.load(open(os.path.join(SRC, "parts.json")))["parts"] + EXTRA_PARTS
     groups = {name: Group(name) for name in GROUP_CENTER}
     body = {"111111": mat("BodyBlack", "17171a", 0.5), "f8f8f8": mat("BodyWhite", "f2f2ef", 0.5),
             "635f62": mat("BodyGrey", "6b6870", 0.55)}
 
     for p in parts:
-        mesh_id = "".join(ch for ch in p["meshId"] if ch.isdigit())
-        if mesh_id in SKIP_MESHES or not p["group"]:
+        mesh = p.get("mesh")
+        mesh_id = "".join(ch for ch in mesh["id"] if ch.isdigit()) if mesh else ""
+        if mesh_id in SKIP_MESHES:
             continue
-        group = groups[p["group"]]
-        matrix = Matrix.Translation(-GROUP_CENTER[p["group"]]) @ cframe_matrix(p["cframe"])
-        scale = [s / m for s, m in zip(p["size"], p["meshSize"])]
+        key, group_name = ACCESSORIES.get(mesh_id, (None, R6_PARTS.get(p["name"])))
+        if not group_name:
+            continue
+        group = groups[group_name]
+        matrix = Matrix.Translation(-GROUP_CENTER[group_name]) @ cframe_matrix(p["cframe"])
+        if mesh:
+            matrix = matrix @ Matrix.Translation(mesh["offset"])
+        scale = mesh["scale"] if mesh else [1, 1, 1]
         if p["name"] == "Head":
             bm = load_mesh("Head", scale)
             project_face(bm)
             group.add(bm, mat("Face", rough=0.42, image="face.png"), matrix, SMOOTH_ANGLE["Head"], subdivide=1)
-        elif mesh_id in ACCESSORIES:
-            key = ACCESSORIES[mesh_id]
+        elif key:
             look = {
                 "Trilby": mat("Trilby", rough=0.58, image="trilby.png"),
                 "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.3),
@@ -225,7 +250,8 @@ def main():
             }[key]
             group.add(load_mesh(key, scale), look, matrix, SMOOTH_ANGLE[key])
         else:
-            group.add(load_mesh(p["name"], scale), body[p["color"]], matrix, 30)
+            # Plain R6 block, softened with a small bevel so it catches light like Studio's plastic.
+            group.add(rounded_box(p["size"], 0.045), body[p["color"]], matrix, 30)
 
     # Shirt graphic (silver cross necklace): the decal is auth-locked and not in the local cache.
     torso = groups["Torso"]

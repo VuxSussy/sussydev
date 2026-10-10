@@ -15,7 +15,7 @@ Nothing has been pushed or merged.
 ## Done
 
 - `.rbxm` animation extraction (no Studio needed) → `public/anims/*.json`; web uses `run-v4`, `idle-v2`, `jump`, `normal-land` + a code-authored sit pose.
-- Sussy imported from Roblox Studio with original meshes/textures, polished in Blender, R15→R6 groups, meshopt GLB (~270 KB).
+- Sussy imported from Roblox Studio with original meshes/textures, polished in Blender. Source is now the R6 model `R6_SussySuspector_1265476893` (classic R6 blocks + accessories), meshopt GLB (~255 KB).
 - Single WebGL stage: AgX tone mapping, PMREM env, blob shadow, adaptive DPR, pause when hidden, three.js code-split.
 - Tech conveyor under Sussy's feet (12 dev techs incl. Python & C++; 10 Roblox tools), focus ring + hover/click + keyboard chips.
 - Sunset hill with tree, wind grass, fireflies, sky shader; Sussy walks over and sits facing the sun; contact panel.
