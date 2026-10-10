@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play } from "lucide-react";
+import { currentVersion } from "@/data/changelog";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
@@ -341,7 +342,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       <footer className="hud-footer">
         <div className="hud-meta">
           <strong>{profile.footerMeta}</strong>
-          <span>R6 · {portfolio.character} · run v4</span>
+          <span>R6 · {portfolio.character} · <Link href="/nhat-ky">v{currentVersion} · Nhật ký</Link></span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
           {atEnd ? <>Chạy lại từ đầu <ArrowUp aria-hidden="true" size={16} /></> : <>Cuộn để chạy cùng {portfolio.character} <ArrowDown aria-hidden="true" size={16} /></>}
