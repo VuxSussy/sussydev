@@ -16,10 +16,15 @@ Mở `http://localhost:3000`.
 ## Kiểm tra và build
 
 ```bash
+npm test
 npm run lint
 npx tsc --noEmit
 npm run build
 ```
+
+Vitest kiểm tra toán học scroll, rig/clip R6 và parser/CLI bằng fixture `.rbxm`
+trong `tests/fixtures`, đối chiếu với `public/anims`. Dùng `npm run test:watch`
+khi chỉnh logic; test không cần Studio hay kết nối mạng.
 
 ## Chỉnh nội dung
 

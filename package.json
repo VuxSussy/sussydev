@@ -10,6 +10,8 @@
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "oxfmt",
     "extract:anims": "node scripts/extract-rbxm-anims.ts",
     "build:model": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-sussy.py && npm run optimize:model",
@@ -57,6 +59,7 @@
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vite": "8.0.13",
+    "vitest": "5.0.3",
     "wrangler": "4.92.0"
   },
   "type": "module"
