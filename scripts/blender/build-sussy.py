@@ -1,14 +1,18 @@
-# Build the "Sussy" portfolio character in Blender and export an R6-style GLB.
+# Import the "Sussy" Roblox model into Blender, polish it, and export an R6-rigged GLB for the website.
 #
-# Source: the R15 model `R15_SussySuspector_1265476893` in Roblox Studio. Part transforms come from
-# `assets-src/sussy/parts.json` (dumped from Studio), meshes from Roblox .mesh files converted with
-# `scripts/rbxmesh-to-json.mjs`. Assets that need Roblox auth (blocky body, scarf, tac belts, shirt
-# graphic) are rebuilt procedurally to match Studio screenshots.
+# Source model: `R15_SussySuspector_1265476893` in Roblox Studio.
+#   assets-src/sussy/parts.json    part transforms/sizes dumped from Studio (relative to HumanoidRootPart)
+#   assets-src/sussy/meshes/*.json original Roblox meshes decoded with scripts/rbxmesh-to-json.mjs
+#                                  (from assetdelivery or Studio's local content cache)
+#   assets-src/sussy/textures/*    original textures (cache KTX2 decoded to PNG) + the face decal
 #
-# R15 parts are merged into the six R6 groups (Torso, Head, RightArm, LeftArm, RightLeg, LeftLeg) so the
-# R6 animation pack drives them. Geometry is authored in Roblox space (Y up, faces -Z, studs) relative to
-# each R6 part centre, then converted to Blender space (x, -z, y) so the Y-up glTF export lands back in
-# Roblox space.
+# Quality pass only: original geometry is kept; we weld duplicate vertices, rebuild normals with
+# angle-based smoothing (Draco meshes ship without normals), subdivide the head once and assign PBR materials.
+#
+# The 15 R15 parts are merged into the six R6 groups (Torso, Head, RightArm, LeftArm, RightLeg, LeftLeg)
+# so the R6 animation pack drives them. Geometry is authored in Roblox space (Y up, faces -Z, studs)
+# relative to each R6 part centre, then converted to Blender space (x, -z, y); the Y-up glTF export
+# lands it back in Roblox space.
 #
 # Run: `blender -b -P scripts/blender/build-sussy.py` or send the file to the Blender MCP addon.
 import json
@@ -29,10 +33,10 @@ GROUP_CENTER = {
     "RightArm": Vector((1.5, 0, 0)), "LeftArm": Vector((-1.5, 0, 0)),
     "RightLeg": Vector((0.5, -2, 0)), "LeftLeg": Vector((-0.5, -2, 0)),
 }
-# 4546389367 is an invisible accessory (fully transparent texture) and is skipped.
-MESH_FILES = {"3963788594": "trilby", "4820755895": "glasses"}
+# Accessory meshes by Roblox asset id. 4546389367 is an invisible accessory (transparent texture).
+ACCESSORIES = {"3963788594": "Trilby", "4820755895": "Glasses", "123160367470095": "TacBelts", "138076927962847": "Scarf"}
 SKIP_MESHES = {"4546389367"}
-GROUP_SIZE = {"Torso": (2, 2, 1), "RightArm": (1, 2, 1), "LeftArm": (1, 2, 1), "RightLeg": (1, 2, 1), "LeftLeg": (1, 2, 1)}
+SMOOTH_ANGLE = {"Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
 
 
 def to_blender(v):
@@ -53,12 +57,9 @@ def cframe_matrix(c):
     return Matrix(((r00, r01, r02, x), (r10, r11, r12, y), (r20, r21, r22, z), (0, 0, 0, 1)))
 
 
-MATS = {}
-
-
 def load_rgba(file):
     # Re-encode as 8-bit RGBA: grayscale / 1-bit PNGs otherwise export as empty glTF images.
-    src = bpy.data.images.load(os.path.join(SRC, file), check_existing=False)
+    src = bpy.data.images.load(os.path.join(SRC, "textures", file), check_existing=False)
     w, h = src.size
     px = np.array(src.pixels[:], dtype=np.float32)
     bpy.data.images.remove(src)
@@ -71,7 +72,10 @@ def load_rgba(file):
     return img
 
 
-def mat(name, color="ffffff", rough=0.7, metal=0.0, image=None, clearcoat=0.0):
+MATS = {}
+
+
+def mat(name, color="ffffff", rough=0.55, metal=0.0, image=None, coat=0.0, sheen=0.0):
     if name in MATS:
         return MATS[name]
     m = bpy.data.materials.new(name)
@@ -80,8 +84,9 @@ def mat(name, color="ffffff", rough=0.7, metal=0.0, image=None, clearcoat=0.0):
     bsdf.inputs["Base Color"].default_value = (*lin(hex_rgb(color)), 1)
     bsdf.inputs["Roughness"].default_value = rough
     bsdf.inputs["Metallic"].default_value = metal
-    bsdf.inputs["Specular IOR Level"].default_value = 0.35
-    bsdf.inputs["Coat Weight"].default_value = clearcoat
+    bsdf.inputs["Specular IOR Level"].default_value = 0.4
+    bsdf.inputs["Coat Weight"].default_value = coat
+    bsdf.inputs["Sheen Weight"].default_value = sheen
     if image:
         tex = m.node_tree.nodes.new("ShaderNodeTexImage")
         tex.image = load_rgba(image)
@@ -90,138 +95,99 @@ def mat(name, color="ffffff", rough=0.7, metal=0.0, image=None, clearcoat=0.0):
     return m
 
 
-class Group:
-    """Collects geometry for one R6 part in its local Roblox space."""
-
-    def __init__(self, name):
-        self.name = name
-        self.bm = bmesh.new()
-        self.uv = self.bm.loops.layers.uv.new("UVMap")
-        self.materials = []
-
-    def mat_index(self, m):
-        if m not in self.materials:
-            self.materials.append(m)
-        return self.materials.index(m)
-
-    def add_bmesh(self, src, m, matrix):
-        """Append another bmesh (already in Roblox part space) transformed by matrix."""
-        idx = self.mat_index(m)
-        src_uv = src.loops.layers.uv.active
-        vmap = {}
-        for v in src.verts:
-            vmap[v] = self.bm.verts.new(matrix @ v.co)
-        for f in src.faces:
-            try:
-                nf = self.bm.faces.new([vmap[v] for v in f.verts])
-            except ValueError:
-                continue
-            nf.material_index = idx
-            nf.smooth = f.smooth
-            if src_uv:
-                for l_new, l_old in zip(nf.loops, f.loops):
-                    l_new[self.uv].uv = l_old[src_uv].uv
-
-    def finish(self):
-        for v in self.bm.verts:
-            v.co = to_blender(v.co)
-        self.bm.normal_update()
-        mesh = bpy.data.meshes.new(self.name)
-        self.bm.to_mesh(mesh)
-        self.bm.free()
-        for m in self.materials:
-            mesh.materials.append(m)
-        obj = bpy.data.objects.new(self.name, mesh)
-        bpy.context.scene.collection.objects.link(obj)
-        mod = obj.modifiers.new("smooth", "WEIGHTED_NORMAL")
-        mod.keep_sharp = True
-        return obj
-
-
-def mesh_from_json(path, scale):
-    data = json.load(open(path))
+def load_mesh(name, scale):
+    data = json.load(open(os.path.join(SRC, "meshes", f"{name}.json")))
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
-    p = data["position"]
+    p, idx, uvs = data["position"], data["index"], data["uv"]
     verts = [bm.verts.new((p[i] * scale[0], p[i + 1] * scale[1], p[i + 2] * scale[2])) for i in range(0, len(p), 3)]
-    idx, uvs = data["index"], data["uv"]
     for t in range(0, len(idx), 3):
         tri = idx[t:t + 3]
         try:
             f = bm.faces.new([verts[i] for i in tri])
         except ValueError:
             continue
-        f.smooth = True
         for loop, i in zip(f.loops, tri):
             loop[uv].uv = (uvs[i * 2], 1 - uvs[i * 2 + 1]) if uvs else (0.5, 0.5)
-    return bm
-
-
-def rounded_box(size, bevel=0.05, segments=2):
-    bm = bmesh.new()
-    bmesh.ops.create_cube(bm, size=1.0)
-    bmesh.ops.scale(bm, vec=size, verts=bm.verts)
-    if bevel:
-        bmesh.ops.bevel(bm, geom=list(bm.edges), offset=bevel, segments=segments, profile=0.5, affect="EDGES", clamp_overlap=True)
-    for f in bm.faces:
-        f.smooth = True
-    bm.loops.layers.uv.new("UVMap")
-    return bm
-
-
-def tube(points, radius, ring=10, flat=1.0, taper=None):
-    """Swept tube along points (Roblox space). flat squashes the cross-section (cloth)."""
-    bm = bmesh.new()
-    pts = [Vector(p) for p in points]
-    rings = []
-    for i, p in enumerate(pts):
-        t = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
-        side = t.cross(Vector((0, 0, 1))) if abs(t.z) < 0.9 else t.cross(Vector((1, 0, 0)))
-        side.normalize()
-        up = side.cross(t).normalized()
-        r = radius * (taper[i] if taper else 1)
-        rings.append([bm.verts.new(p + side * math.cos(a) * r + up * math.sin(a) * r * flat)
-                      for a in (2 * math.pi * k / ring for k in range(ring))])
-    for a, b in zip(rings, rings[1:]):
-        for k in range(ring):
-            f = bm.faces.new([a[k], a[(k + 1) % ring], b[(k + 1) % ring], b[k]])
-            f.smooth = True
-    for cap in (rings[0], rings[-1][::-1]):
-        bm.faces.new(cap[::-1] if cap is rings[0] else cap)
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     bm.normal_update()
-    bm.loops.layers.uv.new("UVMap")
     return bm
 
 
-def torus(major, minor, center, scale=(1, 1, 1), rot_x=0.0, seg=36, ring=12):
-    bm = bmesh.new()
-    rings = []
-    for i in range(seg):
-        a = 2 * math.pi * i / seg
-        c = Vector((math.cos(a) * major, 0, math.sin(a) * major))
-        n = Vector((math.cos(a), 0, math.sin(a)))
-        rings.append([bm.verts.new(c + n * math.cos(b) * minor + Vector((0, math.sin(b) * minor, 0)))
-                      for b in (2 * math.pi * k / ring for k in range(ring))])
-    for i in range(seg):
-        a, b = rings[i], rings[(i + 1) % seg]
-        for k in range(ring):
-            f = bm.faces.new([a[k], b[k], b[(k + 1) % ring], a[(k + 1) % ring]])
-            f.smooth = True
-    bmesh.ops.scale(bm, vec=scale, verts=bm.verts)
-    bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(rot_x, 3, "X"))
-    bmesh.ops.translate(bm, vec=center, verts=bm.verts)
-    bm.normal_update()
-    bm.loops.layers.uv.new("UVMap")
-    return bm
-
-
-def head_uv_project(bm):
+def project_face(bm):
+    """The dynamic head's own texture is a FACS sheet; Studio shows the 'sus' eyes, so project the face decal."""
     uv = bm.loops.layers.uv.active
     for f in bm.faces:
         front = f.normal.z < -0.2
         for loop in f.loops:
             x, y = loop.vert.co.x, loop.vert.co.y
             loop[uv].uv = ((0.6 - x) / 1.2, (y + 0.6) / 1.2) if front else (0.02, 0.98)
+
+
+def tube(points, radius, ring=8):
+    bm = bmesh.new()
+    pts = [Vector(p) for p in points]
+    rings = []
+    for i, p in enumerate(pts):
+        t = (pts[min(i + 1, len(pts) - 1)] - pts[max(i - 1, 0)]).normalized()
+        side = t.cross(Vector((0, 0, 1))).normalized()
+        up = side.cross(t).normalized()
+        rings.append([bm.verts.new(p + side * math.cos(a) * radius + up * math.sin(a) * radius)
+                      for a in (2 * math.pi * k / ring for k in range(ring))])
+    for a, b in zip(rings, rings[1:]):
+        for k in range(ring):
+            bm.faces.new([a[k], a[(k + 1) % ring], b[(k + 1) % ring], b[k]])
+    bm.loops.layers.uv.new("UVMap")
+    return bm
+
+
+def box(size):
+    bm = bmesh.new()
+    bmesh.ops.create_cube(bm, size=1.0)
+    bmesh.ops.scale(bm, vec=size, verts=bm.verts)
+    bmesh.ops.bevel(bm, geom=list(bm.edges), offset=0.008, segments=1, affect="EDGES")
+    bm.loops.layers.uv.new("UVMap")
+    return bm
+
+
+class Group:
+    def __init__(self, name):
+        self.name = name
+        self.pieces = []  # (bmesh, material, matrix, smooth_angle)
+
+    def add(self, bm, material, matrix, angle=35, subdivide=0):
+        self.pieces.append((bm, material, matrix, angle, subdivide))
+
+    def build(self):
+        objects = []
+        for i, (bm, material, matrix, angle, subdivide) in enumerate(self.pieces):
+            bmesh.ops.transform(bm, matrix=matrix, verts=bm.verts)
+            for v in bm.verts:
+                v.co = to_blender(v.co)
+            bm.normal_update()
+            mesh = bpy.data.meshes.new(f"{self.name}_{i}")
+            bm.to_mesh(mesh)
+            bm.free()
+            mesh.materials.append(material)
+            mesh.shade_smooth()
+            mesh.set_sharp_from_angle(angle=math.radians(angle))
+            obj = bpy.data.objects.new(f"{self.name}_{i}", mesh)
+            bpy.context.scene.collection.objects.link(obj)
+            if subdivide:
+                mod = obj.modifiers.new("subdivide", "SUBSURF")
+                mod.levels = subdivide
+                with bpy.context.temp_override(object=obj, active_object=obj):
+                    bpy.ops.object.modifier_apply(modifier=mod.name)
+            objects.append(obj)
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in objects:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = objects[0]
+        bpy.ops.object.join()
+        joined = bpy.context.view_layer.objects.active
+        joined.name = self.name
+        joined.data.name = self.name
+        return joined
 
 
 def main():
@@ -235,70 +201,48 @@ def main():
 
     parts = json.load(open(os.path.join(SRC, "parts.json")))["parts"]
     groups = {name: Group(name) for name in GROUP_CENTER}
-    body_color = {"111111": "16161a", "f8f8f8": "f4f4f2", "635f62": "6b6870"}
+    body = {"111111": mat("BodyBlack", "17171a", 0.5, coat=0.15), "f8f8f8": mat("BodyWhite", "f2f2ef", 0.48, coat=0.2),
+            "635f62": mat("BodyGrey", "6b6870", 0.55)}
 
     for p in parts:
-        group = groups[p["group"]]
-        center = GROUP_CENTER[p["group"]]
-        world = Matrix.Translation(-center) @ cframe_matrix(p["cframe"])
-        size = Vector(p["size"])
         mesh_id = "".join(ch for ch in p["meshId"] if ch.isdigit())
-        if mesh_id in SKIP_MESHES:
+        if mesh_id in SKIP_MESHES or not p["group"]:
             continue
-        name = p["name"].split("/")[0]
+        group = groups[p["group"]]
+        matrix = Matrix.Translation(-GROUP_CENTER[p["group"]]) @ cframe_matrix(p["cframe"])
+        scale = [s / m for s, m in zip(p["size"], p["meshSize"])]
         if p["name"] == "Head":
-            bm = mesh_from_json(os.path.join(SRC, "head.mesh.json"), (1, 1, 1))
-            bm.normal_update()
-            head_uv_project(bm)
-            group.add_bmesh(bm, mat("Face", "ffffff", 0.45, image="face.png", clearcoat=0.3), world)
-        elif mesh_id in MESH_FILES:
-            key = MESH_FILES[mesh_id]
-            scale = [s / m for s, m in zip(p["size"], p["meshSize"])]
-            bm = mesh_from_json(os.path.join(SRC, f"{key}.mesh.json"), scale)
-            look = {"trilby": mat("Trilby", "ffffff", 0.55, image="trilby.png"),
-                    "glasses": mat("Glasses", "ffffff", 0.35, image="glasses.png", clearcoat=0.6)}[key]
-            group.add_bmesh(bm, look, world)
-        elif p["group"] in GROUP_SIZE and "Accessory" not in name and not getattr(group, "has_body", False):
-            # Blocky R15 segments line up exactly with the R6 part, so one rounded box reads cleaner.
-            color = body_color.get(p["color"], p["color"])
-            group.add_bmesh(rounded_box(GROUP_SIZE[p["group"]], bevel=0.07, segments=3), mat(f"Body_{color}", color, 0.62), Matrix())
-            group.has_body = True
+            bm = load_mesh("Head", scale)
+            project_face(bm)
+            group.add(bm, mat("Face", rough=0.38, image="face.png", coat=0.35), matrix, SMOOTH_ANGLE["Head"], subdivide=1)
+        elif mesh_id in ACCESSORIES:
+            key = ACCESSORIES[mesh_id]
+            look = {
+                "Trilby": mat("Trilby", rough=0.6, image="trilby.png", sheen=0.3),
+                "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.6),
+                "Scarf": mat("Scarf", rough=0.62, image="scarf.png", sheen=0.5),
+                "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png", coat=0.2),
+            }[key]
+            group.add(load_mesh(key, scale), look, matrix, SMOOTH_ANGLE[key])
+        else:
+            group.add(load_mesh(p["name"], scale), body[p["color"]], matrix, 30)
 
-    # Procedural rebuilds of auth-locked accessories (Torso space).
+    # Shirt graphic (silver cross necklace): the decal is auth-locked and not in the local cache.
     torso = groups["Torso"]
-    scarf = mat("Scarf", "151518", 0.42, clearcoat=0.25)
-    torso.add_bmesh(torus(0.74, 0.27, (0, 1.02, -0.02), (1.08, 1, 0.92), 0.05), scarf, Matrix())
-    torso.add_bmesh(torus(0.64, 0.22, (0, 1.32, -0.04), (1.0, 1, 0.92), -0.08), scarf, Matrix())
-    torso.add_bmesh(tube([(-0.52, 0.95, -0.62), (-0.66, 0.5, -0.66), (-0.78, 0.0, -0.62), (-0.86, -0.45, -0.58), (-0.92, -0.72, -0.56)],
-                         0.3, ring=12, flat=0.22, taper=[1.0, 1.08, 1.12, 1.0, 0.7]), scarf, Matrix())
-    torso.add_bmesh(tube([(-0.25, 0.95, 0.6), (-0.3, 0.45, 0.62), (-0.32, 0.0, 0.6), (-0.3, -0.42, 0.58)],
-                         0.2, ring=10, flat=0.25, taper=[1.0, 1.05, 0.95, 0.6]), scarf, Matrix())
-    silver = mat("Silver", "d8dade", 0.22, metal=1.0)
-    torso.add_bmesh(tube([(-0.42, 0.85, -0.52), (-0.2, 0.45, -0.515), (0.0, 0.25, -0.515)], 0.018, ring=6), silver, Matrix())
-    torso.add_bmesh(tube([(0.42, 0.85, -0.52), (0.2, 0.45, -0.515), (0.0, 0.25, -0.515)], 0.018, ring=6), silver, Matrix())
-    torso.add_bmesh(rounded_box((0.07, 0.46, 0.04), 0.01), silver, Matrix.Translation((0, 0.0, -0.525)))
-    torso.add_bmesh(rounded_box((0.3, 0.07, 0.04), 0.01), silver, Matrix.Translation((0, 0.12, -0.525)))
-    belt = mat("Belt", "1c1c1f", 0.5)
-    for size, pos in [((2.08, 0.17, 0.05), (0, -0.82, -0.53)), ((2.08, 0.17, 0.05), (0, -0.82, 0.53)),
-                      ((0.05, 0.17, 1.1), (1.04, -0.82, 0)), ((0.05, 0.17, 1.1), (-1.04, -0.82, 0))]:
-        torso.add_bmesh(rounded_box(size, 0.015), belt, Matrix.Translation(pos))
-    for x in (1.07, -1.07):
-        torso.add_bmesh(rounded_box((0.16, 0.42, 0.3), 0.04), belt, Matrix.Translation((x, -1.0, 0.05)))
-    gold = mat("Badge", "b8964c", 0.3, metal=0.9)
-    torso.add_bmesh(torus(0.11, 0.035, (0, 0, 0), (1, 1, 1), math.pi / 2, 20, 8), gold, Matrix.Translation((0.2, -0.82, -0.58)))
-    torso.add_bmesh(rounded_box((0.16, 0.2, 0.03), 0.02), gold, Matrix.Translation((0.2, -0.82, -0.58)))
-    steel = mat("Steel", "8e9399", 0.3, metal=1.0)
-    for dx in (0.0, 0.14):
-        torso.add_bmesh(torus(0.085, 0.025, (0, 0, 0), (1, 1, 1), math.pi / 2, 20, 8), steel, Matrix.Translation((0.62 + dx, -0.86, -0.59)))
-    torso.add_bmesh(rounded_box((0.16, 0.08, 0.04), 0.01), steel, Matrix.Translation((-0.25, -0.82, -0.575)))
+    silver = mat("Silver", "d8dade", 0.2, metal=1.0)
+    torso.add(tube([(-0.42, 0.85, -0.52), (-0.2, 0.45, -0.515), (0.0, 0.25, -0.515)], 0.016), silver, Matrix(), 60)
+    torso.add(tube([(0.42, 0.85, -0.52), (0.2, 0.45, -0.515), (0.0, 0.25, -0.515)], 0.016), silver, Matrix(), 60)
+    torso.add(box((0.07, 0.46, 0.035)), silver, Matrix.Translation((0, 0.0, -0.522)), 30)
+    torso.add(box((0.3, 0.07, 0.035)), silver, Matrix.Translation((0, 0.12, -0.522)), 30)
 
     for g in groups.values():
-        g.finish()
+        g.build()
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", use_selection=True, export_yup=True,
-                              export_apply=True, export_image_format="WEBP", export_materials="EXPORT")
+                              export_apply=True, export_image_format="WEBP", export_image_quality=88,
+                              export_materials="EXPORT")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(SRC, "sussy-r6.blend"), copy=True)
     print("exported", OUT, os.path.getsize(OUT), "bytes")
 
