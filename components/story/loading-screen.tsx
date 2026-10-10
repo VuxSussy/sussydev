@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
-type LoadingScreenProps = { progress: number; done: boolean; reducedMotion: boolean };
+type LoadingScreenProps = { progress: number; done: boolean; reducedMotion: boolean; label: string };
 
 /** Full-screen loader: Sussy's head as a 2D sprite spinning like a coin while the 3D scene loads. */
-export function LoadingScreen({ progress, done, reducedMotion }: LoadingScreenProps) {
+export function LoadingScreen({ progress, done, reducedMotion, label }: LoadingScreenProps) {
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     if (!done) return;
@@ -21,7 +21,7 @@ export function LoadingScreen({ progress, done, reducedMotion }: LoadingScreenPr
         <Image className="loader-head" src="/brand/sussy-head.png" alt="" width={384} height={384} priority unoptimized />
         <span className="loader-shadow" />
       </div>
-      <p className="loader-label">Đang gọi Sussy<span aria-hidden="true">…</span></p>
+      <p className="loader-label">{label}<span aria-hidden="true">…</span></p>
       <div className="loader-bar" aria-hidden="true"><span style={{ transform: `scaleX(${Math.max(progress, 0.04)})` }} /></div>
       <p className="loader-percent" aria-hidden="true">{String(percent).padStart(3, "0")}%</p>
     </output>
