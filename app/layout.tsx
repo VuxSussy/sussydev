@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Archivo, Space_Grotesk } from 'next/font/google';
+import { PortfolioShell } from '@/components/story/portfolio-shell';
 import './globals.css';
 
 const display = Archivo({ variable: '--font-display', subsets: ['latin', 'vietnamese'], weight: ['300', '400', '500', '600'] });
@@ -25,7 +26,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <link rel="preload" href="/brand/sussy-head.png" as="image" />
         <link rel="preload" href="/models/sussy/sussy-r6.glb" as="fetch" crossOrigin="anonymous" />
       </head>
-      <body className={`${display.variable} ${body.variable} antialiased`}>{children}</body>
+      <body className={`${display.variable} ${body.variable} antialiased`}><PortfolioShell>{children}</PortfolioShell></body>
     </html>
   );
 }

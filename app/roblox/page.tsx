@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { PortfolioStory } from "@/components/story/portfolio-story";
 
 const title = "Sussy / 002 — Portfolio Roblox Developer";
 const description = "Portfolio Roblox: Luau, Roblox Studio, animation R6 và gameplay nhiều người chơi — Sussy chạy qua từng công cụ.";
@@ -12,5 +11,5 @@ export const metadata: Metadata = {
 };
 
 export default function RobloxPortfolio() {
-  return <PortfolioStory key="roblox" mode="roblox" />;
+  return null;
 }

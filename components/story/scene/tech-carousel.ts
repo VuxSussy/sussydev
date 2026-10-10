@@ -15,7 +15,6 @@ type Item = {
   ring: THREE.Mesh;
   ringMaterial: THREE.MeshBasicMaterial;
   color: THREE.Color;
-  focus: number;
 };
 
 /** Extruded simple-icons logo, centred, ~1.8 studs wide, facing +Z. */
@@ -38,6 +37,7 @@ function soften(hex: string) {
 
 export class TechCarousel {
   readonly group = new THREE.Group();
+  readonly pickables: THREE.Object3D[] = [];
   private items: Item[] = [];
   private plinthGeometry = new RoundedBoxGeometry(2.4, 0.24, 2.4, 3, 0.09);
   private ringGeometry = new THREE.RingGeometry(1.32, 1.4, 64);
@@ -62,14 +62,10 @@ export class TechCarousel {
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.25;
       root.add(plinth, logo, ring);
+      this.pickables.push(logo, plinth);
       this.group.add(root);
-      this.items.push({ root, logo, logoMaterial, ring, ringMaterial, color, focus: 0 });
+      this.items.push({ root, logo, logoMaterial, ring, ringMaterial, color });
     });
-  }
-
-  /** Meshes the pointer can hover/click. */
-  get pickables() {
-    return this.items.flatMap((item) => [item.logo, item.root.children[0]]);
   }
 
   /**
@@ -77,7 +73,7 @@ export class TechCarousel {
    * @param visibility 0..1 conveyor visibility
    * @param hovered index under the pointer, or -1
    */
-  update(position: number, visibility: number, hovered: number, time: number, dt: number) {
+  update(position: number, visibility: number, hovered: number, time: number) {
     this.group.visible = visibility > 0.002;
     if (!this.group.visible) return;
     const rise = 1 - Math.pow(1 - visibility, 3);
@@ -86,9 +82,7 @@ export class TechCarousel {
       const item = this.items[i];
       const offset = i - position;
       const distance = Math.abs(offset);
-      const target = Math.max(1 - distance, hovered === i ? 0.75 : 0);
-      item.focus += (target - item.focus) * (1 - Math.exp(-10 * dt));
-      const f = item.focus;
+      const f = Math.max(1 - distance, hovered === i ? 0.75 : 0);
       const edge = 1 - smoothstep(2.2, 4.2, distance);
       item.root.position.x = offset * SPACING;
       item.root.position.z = -Math.pow(distance, 1.6) * 0.35;

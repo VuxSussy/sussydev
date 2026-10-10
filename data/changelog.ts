@@ -8,6 +8,16 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "0.7",
+    date: "2026-10-11",
+    title: "Mượt hơn khi đổi chế độ",
+    notes: [
+      "Chuyển Dev ↔ Roblox giữ nguyên chương đang xem, không tải lại nhân vật hay renderer.",
+      "Tối ưu từng frame và giải phóng tài nguyên WebGL gọn hơn.",
+      "49 test tự động cho toán học cuộn trang, rig R6 và bộ trích animation .rbxm.",
+    ],
+  },
+  {
     version: "0.6",
     date: "2026-10-11",
     title: "Sussy R6 & nhật ký",

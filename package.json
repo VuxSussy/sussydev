@@ -10,6 +10,8 @@
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "oxfmt",
     "extract:anims": "node scripts/extract-rbxm-anims.ts",
     "build:model": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-sussy.py && npm run optimize:model",
@@ -51,12 +53,14 @@
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-rsc": "0.5.26",
     "draco3d": "^1.5.7",
+    "happy-dom": "20.14.6",
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
     "vite": "8.0.13",
+    "vitest": "5.0.3",
     "wrangler": "4.92.0"
   },
   "type": "module"

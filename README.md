@@ -16,10 +16,15 @@ Mở `http://localhost:3000`.
 ## Kiểm tra và build
 
 ```bash
+npm test
 npm run lint
 npx tsc --noEmit
 npm run build
 ```
+
+Vitest kiểm tra toán học scroll, rig/clip R6 và parser/CLI bằng fixture `.rbxm`
+trong `tests/fixtures`, đối chiếu với `public/anims`. Dùng `npm run test:watch`
+khi chỉnh logic; test không cần Studio hay kết nối mạng.
 
 ## Chỉnh nội dung
 
@@ -34,6 +39,7 @@ Mọi nội dung nằm trong `data/portfolio.ts`:
 
 ```
 components/story/portfolio-story.tsx    overlay HTML theo 4 chương, scroll → story (0..4)
+components/story/portfolio-shell.tsx    shell trong layout chung, giữ canvas khi đổi Dev ↔ Roblox
 components/story/scene/story-scene.ts   renderer WebGL duy nhất, camera theo keyframe, adaptive DPR
 components/story/scene/tech-carousel.ts băng chuyền logo + hiệu ứng focus/hover
 components/story/scene/environment.ts   sky shader, sàn studio, đồi hoàng hôn, cây, cỏ, đom đóm
@@ -73,7 +79,13 @@ npm run build:model
 
 ## Hiệu năng & trợ năng
 
-- Một canvas cố định, dừng render khi tab ẩn, DPR tự hạ khi FPS < 45, bóng tiếp xúc giả thay cho shadow map.
+- Một canvas cố định, dừng render khi tab ẩn, DPR tự hạ khi FPS < 45; chỉ tăng lại sau hai mẫu ổn định.
+  Làm nóng shader trước khi hiện scene, bóng tiếp xúc giả thay cho shadow map.
+- Dev ↔ Roblox dùng chung avatar/renderer; màn che đầu Sussy và camera lùi nhẹ, giữ tiến độ chương dù stack dài khác nhau.
 - Three.js được tách chunk và tải động sau khi chữ đã hiển thị.
-- Nút "Giảm chuyển động" (nhớ theo trình duyệt) và tôn trọng `prefers-reduced-motion`: tắt nội suy, Sussy đứng idle.
+- Nút "Giảm chuyển động" (nhớ theo trình duyệt) và tôn trọng `prefers-reduced-motion`: tắt nội suy/animation CSS,
+  giữ tư thế idle; chỉ vẽ lại scene khi thay đổi vị trí cuộn, con trỏ hoặc kích thước.
 - Danh sách tech có bản HTML (chip) dùng được bằng bàn phím: Tab / ← →.
+- Hook `window.__sussyScene` chỉ bật trong dev với `/?debug` hoặc `/roblox?debug`.
+
+Chưa có kết quả FPS trên thiết bị thật hoặc Lighthouse cho pass Codex này; xem giới hạn kiểm tra trong `HANDOFF.md`.
