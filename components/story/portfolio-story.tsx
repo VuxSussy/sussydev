@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play } from "lucide-react";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
-import { CHAPTERS, chapterIndex, storyForTech, storyFromSections, techPosition } from "@/lib/story";
+import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { LoadingScreen } from "./loading-screen";
@@ -48,6 +49,7 @@ function contactText(contact: ContactLink) {
 }
 
 export function PortfolioStory({ mode }: { mode: Mode }) {
+  const router = useRouter();
   const profile = portfolio.profiles[mode];
   const techs = profile.techStack;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -57,6 +59,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const chipsRef = useRef<HTMLFieldSetElement>(null);
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, () => false);
   const reducedRef = useRef(reducedMotion);
+  const storyRef = useRef(0);
+  const previousMode = useRef(mode);
+  const pendingStory = useRef<number | null>(null);
+  const switchTimer = useRef<number | undefined>(undefined);
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [webglFailed, setWebglFailed] = useState(false);
@@ -64,6 +70,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const [techIndex, setTechIndex] = useState(0);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
+  const [switchingMode, setSwitchingMode] = useState<Mode | null>(null);
 
   useEffect(() => {
     reducedRef.current = reducedMotion;
@@ -76,15 +83,40 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   };
 
   const scrollToStory = useCallback((story: number) => {
-    const index = Math.min(CHAPTERS.length - 1, Math.floor(story));
-    const section = sectionRefs.current[index];
-    if (!section) return;
-    const local = story - index;
-    const top = window.scrollY + section.getBoundingClientRect().top + local * section.offsetHeight - window.innerHeight * 0.5;
-    window.scrollTo({ top: Math.max(0, top), behavior: reducedRef.current ? "auto" : "smooth" });
+    const top = scrollTopForStory(story, sectionRefs.current, window.innerHeight, window.scrollY);
+    if (top !== null) window.scrollTo({ top, behavior: reducedRef.current ? "instant" : "smooth" });
   }, []);
 
   const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory, techs.length]);
+  const selectSceneTech = useEffectEvent(selectTech);
+  const getSceneProfile = useEffectEvent(() => ({ techs, theme: mode }));
+
+  const switchMode = (next: Mode) => {
+    if (next === mode || switchingMode !== null) return;
+    pendingStory.current = storyFromSections(sectionRefs.current, window.innerHeight);
+    setSwitchingMode(next);
+    sceneRef.current?.setDeparting(!reducedRef.current);
+    switchTimer.current = window.setTimeout(() => router.push(modeHref(next), { scroll: false }), reducedRef.current ? 0 : 240);
+  };
+
+  useLayoutEffect(() => {
+    if (previousMode.current === mode) return;
+    previousMode.current = mode;
+    const story = pendingStory.current ?? storyRef.current;
+    pendingStory.current = null;
+    const top = scrollTopForStory(story, sectionRefs.current, window.innerHeight, window.scrollY);
+    if (top !== null) window.scrollTo({ top, behavior: "instant" });
+    storyRef.current = story;
+    setChapter(chapterIndex(story));
+    setTechIndex(Math.round(techPosition(story, techs.length)));
+    setHoveredTech(-1);
+    sceneRef.current?.setProfile(mode, techs, story);
+    sceneRef.current?.setDeparting(false);
+    const frame = requestAnimationFrame(() => setSwitchingMode(null));
+    return () => cancelAnimationFrame(frame);
+  }, [mode, techs]);
+
+  useEffect(() => () => window.clearTimeout(switchTimer.current), []);
 
   // Scroll → story value → scene + overlay state.
   useEffect(() => {
@@ -92,6 +124,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const update = () => {
       frame = 0;
       const story = storyFromSections(sectionRefs.current, window.innerHeight);
+      storyRef.current = story;
       sceneRef.current?.setStory(story);
       setChapter(chapterIndex(story));
       setTechIndex(Math.round(techPosition(story, techs.length)));
@@ -114,25 +147,25 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     if (!canvas) return;
     let disposed = false;
     let scene: StoryScene | null = null;
+    let readyTimer: number | undefined;
     const start = performance.now();
     import("./scene/story-scene")
       .then(async ({ StoryScene }) => {
         if (disposed) return;
         scene = new StoryScene({
           canvas,
-          techs,
-          theme: mode,
+          ...getSceneProfile(),
           reducedMotion: reducedRef.current,
           onProgress: (value) => !disposed && setProgress(value),
           onTechHover: (index) => !disposed && setHoveredTech(index),
-          onTechSelect: (index) => selectTech(index),
+          onTechSelect: (index) => selectSceneTech(index),
         });
         sceneRef.current = scene;
         if (process.env.NODE_ENV !== "production") (window as unknown as { __sussyScene?: StoryScene }).__sussyScene = scene;
         scene.setStory(storyFromSections(sectionRefs.current, window.innerHeight));
         await scene.load();
         const wait = Math.max(0, 700 - (performance.now() - start));
-        window.setTimeout(() => !disposed && setReady(true), wait);
+        readyTimer = window.setTimeout(() => !disposed && setReady(true), wait);
       })
       .catch(() => {
         if (disposed) return;
@@ -141,10 +174,11 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       });
     return () => {
       disposed = true;
+      window.clearTimeout(readyTimer);
       scene?.dispose();
       sceneRef.current = null;
     };
-  }, [selectTech, techs, mode]);
+  }, []);
 
   async function copyEmail(value: string) {
     try {
@@ -171,8 +205,12 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const atEnd = chapter === CHAPTERS.length - 1;
 
   return (
-    <div className="site" data-mode={mode}>
+    <div className="site" data-mode={mode} data-reduced-motion={reducedMotion} aria-busy={switchingMode !== null}>
       <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
+      <div className={`mode-curtain${switchingMode ? " is-active" : ""}`} aria-hidden={switchingMode === null}>
+        <Image className="loader-head" src="/brand/sussy-head.png" alt="" width={384} height={384} unoptimized />
+        <output className="loader-label" aria-live="polite">{portfolio.profiles[switchingMode ?? mode].loadingLabel}</output>
+      </div>
       <a className="skip-link" href="#main">Chuyển đến nội dung chính</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
@@ -189,7 +227,11 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         </a>
         <nav className="mode-switch" aria-label="Chọn portfolio">
           {MODES.map((item) => (
-            <Link key={item} href={modeHref(item)} aria-current={item === mode ? "page" : undefined}>
+            <Link key={item} href={modeHref(item)} scroll={false} aria-current={item === mode ? "page" : undefined} onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              switchMode(item);
+            }}>
               {portfolio.profiles[item].label}
             </Link>
           ))}

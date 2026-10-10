@@ -85,6 +85,8 @@ export class StoryScene {
   private lookAt = new THREE.Vector3();
   private story = 0;
   private storyTarget = 0;
+  private departure = 0;
+  private departureTarget = 0;
   private hovered = -1;
   private treadmill = new THREE.Vector2();
   private reducedMotion: boolean;
@@ -182,6 +184,30 @@ export class StoryScene {
     this.storyTarget = story;
   }
 
+  setDeparting(value: boolean) {
+    this.departureTarget = value ? 1 : 0;
+  }
+
+  setProfile(theme: SceneTheme, techs: readonly TechStack[], story: number) {
+    if (this.options.theme !== theme) {
+      this.options.theme = theme;
+      this.options.techs = techs;
+      this.sky.setTheme(theme);
+      this.floor.setTheme(theme);
+      this.studioRim.set(theme === "roblox" ? "#6aa8ff" : "#9fb0ff");
+      this.studioFog.set(theme === "roblox" ? "#0a1120" : "#0e0e11");
+      this.scene.remove(this.carousel.group);
+      this.carousel.dispose();
+      this.carousel = new TechCarousel(techs, theme === "roblox" ? "#6cb4ff" : "#f3b47c");
+      this.scene.add(this.carousel.group);
+      this.hovered = -1;
+      this.jumpTime = -1;
+      this.lastChapter = -1;
+      this.treadmill.set(0, 0);
+    }
+    this.story = this.storyTarget = story;
+  }
+
   setReducedMotion(value: boolean) {
     this.reducedMotion = value;
   }
@@ -259,6 +285,8 @@ export class StoryScene {
     this.parallax.set(damp(this.parallax.x, px, 3, dt), damp(this.parallax.y, py, 3, dt));
     this.camera.position.set(key.cam[0] + this.parallax.x * 0.45, key.cam[1] + this.parallax.y * 0.25, key.cam[2]);
     this.lookAt.set(...key.target);
+    this.departure = reduced ? 0 : damp(this.departure, this.departureTarget, 10, dt);
+    this.camera.position.sub(this.lookAt).multiplyScalar(1 + this.departure * 0.08).add(this.lookAt);
     if (this.debugView) {
       this.camera.position.set(...this.debugView.position);
       this.lookAt.set(...this.debugView.target);

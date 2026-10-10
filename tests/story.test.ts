@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, clamp01, damp, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, clamp01, damp, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -15,6 +15,21 @@ describe("scroll story", () => {
   it("clamps the chapter rail including the final chapter", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual(["mo-dau", "tech-stack", "du-an", "lien-he"]);
     expect([-1, 0, 0.64, 0.65, 1.65, 2.65, 4, 10].map(chapterIndex)).toEqual([0, 0, 0, 1, 2, 3, 3, 3]);
+  });
+
+  it("restores the same story when the destination chapters have different heights", () => {
+    for (const techHeight of [4200, 3600]) {
+      const heights = [1500, techHeight, 2500, 1900];
+      const tops = [0, 1500, 1500 + techHeight, 4000 + techHeight];
+      for (const value of [0.5, 1.45, 1.89, 2.4, 3.5]) {
+        const sections = heights.map((height, i) => section(tops[i], height));
+        const scrollY = scrollTopForStory(value, sections, 1000, 0)!;
+        expect(storyFromSections(heights.map((height, i) => section(tops[i] - scrollY, height)), 1000)).toBeCloseTo(value, 10);
+      }
+    }
+    expect(scrollTopForStory(-1, [section(0, 1500)], 1000, 0)).toBe(0);
+    expect(scrollTopForStory(4, [null, null, null, section(5000, 1900)], 1000, 100)).toBe(6500);
+    expect(scrollTopForStory(1, [], 1000, 0)).toBeNull();
   });
 
   it("eases monotonically with fixed endpoints", () => {

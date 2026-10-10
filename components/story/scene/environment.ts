@@ -72,7 +72,12 @@ export function createSky(theme: SceneTheme) {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(400, 48, 24), material);
   mesh.frustumCulled = false;
   mesh.renderOrder = -10;
-  return { mesh, material };
+  return { mesh, material, setTheme(theme: SceneTheme) {
+    const t = THEMES[theme];
+    material.uniforms.uBottom.value.set(...t.skyBottom);
+    material.uniforms.uTop.value.set(...t.skyTop);
+    material.uniforms.uGlow.value.set(...t.skyGlow);
+  } };
 }
 
 /** Unlit studio floor with a soft radial falloff and a grid that scrolls like a treadmill. */
@@ -117,7 +122,14 @@ export function createStudioFloor(theme: SceneTheme) {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), material);
   mesh.rotation.x = -Math.PI / 2;
   mesh.renderOrder = -5;
-  return { mesh, material };
+  return { mesh, material, setTheme(theme: SceneTheme) {
+    const t = THEMES[theme];
+    material.uniforms.uNear.value.set(...t.floorNear);
+    material.uniforms.uFar.value.set(...t.floorFar);
+    material.uniforms.uLine.value.set(...t.line);
+    material.uniforms.uLineStrength.value = t.lineStrength;
+    material.uniforms.uStuds.value = t.studs;
+  } };
 }
 
 /** Soft contact shadow that follows the character (cheaper and softer than shadow maps). */
