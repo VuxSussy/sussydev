@@ -358,3 +358,106 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
     },
   };
 }
+
+/** Stud texture for classic Roblox parts: soft round studs on a neutral tile (tinted by material colour). */
+function studTexture() {
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#d8d8d8";
+  ctx.fillRect(0, 0, size, size);
+  const gradient = ctx.createRadialGradient(size * 0.45, size * 0.42, 2, size / 2, size / 2, size * 0.32);
+  gradient.addColorStop(0, "#ffffff");
+  gradient.addColorStop(0.7, "#e2e2e2");
+  gradient.addColorStop(1, "#bdbdbd");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
+  ctx.fill();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+/** SpawnLocation emblem: Roblox's spawn ring drawn on the pad's top face. */
+function spawnTexture() {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.fillStyle = "#3d4656";
+  ctx.fillRect(0, 0, size, size);
+  ctx.strokeStyle = "#cfd8e6";
+  ctx.lineWidth = 14;
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = "#cfd8e6";
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size * 0.12, 0, Math.PI * 2);
+  ctx.fill();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+/**
+ * Roblox-mode set dressing: a SpawnLocation behind Sussy and a few classic studded parts drifting in the
+ * background like a Toolbox showcase. Colours are the classic BrickColors, desaturated to stay calm.
+ */
+export function createRobloxProps() {
+  const group = new THREE.Group();
+  const studs = studTexture();
+  const brick = (color: string, size: [number, number, number]) => {
+    const map = studs.clone();
+    map.repeat.set(size[0], size[2]);
+    map.needsUpdate = true;
+    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).lerp(new THREE.Color("#8a93a3"), 0.35), map, roughness: 0.7 });
+    return new THREE.Mesh(new THREE.BoxGeometry(...size), material);
+  };
+
+  const spawn = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 0.4, 6),
+    [
+      ...Array.from({ length: 2 }, () => new THREE.MeshStandardMaterial({ color: "#3d4656", roughness: 0.6 })),
+      new THREE.MeshStandardMaterial({ map: spawnTexture(), roughness: 0.55 }),
+      ...Array.from({ length: 3 }, () => new THREE.MeshStandardMaterial({ color: "#3d4656", roughness: 0.6 })),
+    ],
+  );
+  spawn.position.set(0, 0.2, -6.5);
+  group.add(spawn);
+
+  const floaters = [
+    { color: "#c4281c", size: [4, 1.2, 2] as [number, number, number], pos: [-20, 9, -36] },
+    { color: "#0d69ac", size: [2, 2, 2] as [number, number, number], pos: [17, 12, -40] },
+    { color: "#f5cd30", size: [6, 1.2, 2] as [number, number, number], pos: [-4, 15, -48] },
+    { color: "#4b974b", size: [2, 4, 2] as [number, number, number], pos: [24, 6, -32] },
+    { color: "#a34b4b", size: [1, 1, 4] as [number, number, number], pos: [-26, 5, -30] },
+  ].map((item, index) => {
+    const mesh = brick(item.color, item.size);
+    mesh.position.set(item.pos[0], item.pos[1], item.pos[2]);
+    mesh.rotation.set(index * 0.7, index * 1.3, index * 0.4);
+    mesh.userData.base = mesh.position.y;
+    mesh.userData.spin = { x: mesh.rotation.x, y: mesh.rotation.y, dir: index % 2 ? 1 : -1 };
+    group.add(mesh);
+    return mesh;
+  });
+
+  return {
+    group,
+    update(time: number, visibility: number) {
+      group.visible = visibility > 0.001;
+      if (!group.visible) return;
+      const sink = (1 - visibility) * 8;
+      spawn.position.y = 0.2 - sink * 0.2;
+      floaters.forEach((mesh, index) => {
+        mesh.position.y = (mesh.userData.base as number) + Math.sin(time * 0.5 + index * 1.7) * 0.35 - sink;
+        const spin = mesh.userData.spin as { x: number; y: number; dir: number };
+        mesh.rotation.y = spin.y + time * 0.09 * spin.dir;
+        mesh.rotation.x = spin.x + time * 0.05;
+      });
+    },
+  };
+}

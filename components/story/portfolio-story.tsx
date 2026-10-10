@@ -71,6 +71,17 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const [techIndex, setTechIndex] = useState(0);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
+  const studsRef = useRef<HTMLSpanElement>(null);
+
+  // Roblox leaderstats: poll the scene's running distance a few times per second (no React re-render).
+  useEffect(() => {
+    if (mode !== "roblox") return;
+    const timer = window.setInterval(() => {
+      const studs = sceneRef.current?.studsRun ?? 0;
+      if (studsRef.current) studsRef.current.textContent = Math.floor(studs).toLocaleString("vi-VN");
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [mode]);
   // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
   const [sound, setSound] = useState(false);
   const toggleSound = () => {
@@ -261,6 +272,13 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           <a className="outline-button" href="#lien-he">Liên hệ <ArrowUpRight aria-hidden="true" size={16} /></a>
         </div>
       </header>
+
+      {mode === "roblox" && (
+        <aside className="leaderstats" aria-label="Leaderstats">
+          <div className="ls-row ls-head"><span>Người chơi</span><span>Stage</span><span>Studs</span></div>
+          <div className="ls-row"><span>{portfolio.character}</span><span>{chapter + 1}</span><span ref={studsRef}>0</span></div>
+        </aside>
+      )}
 
       <nav className="chapter-rail" aria-label="Các chương">
         <ol>

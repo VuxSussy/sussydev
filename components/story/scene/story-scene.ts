@@ -5,7 +5,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import type { TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { chapterJumpTime, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
-import { createBlobShadow, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
+import { createBlobShadow, createRobloxProps, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
 import { TechCarousel } from "./tech-carousel";
 import { disposeObjects } from "./dispose";
@@ -75,6 +75,11 @@ export class StoryScene {
   private actions: Record<"run" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
+  /** Roblox-mode set dressing, faded in/out with the active theme. */
+  private robloxProps = createRobloxProps();
+  private robloxMix = 0;
+  /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
+  studsRun = 0;
   private footsteps = new Footsteps();
   private lastRunTime = 0;
   private lastHopTime = -1;
@@ -141,6 +146,8 @@ export class StoryScene {
     this.sky.material.depthTest = false;
     this.sunset = createSunsetWorld({ grassCount: coarse ? 1400 : 3200 });
     this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
+    this.robloxMix = options.theme === "roblox" ? 1 : 0;
+    this.scene.add(this.robloxProps.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
     this.keyLight.target.position.set(0, 2, 0);
 
@@ -387,6 +394,7 @@ export class StoryScene {
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
     if (!reduced) {
       const speed = RUN_SPEED * moving * (1 - sunset) * dt;
+      this.studsRun += speed;
       this.treadmill.x -= Math.sin(key.yaw) * speed;
       this.treadmill.y += Math.cos(key.yaw) * speed;
     }
@@ -412,6 +420,8 @@ export class StoryScene {
     const rise = 1 - Math.pow(1 - sunset, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
     this.sunset.update(time, sunset, this.renderer.getPixelRatio());
+    this.robloxMix = reduced ? (this.options.theme === "roblox" ? 1 : 0) : damp(this.robloxMix, this.options.theme === "roblox" ? 1 : 0, 3, dt);
+    this.robloxProps.update(time, this.robloxMix * (1 - sunset));
     this.fog.color.copy(this.studioFog).lerp(COLORS.fog, sunset);
     this.fog.near = 30 - 10 * sunset;
     this.fog.far = 160 + 80 * sunset;
