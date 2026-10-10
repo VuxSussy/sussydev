@@ -1,7 +1,7 @@
 # Sussy / 001 — Portfolio
 
 Portfolio one-page bằng Vinext (tương thích Next.js App Router), React 19, TypeScript và Three.js.
-Nhân vật Roblox **Sussy** (model `R15_SussySuspector_1265476893` trong Roblox Studio) chạy theo nhịp cuộn trang:
+Nhân vật Roblox **Sussy** (model R6 `R6_SussySuspector_1265476893` trong Roblox Studio) chạy theo nhịp cuộn trang:
 mở đầu → băng chuyền tech stack dưới chân → dự án → ngồi dưới gốc cây ngắm hoàng hôn ở phần liên hệ.
 
 ## Chạy local
@@ -61,7 +61,7 @@ Web đang dùng `run-v4` và `idle-v2`; tư thế ngồi được tạo trong `c
 2. `assets-src/sussy/meshes/*.json`: mesh gốc Roblox, giải mã bằng `scripts/rbxmesh-to-json.mjs` (mesh v2–v7, Draco).
    Asset công khai lấy từ assetdelivery; asset cần đăng nhập lấy từ cache nội bộ của Roblox Studio
    (`$TMPDIR/Roblox/rbx-storage`, texture KTX2 BC1 + zstd giải mã sang PNG).
-3. `scripts/blender/build-sussy.py`: import vào Blender, gộp 15 part R15 thành 6 nhóm R6, làm mượt normal,
+3. `scripts/blender/build-sussy.py`: import vào Blender: khối R6 bo nhẹ + phụ kiện SpecialMesh gắn vào part R6 tương ứng, làm mượt normal,
    subdivide đầu, gán vật liệu PBR, xuất GLB. File `.blend` lưu ở `assets-src/sussy/sussy-r6.blend`.
 4. `npm run optimize:model`: nén meshopt + WebP (≈860 KB → ≈270 KB).
 

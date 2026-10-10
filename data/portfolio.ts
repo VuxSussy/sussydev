@@ -66,7 +66,7 @@ export type Profile = {
 export const portfolio = {
   name: "Tên của bạn",
   initials: "TB",
-  /** The Roblox character starring on the site (R15_SussySuspector in Roblox Studio). */
+  /** The Roblox character starring on the site (R6_SussySuspector_1265476893 in Roblox Studio). */
   character: "Sussy",
   location: "Thành phố Hồ Chí Minh, Việt Nam",
   availability: "Sẵn sàng cho những dự án phù hợp",
