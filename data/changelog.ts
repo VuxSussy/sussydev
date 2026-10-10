@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.3",
+    date: "2026-10-11",
+    title: "Chạng vạng",
+    notes: ["Ngồi lại đủ lâu ở phần liên hệ, trời sẽ tối dần và sao bắt đầu lấp lánh; cuộn đi là trời sáng lại."],
+  },
+  {
     version: "1.2",
     date: "2026-10-11",
     title: "Hello, world",

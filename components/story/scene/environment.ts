@@ -34,7 +34,7 @@ export function createSky(theme: SceneTheme) {
     depthWrite: false,
     toneMapped: false,
     uniforms: {
-      uMix: { value: 0 }, uSunDir: { value: SUN_DIRECTION.clone() },
+      uMix: { value: 0 }, uSunDir: { value: SUN_DIRECTION.clone() }, uNight: { value: 0 }, uTime: { value: 0 },
       uBottom: { value: vec3(t.skyBottom) }, uTop: { value: vec3(t.skyTop) }, uGlow: { value: vec3(t.skyGlow) },
     },
     vertexShader: /* glsl */ `
@@ -46,16 +46,19 @@ export function createSky(theme: SceneTheme) {
       }`,
     fragmentShader: /* glsl */ `
       uniform float uMix; uniform vec3 uSunDir; uniform vec3 uBottom; uniform vec3 uTop; uniform vec3 uGlow; varying vec3 vDir;
+      uniform float uNight; uniform float uTime;
       ${dither}
+      float hash13(vec3 p) { p = fract(p * 0.1031); p += dot(p, p.zyx + 31.32); return fract((p.x + p.y) * p.z); }
       void main() {
         vec3 d = normalize(vDir);
         float h = d.y;
         vec3 studio = mix(uBottom, uTop, smoothstep(-0.25, 0.55, h));
         studio += uGlow * pow(max(dot(d, normalize(vec3(0.0, 0.18, -1.0))), 0.0), 5.0);
 
-        vec3 zenith = vec3(0.12, 0.11, 0.22);
-        vec3 mid = vec3(0.45, 0.30, 0.42);
-        vec3 horizon = vec3(0.96, 0.62, 0.42);
+        // Dusk deepens the palette while Sussy lingers at the sunset (uNight 0..1).
+        vec3 zenith = mix(vec3(0.12, 0.11, 0.22), vec3(0.05, 0.06, 0.14), uNight);
+        vec3 mid = mix(vec3(0.45, 0.30, 0.42), vec3(0.2, 0.15, 0.28), uNight);
+        vec3 horizon = mix(vec3(0.96, 0.62, 0.42), vec3(0.72, 0.4, 0.34), uNight);
         float t = clamp(h, 0.0, 1.0);
         vec3 sunset = mix(horizon, mid, smoothstep(0.0, 0.2, t));
         sunset = mix(sunset, zenith, smoothstep(0.16, 0.7, t));
@@ -63,6 +66,13 @@ export function createSky(theme: SceneTheme) {
         float s = max(dot(d, uSunDir), 0.0);
         sunset += vec3(1.0, 0.72, 0.46) * (pow(s, 10.0) * 0.32 + pow(s, 160.0) * 0.6);
         sunset = mix(sunset, vec3(1.0, 0.92, 0.78), smoothstep(0.99935, 0.9997, s));
+
+        // Stars: one per hashed direction cell, fading in near the zenith as dusk falls.
+        vec3 cell = floor(d * 120.0);
+        float seed = hash13(cell);
+        float star = step(0.992, seed) * (1.0 - smoothstep(0.05, 0.38, length(fract(d * 120.0) - 0.5)));
+        float twinkle = 0.55 + 0.45 * sin(uTime * (1.2 + seed * 2.0) + seed * 90.0);
+        sunset += vec3(0.88, 0.9, 1.0) * star * twinkle * uNight * smoothstep(0.02, 0.12, h) * (1.0 - smoothstep(0.6, 0.98, s));
 
         vec3 col = mix(studio, sunset, uMix);
         col += (hash12(gl_FragCoord.xy) - 0.5) / 255.0;

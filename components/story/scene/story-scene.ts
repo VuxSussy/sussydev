@@ -78,6 +78,8 @@ export class StoryScene {
   /** Roblox-mode set dressing, faded in/out with the active theme. */
   private robloxProps = createRobloxProps();
   private robloxMix = 0;
+  /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
+  private dusk = 0;
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
   private footsteps = new Footsteps();
@@ -416,6 +418,10 @@ export class StoryScene {
 
     // Studio → sunset.
     this.sky.material.uniforms.uMix.value = sunset;
+    const seated = sit > 0.95 && !reduced;
+    this.dusk = damp(this.dusk, seated ? 1 : 0, seated ? 0.07 : 1.5, dt);
+    this.sky.material.uniforms.uNight.value = this.dusk * sunset;
+    this.sky.material.uniforms.uTime.value = time;
     this.sky.mesh.position.copy(this.camera.position);
     const rise = 1 - Math.pow(1 - sunset, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
@@ -427,7 +433,7 @@ export class StoryScene {
     this.fog.far = 160 + 80 * sunset;
     this.keyLight.color.copy(COLORS.key).lerp(COLORS.sunsetKey, sunset);
     this.keyLight.position.set(4 - 12 * sunset, 7 - 4.5 * sunset, 6 - 18 * sunset);
-    this.keyLight.intensity = 2.4 + 0.6 * sunset;
+    this.keyLight.intensity = (2.4 + 0.6 * sunset) * (1 - 0.35 * this.dusk);
     this.rimLight.color.copy(this.studioRim).lerp(COLORS.rim, sunset);
     this.rimLight.intensity = 2.2 - 1.2 * sunset;
     this.hemi.color.copy(COLORS.sky).lerp(COLORS.sunsetSky, sunset);
