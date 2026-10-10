@@ -23,7 +23,7 @@ function readFaces(off, count) { for (let i = 0; i < count * 3; i++) out.index.p
 if (/version [2345]\./.test(version)) {
   const headerSize = buf.readUInt16LE(pos);
   const vsize = buf.readUInt8(pos + 2);
-  let numVerts, numFaces, numLODs = 0, lodOffsetsAt;
+  let numVerts, numFaces, numLODs = 0;
   if (version.startsWith("version 2")) { numVerts = buf.readUInt32LE(pos + 4); numFaces = buf.readUInt32LE(pos + 8); }
   else if (version.startsWith("version 3")) { numLODs = buf.readUInt16LE(pos + 6); numVerts = buf.readUInt32LE(pos + 8); numFaces = buf.readUInt32LE(pos + 12); }
   else { numVerts = buf.readUInt32LE(pos + 4); numFaces = buf.readUInt32LE(pos + 8); numLODs = buf.readUInt16LE(pos + 12); }
@@ -32,14 +32,14 @@ if (/version [2345]\./.test(version)) {
   readVerts(pos, numVerts, vsize);
   pos += numVerts * vsize;
   if (numBones) pos += numVerts * 8;
-  lodOffsetsAt = pos + numFaces * 12;
+  const lodOffsetsAt = pos + numFaces * 12;
   let faceCount = numFaces;
   if (numLODs > 1) faceCount = buf.readUInt32LE(lodOffsetsAt + 4) - buf.readUInt32LE(lodOffsetsAt);
   readFaces(pos, faceCount);
 } else {
   const decoderModule = await draco3d.createDecoderModule({});
   while (pos < buf.length) {
-    const name = buf.subarray(pos, pos + 8).toString().replace(/\0/g, "");
+    const name = buf.subarray(pos, pos + 8).toString().replaceAll("\u0000", "");
     const cver = buf.readUInt32LE(pos + 8);
     const size = buf.readUInt32LE(pos + 12);
     const data = buf.subarray(pos + 16, pos + 16 + size);

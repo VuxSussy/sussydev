@@ -1,7 +1,8 @@
-import { PortfolioPage } from "@/components/portfolio-page";
+import { PortfolioStory } from "@/components/story/portfolio-story";
 import { portfolio } from "@/data/portfolio";
 
 export default function Home() {
-  const personSchema = { "@context": "https://schema.org", "@type": "Person", name: portfolio.name, jobTitle: portfolio.role, email: `mailto:${portfolio.email}`, address: portfolio.location, sameAs: Object.values(portfolio.socials).filter(Boolean) };
-  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} /><PortfolioPage /></>;
+  const sameAs = portfolio.contacts.filter((c) => c.value.startsWith("http")).map((c) => c.value);
+  const personSchema = { "@context": "https://schema.org", "@type": "Person", name: portfolio.name, jobTitle: portfolio.role, address: portfolio.location, sameAs };
+  return <><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(personSchema) }} /><PortfolioStory /></>;
 }

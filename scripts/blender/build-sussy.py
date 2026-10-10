@@ -201,7 +201,7 @@ def main():
 
     parts = json.load(open(os.path.join(SRC, "parts.json")))["parts"]
     groups = {name: Group(name) for name in GROUP_CENTER}
-    body = {"111111": mat("BodyBlack", "17171a", 0.5, coat=0.15), "f8f8f8": mat("BodyWhite", "f2f2ef", 0.48, coat=0.2),
+    body = {"111111": mat("BodyBlack", "17171a", 0.5), "f8f8f8": mat("BodyWhite", "f2f2ef", 0.5),
             "635f62": mat("BodyGrey", "6b6870", 0.55)}
 
     for p in parts:
@@ -214,14 +214,14 @@ def main():
         if p["name"] == "Head":
             bm = load_mesh("Head", scale)
             project_face(bm)
-            group.add(bm, mat("Face", rough=0.38, image="face.png", coat=0.35), matrix, SMOOTH_ANGLE["Head"], subdivide=1)
+            group.add(bm, mat("Face", rough=0.42, image="face.png"), matrix, SMOOTH_ANGLE["Head"], subdivide=1)
         elif mesh_id in ACCESSORIES:
             key = ACCESSORIES[mesh_id]
             look = {
-                "Trilby": mat("Trilby", rough=0.6, image="trilby.png", sheen=0.3),
-                "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.6),
-                "Scarf": mat("Scarf", rough=0.62, image="scarf.png", sheen=0.5),
-                "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png", coat=0.2),
+                "Trilby": mat("Trilby", rough=0.58, image="trilby.png"),
+                "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.3),
+                "Scarf": mat("Scarf", rough=0.66, image="scarf.png"),
+                "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png"),
             }[key]
             group.add(load_mesh(key, scale), look, matrix, SMOOTH_ANGLE[key])
         else:

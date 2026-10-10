@@ -41,10 +41,8 @@ class Reader {
   str() { const n = this.u32(); const s = new TextDecoder().decode(this.buf.subarray(this.pos, this.pos + n)); this.pos += n; return s; }
   // Interleaved big-endian 32-bit words, as used by ints, floats, enums and referents.
   words(count: number): number[] {
-    const out = new Array<number>(count);
-    for (let k = 0; k < count; k++) {
-      out[k] = ((this.buf[this.pos + k] << 24) | (this.buf[this.pos + count + k] << 16) | (this.buf[this.pos + 2 * count + k] << 8) | this.buf[this.pos + 3 * count + k]) >>> 0;
-    }
+    const out = Array.from({ length: count }, (_, k) =>
+      ((this.buf[this.pos + k] << 24) | (this.buf[this.pos + count + k] << 16) | (this.buf[this.pos + 2 * count + k] << 8) | this.buf[this.pos + 3 * count + k]) >>> 0);
     this.pos += count * 4;
     return out;
   }
