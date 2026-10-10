@@ -65,12 +65,9 @@ export function buildR6Rig(source: THREE.Object3D, motors: Record<string, Motor>
     parentFrame.add(c0);
     c0.add(transform);
     transform.add(partFrame);
+    // Meshes are authored in part space; any node transform left on them is meshopt dequantization.
     const mesh = source.getObjectByName(meshName(joint.part));
-    if (mesh) {
-      mesh.position.set(0, 0, 0);
-      mesh.quaternion.identity();
-      partFrame.add(mesh);
-    }
+    if (mesh) partFrame.add(mesh);
     joints[joint.part] = transform;
     parts[joint.part] = partFrame;
   }

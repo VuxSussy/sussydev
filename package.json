@@ -10,7 +10,10 @@
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "extract:anims": "node scripts/extract-rbxm-anims.ts",
+    "build:model": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-sussy.py && npm run optimize:model",
+    "optimize:model": "gltf-transform optimize public/models/sussy/sussy-r6.glb public/models/sussy/sussy-r6.glb --compress meshopt --texture-compress webp --texture-size 512 --simplify false --join false --instance false --flatten false"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -39,6 +42,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
+    "@gltf-transform/cli": "^4.5.1",
     "@openai/sites-vite-plugin": "0.2.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
