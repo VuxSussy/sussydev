@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.2",
+    date: "2026-10-11",
+    title: "Hello, world",
+    notes: ["Nút VI / EN trong header: toàn bộ portfolio Dev và Roblox có bản tiếng Anh (case study và nhật ký vẫn tiếng Việt)."],
+  },
+  {
     version: "1.1",
     date: "2026-10-11",
     title: "Trang lạc đường",

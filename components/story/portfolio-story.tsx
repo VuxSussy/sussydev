@@ -3,15 +3,33 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
+import { contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { LoadingScreen } from "./loading-screen";
+
+const LOCALE_KEY = "sussy-locale";
+const LOCALE_EVENT = "sussy-locale-change";
+
+/** Interface language: the visitor's remembered choice, Vietnamese by default. */
+function readLocale(): Locale {
+  try {
+    return window.localStorage.getItem(LOCALE_KEY) === "en" ? "en" : "vi";
+  } catch {
+    return "vi";
+  }
+}
+
+function subscribeLocale(callback: () => void) {
+  window.addEventListener(LOCALE_EVENT, callback);
+  return () => window.removeEventListener(LOCALE_EVENT, callback);
+}
 
 const MOTION_KEY = "sussy-reduced-motion";
 const MOTION_EVENT = "sussy-motion-change";
@@ -52,8 +70,11 @@ function contactText(contact: ContactLink) {
 
 export function PortfolioStory({ mode }: { mode: Mode }) {
   const router = useRouter();
-  const profile = portfolio.profiles[mode];
-  const techs = profile.techStack;
+  // The 3D scene and scroll maths use the source tech list; only the copy is localised.
+  const techs = portfolio.profiles[mode].techStack;
+  const locale = useSyncExternalStore(subscribeLocale, readLocale, () => "vi" as Locale);
+  const profile = useMemo(() => localizedProfile(mode, locale), [mode, locale]);
+  const t = ui[locale];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const sceneRef = useRef<StoryScene | null>(null);
@@ -85,6 +106,15 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }, [mode]);
   // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
   const [sound, setSound] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  const toggleLocale = () => {
+    try { window.localStorage.setItem(LOCALE_KEY, locale === "vi" ? "en" : "vi"); } catch { /* ignore */ }
+    window.dispatchEvent(new Event(LOCALE_EVENT));
+  };
   const toggleSound = () => {
     const next = !sound;
     setSound(next);
@@ -216,7 +246,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }
 
   const focusIndex = hoveredTech >= 0 ? hoveredTech : techIndex;
-  const focusTech = techs[focusIndex];
+  const focusTech = profile.techStack[focusIndex];
 
   // Keep the active chip centred when the chip row scrolls horizontally (mobile).
   useEffect(() => {
@@ -234,9 +264,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
       <div className={`mode-curtain${switchingMode ? " is-active" : ""}`} aria-hidden={switchingMode === null}>
         <Image className="loader-head" src="/brand/sussy-head.png" alt="" width={384} height={384} unoptimized />
-        <output className="loader-label" aria-live="polite">{portfolio.profiles[switchingMode ?? mode].loadingLabel}</output>
+        <output className="loader-label" aria-live="polite">{localizedProfile(switchingMode ?? mode, locale).loadingLabel}</output>
       </div>
-      <a className="skip-link" href="#main">Chuyển đến nội dung chính</a>
+      <a className="skip-link" href="#main">{t.skip}</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
         <canvas ref={canvasRef} />
@@ -244,13 +274,13 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       </div>
 
       <header className="hud-header">
-        <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — về đầu trang`}>
+        <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — ${t.toTop}`}>
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / {profile.code}</strong>
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-sub">{profile.brandSub}</span>
         </a>
-        <nav className="mode-switch" aria-label="Chọn portfolio">
+        <nav className="mode-switch" aria-label={t.chooseMode}>
           {MODES.map((item) => (
             <Link key={item} href={modeHref(item)} scroll={false} aria-current={item === mode ? "page" : undefined} onClick={(event) => {
               if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -262,31 +292,35 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           ))}
         </nav>
         <div className="hud-actions">
-          <button type="button" className="motion-toggle" aria-pressed={sound} onClick={toggleSound} title="Tiếng bước chân">
+          <button type="button" className="lang-toggle" onClick={toggleLocale} aria-label={`${t.language}: ${locale === "vi" ? "English" : "Tiếng Việt"}`}>
+            <span aria-hidden="true" data-active={locale === "vi"}>VI</span>
+            <span aria-hidden="true" data-active={locale === "en"}>EN</span>
+          </button>
+          <button type="button" className="motion-toggle" aria-pressed={sound} onClick={toggleSound} title={t.soundTitle}>
             {sound ? <Volume2 aria-hidden="true" size={15} /> : <VolumeX aria-hidden="true" size={15} />}
-            <span>{sound ? "Tắt âm thanh" : "Bật âm thanh"}</span>
+            <span>{sound ? t.soundOff : t.soundOn}</span>
           </button>
           <button type="button" className="motion-toggle" aria-pressed={reducedMotion} onClick={toggleMotion}>
             {reducedMotion ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
-            <span>{reducedMotion ? "Bật chuyển động" : "Giảm chuyển động"}</span>
+            <span>{reducedMotion ? t.motionOn : t.motionOff}</span>
           </button>
-          <a className="outline-button" href="#lien-he">Liên hệ <ArrowUpRight aria-hidden="true" size={16} /></a>
+          <a className="outline-button" href="#lien-he">{t.contact} <ArrowUpRight aria-hidden="true" size={16} /></a>
         </div>
       </header>
 
       {mode === "roblox" && (
         <aside className="leaderstats" aria-label="Leaderstats">
-          <div className="ls-row ls-head"><span>Người chơi</span><span>Stage</span><span>Studs</span></div>
+          <div className="ls-row ls-head"><span>{t.player}</span><span>Stage</span><span>Studs</span></div>
           <div className="ls-row"><span>{portfolio.character}</span><span>{chapter + 1}</span><span ref={studsRef}>0</span></div>
         </aside>
       )}
 
-      <nav className="chapter-rail" aria-label="Các chương">
+      <nav className="chapter-rail" aria-label={t.chapters}>
         <ol>
           {CHAPTERS.map((item, index) => (
             <li key={item.id}>
               <button type="button" aria-current={chapter === index ? "step" : undefined} onClick={() => scrollToStory(index + (index === 0 ? 0 : 0.18))}>
-                {chapter === index && <span className="rail-label">{item.label}</span>}
+                {chapter === index && <span className="rail-label">{t.chapterLabels[index]}</span>}
                 <span className="rail-index">{pad(index + 1)}</span>
                 <span className="rail-line" aria-hidden="true" />
               </button>
@@ -302,8 +336,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               <p className="eyebrow">01 / 04 <span className="eyebrow-line" aria-hidden="true" /> {portfolio.character.toUpperCase()}</p>
               <h1 id="intro-title">{profile.headline[0]}<br />{profile.headline[1]}</h1>
               <p className="lede">{profile.intro}</p>
-              <p className="meta">{profile.role} · {portfolio.location}</p>
-              <p className="meta hint">Mẹo: bấm vào {portfolio.character} để nhảy.</p>
+              <p className="meta">{profile.role} · {t.location}</p>
+              <p className="meta hint">{t.hint(portfolio.character)}</p>
             </div>
           </div>
         </section>
@@ -314,7 +348,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               <p className="eyebrow">02 / 04 <span className="eyebrow-line" aria-hidden="true" /> TECH STACK</p>
               <h2 id="tech-title">{profile.techTitle[0]}<br />{profile.techTitle[1]}</h2>
               <fieldset className="tech-chips" ref={chipsRef}>
-                <legend className="sr-only">Chọn tech stack</legend>
+                <legend className="sr-only">{t.chooseTech}</legend>
                 {techs.map((tech, index) => (
                   <button
                     key={tech.name}
@@ -344,7 +378,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
 
         <section id="du-an" ref={(el) => { sectionRefs.current[2] = el; }} className="chapter chapter-work" aria-labelledby="work-title">
           <div className="work-inner">
-            <p className="eyebrow">03 / 04 <span className="eyebrow-line" aria-hidden="true" /> DỰ ÁN & KINH NGHIỆM</p>
+            <p className="eyebrow">03 / 04 <span className="eyebrow-line" aria-hidden="true" /> {t.workEyebrow}</p>
             <h2 id="work-title">{profile.workTitle[0]}<br />{profile.workTitle[1]}</h2>
             <div className="work-list">
               {profile.projects.map((project, index) => (
@@ -353,7 +387,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
                   <h3>{project.title}</h3>
                   <p>{project.summary}</p>
                   {caseStudies[project.slug] ? (
-                    <p className="card-foot"><Link href={`/du-an/${project.slug}`}>Đọc case study →</Link></p>
+                    <p className="card-foot"><Link href={`/du-an/${project.slug}`}>{t.readCase}</Link></p>
                   ) : (
                     project.impact && <p className="card-foot">{project.impact}</p>
                   )}
@@ -361,7 +395,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               ))}
             </div>
             <div className="glass-card experience-card">
-              <h3 className="card-title">Kinh nghiệm</h3>
+              <h3 className="card-title">{t.experience}</h3>
               <ol>
                 {profile.experience.map((item) => (
                   <li key={`${item.period}-${item.company}`}>
@@ -372,7 +406,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               </ol>
             </div>
             <div className="glass-card about-card">
-              <h3 className="card-title">Về tôi</h3>
+              <h3 className="card-title">{t.about}</h3>
               {profile.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </div>
           </div>
@@ -381,9 +415,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         <section id="lien-he" ref={(el) => { sectionRefs.current[3] = el; }} className="chapter chapter-contact" aria-labelledby="contact-title">
           <div className="chapter-sticky">
             <div className="contact-panel">
-              <p className="eyebrow">04 / 04 <span className="eyebrow-line" aria-hidden="true" /> HOÀNG HÔN</p>
-              <h2 id="contact-title">Hết đường chạy rồi.<br />Ngồi lại nói chuyện nhé.</h2>
-              <p className="lede">{portfolio.availability}. Nhắn cho tôi qua bất kỳ kênh nào bên dưới.</p>
+              <p className="eyebrow">04 / 04 <span className="eyebrow-line" aria-hidden="true" /> {t.sunsetEyebrow}</p>
+              <h2 id="contact-title">{t.contactTitle[0]}<br />{t.contactTitle[1]}</h2>
+              <p className="lede">{t.contactLede(t.availability)}</p>
               <ul className="contact-list">
                 {portfolio.contacts.map((contact) => {
                   const href = contactHref(contact);
@@ -393,15 +427,15 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
                       {href ? (
                         <a href={href} target={external ? "_blank" : undefined} rel={external ? "noreferrer" : undefined}>
                           <BrandIcon kind={contact.kind} />
-                          <span className="contact-label">{contact.label}</span>
+                          <span className="contact-label">{contactLabel(contact, locale)}</span>
                           <span className="contact-value">{contactText(contact)}</span>
                           <ArrowUpRight aria-hidden="true" size={15} />
                         </a>
                       ) : (
                         <span className="contact-pending" aria-disabled="true">
                           <BrandIcon kind={contact.kind} />
-                          <span className="contact-label">{contact.label}</span>
-                          <span className="contact-value">Đang cập nhật</span>
+                          <span className="contact-label">{contactLabel(contact, locale)}</span>
+                          <span className="contact-value">{t.pending}</span>
                         </span>
                       )}
                     </li>
@@ -411,10 +445,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               {gmail && (
                 <button type="button" className="copy-button" onClick={() => copyEmail(gmail)}>
                   {copied ? <Check aria-hidden="true" size={15} /> : <Copy aria-hidden="true" size={15} />}
-                  {copied ? "Đã sao chép email" : "Sao chép email"}
+                  {copied ? t.copiedEmail : t.copyEmail}
                 </button>
               )}
-              <span className="sr-only" aria-live="polite">{copied ? "Đã sao chép địa chỉ email" : ""}</span>
+              <span className="sr-only" aria-live="polite">{copied ? t.copiedAnnounce : ""}</span>
             </div>
           </div>
         </section>
@@ -423,14 +457,14 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       <footer className="hud-footer">
         <div className="hud-meta">
           <strong>{profile.footerMeta}</strong>
-          <span>R6 · {portfolio.character} · <Link href="/nhat-ky">v{currentVersion} · Nhật ký</Link></span>
+          <span>R6 · {portfolio.character} · <Link href="/nhat-ky">v{currentVersion} · {t.changelog}</Link></span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
-          {atEnd ? <>Chạy lại từ đầu <ArrowUp aria-hidden="true" size={16} /></> : <>Cuộn để chạy cùng {portfolio.character} <ArrowDown aria-hidden="true" size={16} /></>}
+          {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}
         </button>
         <p className="hud-readout"><span>STORY</span><span ref={readoutRef}>000%</span></p>
       </footer>
-      <p className="sr-only">© {new Date().getFullYear()} {portfolio.name}. Nhân vật Roblox {portfolio.character} chạy qua portfolio theo nhịp cuộn trang.</p>
+      <p className="sr-only">© {new Date().getFullYear()} {portfolio.name}. {t.footnote(portfolio.character)}</p>
     </div>
   );
 }

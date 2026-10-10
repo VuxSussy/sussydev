@@ -72,6 +72,12 @@ button, a[href] { cursor: pointer; }
 .ls-row span:not(:first-child) { text-align: right; }
 .ls-head { color: var(--text-muted); font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; border-bottom: 1px solid var(--border); }
 
+/* Language toggle (VI / EN) */
+.lang-toggle { display: inline-flex; align-items: center; gap: 0.15rem; min-height: 44px; padding: 0 0.2rem; font-size: 0.75rem; letter-spacing: 0.12em; color: var(--text-muted); }
+.lang-toggle span { padding: 0.25rem 0.35rem; border-radius: 3px; transition: color 200ms, background 200ms; }
+.lang-toggle span[data-active="true"] { color: var(--background); background: var(--text-secondary); }
+.lang-toggle:hover span[data-active="false"] { color: var(--text-primary); }
+
 /* ---------- Mode switch ---------- */
 .mode-switch { position: absolute; left: 50%; transform: translateX(-50%); display: flex; padding: 3px; border: 1px solid var(--border-strong); border-radius: 999px; background: rgba(var(--bg-rgb), 0.6); backdrop-filter: blur(10px); }
 .mode-switch a { position: relative; min-height: 34px; min-width: 4.6rem; display: grid; place-items: center; padding: 0 1rem; border-radius: 999px; font-size: 0.8125rem; letter-spacing: 0.06em; color: var(--text-secondary); transition: color 300ms, background 400ms var(--ease-out); }
