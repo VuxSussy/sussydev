@@ -283,6 +283,14 @@ button, a[href] { cursor: pointer; }
   .contact-list a, .contact-pending { grid-template-columns: 1.25rem 5.5rem 1fr auto; }
 }
 @media (max-width: 560px) {
+  .hud-header { flex-wrap: wrap; row-gap: 0.55rem; padding-top: 1rem; padding-bottom: 1.4rem; }
+  .brand { order: 1; }
+  .hud-actions { order: 2; margin-left: auto; gap: 0.1rem; }
+  .mode-switch { order: 3; }
+  .motion-toggle { min-width: 36px; }
+  .brand { gap: 0.55rem; }
+  .lang-toggle { padding: 0; }
+  .chapter-sticky { padding-top: 8rem; }
   .motion-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
   .outline-button { padding: 0.6rem 0.8rem; }
   .outline-button svg { display: none; }
