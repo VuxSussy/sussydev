@@ -173,7 +173,8 @@ export function createBlobShadow() {
 export function groundHeight(x: number, z: number) {
   // Flat corridor along the road (z ~ 0) and around the tree; rolling meadow further out, falling away far off.
   const fromRoad = Math.abs(z);
-  const corridor = smoothstep(4, 16, fromRoad);
+  // The camera side (+Z) stays flatter for longer so hills never rise between the camera and Sussy's feet.
+  const corridor = z > 0 ? smoothstep(14, 30, z) : smoothstep(4, 16, fromRoad);
   const roll = (Math.sin(x * 0.13 + 1.3) * Math.sin(z * 0.11) * 1.1 + Math.sin(x * 0.05 - z * 0.04) * 0.8) * corridor;
   const fall = -Math.pow(Math.max(fromRoad - 34, 0), 1.25) * 0.06;
   return roll + fall;
@@ -441,7 +442,9 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
           if (onRoad(x, z) || near(x, z, 1.2) || (x > DOOR_X + 2 && Math.abs(z) < 16)) return null;
           // Keep the spot where Sussy sits (and the camera's view of it) clear.
           if (Math.hypot(x - SIT_SPOT.x, z - SIT_SPOT.y - 2) < 2.6) return null;
-          return { x, z, scale: 0.8 + rand() * 0.8 };
+          // The camera looks down from +Z: short grass on that side keeps Sussy's feet and the road in view.
+          const nearSide = z > 0 && z < 12 ? 0.5 : 1;
+          return { x, z, scale: (0.8 + rand() * 0.8) * nearSide };
         }, 11));
       }
       const fern = find("Fern");
@@ -452,7 +455,8 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
           const aroundTree = rand() < 0.45;
           const a = rand() * Math.PI * 2;
           const x = aroundTree ? TREE_BASE.x + Math.cos(a) * (1.4 + rand() * 4) : SIT_SPOT.x - 10 + rand() * (ROAD_START.x - SIT_SPOT.x + 2);
-          const z = aroundTree ? TREE_BASE.z + Math.sin(a) * (1.2 + rand() * 3) : (rand() < 0.5 ? -1 : 1) * (2.4 + rand() * 3);
+          // Roadside ferns grow on the far verge only; the camera-side verge keeps short grass.
+          const z = aroundTree ? TREE_BASE.z + Math.sin(a) * (1.2 + rand() * 3) : -(2.4 + rand() * 3.5);
           if (onRoad(x, z) || x > DOOR_X + 2 || sightline(x, z)) return null;
           return { x, z, scale: 1.2 + rand() * 0.9 };
         }, 23));
