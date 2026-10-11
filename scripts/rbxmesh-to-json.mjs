@@ -38,12 +38,20 @@ if (/version [2345]\./.test(version)) {
   readFaces(pos, faceCount);
 } else {
   const decoderModule = await draco3d.createDecoderModule({});
+  // Faces of every LOD follow each other in COREMESH; the LODS chunk gives where each level starts. Keep LOD0 only,
+  // or the coarser levels render on top of it (the "two scarves" look, with z-fighting patches).
+  let lod0Faces = Infinity;
   while (pos < buf.length) {
     const name = buf.subarray(pos, pos + 8).toString().replaceAll("\u0000", "");
     const cver = buf.readUInt32LE(pos + 8);
     const size = buf.readUInt32LE(pos + 12);
     const data = buf.subarray(pos + 16, pos + 16 + size);
     pos += 16 + size;
+    if (name === "LODS") {
+      const count = data.readUInt32LE(3);
+      if (count > 1) lod0Faces = data.readUInt32LE(7 + 4) - data.readUInt32LE(7);
+      continue;
+    }
     if (name !== "COREMESH") continue;
     if (cver === 1) {
       const nv = data.readUInt32LE(0);
@@ -101,6 +109,7 @@ if (/version [2345]\./.test(version)) {
       decoderModule.destroy(faces);
     }
   }
+  if (out.index.length > lod0Faces * 3) out.index.length = lod0Faces * 3;
 }
 writeFileSync(output, JSON.stringify(out));
 const xs = out.position.filter((_, i) => i % 3 === 0), ys = out.position.filter((_, i) => i % 3 === 1), zs = out.position.filter((_, i) => i % 3 === 2);

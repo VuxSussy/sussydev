@@ -38,7 +38,7 @@ export const caseStudies: Record<string, CaseStudy> = {
       {
         title: "Từ studio ra hoàng hôn",
         paragraphs: [
-          "Phần tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Để hai cảnh không bị cắt ngang, phần dự án trở thành một hành trình: băng chuyền tắt, một cánh cửa sáng mở ra, Sussy chạy ra con đường đất, ngang qua các cột mốc ghi số và năm của từng dự án, trời ngả dần sang hoàng hôn, rồi dừng lại ngồi dưới gốc cây, quay mặt về phía người xem.",
+          "Phần tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Để hai cảnh không bị cắt ngang, phần dự án trở thành một hành trình: băng chuyền tắt, một cánh cửa sáng mở ra, ánh sáng từ khung cửa tràn kín màn hình đúng lúc Sussy bước qua (studio và đồng cỏ đổi chỗ sau lớp sáng đó), Sussy chạy ra con đường đất, ngang qua các màn hình neon chiếu demo của từng dự án, trời ngả dần sang hoàng hôn, rồi dừng lại ngồi dưới gốc cây, quay mặt về phía người xem.",
           "Cây, bụi, cỏ và dương xỉ dựng bằng script Python trong Blender. Bóng tối bên trong tán lá và viền nắng ấm được tính sẵn vào màu đỉnh, nên trên web mỗi loại chỉ cần một vật liệu; cỏ được instance hàng nghìn lần và đung đưa bằng một shader gió nhỏ.",
         ],
       },
@@ -76,7 +76,7 @@ export const caseStudies: Record<string, CaseStudy> = {
       {
         title: "Giải mã mesh Roblox",
         paragraphs: [
-          "Một script Node đọc định dạng .mesh từ phiên bản 2 đến 7. Bản 7 dùng chunk COREMESH nén Draco, giải bằng draco3d; LOD đầu tiên được giữ lại.",
+          "Một script Node đọc định dạng .mesh từ phiên bản 2 đến 7. Bản 7 dùng chunk COREMESH nén Draco, giải bằng draco3d. Tam giác của mọi mức LOD nằm nối tiếp nhau trong COREMESH; chunk LODS cho biết mỗi mức bắt đầu ở đâu, và chỉ LOD0 được giữ lại. Lúc đầu bước này bị bỏ sót, nên các LOD thô vẽ đè lên LOD0 khiến khăn choàng trông như hai cái khăn chồng nhau, lốm đốm z-fighting.",
         ],
       },
       {

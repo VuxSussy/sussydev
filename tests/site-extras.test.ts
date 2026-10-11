@@ -115,3 +115,28 @@ it("bakes a meshopt-quantised node transform into float geometry", () => {
   expect(position.array).toBeInstanceOf(Float32Array);
   expect([position.getX(0), position.getY(1), position.getZ(2)].map((v) => +v.toFixed(3))).toEqual([4, 6, -4]);
 });
+
+it("sorts each tech stack into Language, Framework and Tool shelves with a gap between them", async () => {
+  const { portfolio, TECH_GROUPS } = await import("../data/portfolio");
+  const { laneSlots } = await import("../components/story/scene/tech-carousel");
+  for (const profile of Object.values(portfolio.profiles)) {
+    const order = profile.techStack.map((tech) => TECH_GROUPS.indexOf(tech.group));
+    // Grouped in shelf order, so chip order (rendered per group) matches the conveyor's indices.
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    expect(new Set(order).size).toBe(3);
+    const slots = laneSlots(profile.techStack);
+    slots.slice(1).forEach((slot, i) => {
+      const newShelf = profile.techStack[i + 1].group !== profile.techStack[i].group;
+      expect(slot - slots[i]).toBeCloseTo(newShelf ? 1.75 : 1);
+    });
+  }
+});
+
+it("keeps only the finest LOD of the Roblox accessory meshes", async () => {
+  const { readFileSync } = await import("node:fs");
+  // LOD0 face counts from the meshes' LODS chunks (the coarser LODs used to render on top: "two scarves").
+  for (const [name, lod0] of [["Scarf", 3144], ["TacBelts", 3643]] as const) {
+    const mesh = JSON.parse(readFileSync(`assets-src/sussy/meshes/${name}.json`, "utf8")) as { index: number[] };
+    expect(mesh.index.length / 3).toBe(lod0);
+  }
+});

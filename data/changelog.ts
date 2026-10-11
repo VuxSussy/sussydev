@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "3.1",
+    date: "2026-10-11",
+    title: "Bước qua ánh sáng",
+    notes: [
+      "Ra khỏi studio mượt hơn: cánh cửa sáng dần khi Sussy tới gần, ánh sáng tràn kín màn hình đúng lúc Sussy bước qua, rồi tan ra để lộ đồng cỏ. Không còn cảnh cỏ trồi lên từ dưới sàn.",
+      "Màn hình demo bên đường to hơn khoảng 1,5 lần, dựng trên hai cột.",
+      "Tech stack chia thành ba kệ: Ngôn ngữ, Framework và Công cụ, cả ở hàng chip lẫn trên băng chuyền 3D (mỗi kệ một màu, có khoảng cách và nhãn riêng).",
+      "Sửa khăn choàng và thắt lưng trông như hai lớp chồng lên nhau: mesh Roblox chứa nhiều mức LOD và trước đây tất cả được vẽ cùng lúc; giờ chỉ giữ mức chi tiết nhất.",
+    ],
+  },
+  {
     version: "3.0",
     date: "2026-10-11",
     title: "Khăn gốc, trứng lăn",

@@ -38,6 +38,18 @@ test.describe("portfolio story", () => {
     await expect(page.locator(".chapter-rail [aria-current='step']")).toContainText("02", { timeout: 10_000 });
   });
 
+  test("groups the tech chips into Language, Framework and Tool", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
+    const chips = page.locator("#tech-stack .tech-chips");
+    for (const [name, first] of [["Ngôn ngữ", "TypeScript"], ["Framework", "React"], ["Công cụ", "Roblox Studio"]]) {
+      await expect(chips.getByRole("group", { name }).getByRole("button").first()).toHaveText(first);
+    }
+    await chips.getByRole("group", { name: "Công cụ" }).getByRole("button", { name: "Blender" }).click();
+    await expect(page.locator(".tech-caption .tech-name")).toHaveText("Blender", { timeout: 10_000 });
+    await expect(page.locator(".tech-caption .tech-kind")).toHaveText("Công cụ");
+  });
+
   test("the header contact link lands on the seated sunset scene", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });

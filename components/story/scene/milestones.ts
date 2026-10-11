@@ -2,14 +2,17 @@ import * as THREE from "three";
 import type { Project } from "@/data/portfolio";
 import { smoothstep } from "@/lib/story";
 
-const SIDE_Z = -3.2;
+const SIDE_Z = -4.4;
 /** Story values of the first and last roadside stop. */
 export const STOPS_START = 2.42;
 export const STOPS_SPAN = 0.42;
 
-const SCREEN_W = 4.4;
+const SCREEN_W = 6.8;
 const SCREEN_H = SCREEN_W * (9 / 16);
-const SCREEN_Y = 5.5;
+const SCREEN_Y = 6.7;
+/** Two posts carry the wide screen; their height reaches the housing's lower edge. */
+const POST_H = SCREEN_Y - SCREEN_H / 2;
+const POST_X = SCREEN_W / 2 - 1.1;
 const FONT = "'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace";
 
 type Palette = { neon: string; hot: string };
@@ -137,7 +140,7 @@ type Post = {
 export class Milestones {
   readonly group = new THREE.Group();
   private posts: Post[] = [];
-  private postGeometry = new THREE.CylinderGeometry(0.11, 0.14, 4.2, 10);
+  private postGeometry = new THREE.CylinderGeometry(0.13, 0.17, POST_H, 10);
   private housingGeometry = new THREE.BoxGeometry(SCREEN_W + 0.3, SCREEN_H + 0.3, 0.2);
   private screenGeometry = new THREE.PlaneGeometry(SCREEN_W, SCREEN_H);
   private glowGeometry = new THREE.PlaneGeometry(SCREEN_W + 1.6, SCREEN_H + 1.4);
@@ -160,8 +163,11 @@ export class Milestones {
     this.textures.push(glowTexture);
     projects.forEach((project, index) => {
       const root = new THREE.Group();
-      const pole = new THREE.Mesh(this.postGeometry, this.metal);
-      pole.position.y = 2.1;
+      const poles = [-POST_X, POST_X].map((x) => {
+        const pole = new THREE.Mesh(this.postGeometry, this.metal);
+        pole.position.set(x, POST_H / 2, -0.32);
+        return pole;
+      });
       const housing = new THREE.Mesh(this.housingGeometry, this.metal);
       housing.position.y = SCREEN_Y;
       const placeholder = placeholderScreen(index, project, palette);
@@ -195,7 +201,7 @@ export class Milestones {
       this.textures.push(captionTex);
       const caption = new THREE.MeshBasicMaterial({ map: captionTex, toneMapped: false });
       const captionMesh = new THREE.Mesh(this.captionGeometry, caption);
-      captionMesh.position.set(0, SCREEN_Y - SCREEN_H / 2 - 0.5, 0.06);
+      captionMesh.position.set(0, SCREEN_Y - SCREEN_H / 2 - 0.82, 0.06);
       const neonTop = new THREE.MeshBasicMaterial({ color: palette.hot, toneMapped: false });
       const neonBottom = new THREE.MeshBasicMaterial({ color: palette.neon, toneMapped: false });
       const top = new THREE.Mesh(this.stripGeometry, neonTop);
@@ -203,7 +209,7 @@ export class Milestones {
       const bottom = new THREE.Mesh(this.stripGeometry, neonBottom);
       bottom.position.set(0, SCREEN_Y - SCREEN_H / 2 - 0.17, 0.08);
       this.materials.push(screen, glow, caption, neonTop, neonBottom);
-      root.add(pole, housing, screenMesh, glowMesh, captionMesh, top, bottom);
+      root.add(...poles, housing, screenMesh, glowMesh, captionMesh, top, bottom);
       this.group.add(root);
       this.posts.push({ root, screen, glow });
     });

@@ -321,12 +321,63 @@ export function createStudioDoor() {
   group.add(new THREE.Mesh(spillGeometry, spillMaterial));
   return {
     group,
-    update(visibility: number, time: number) {
+    /** Centre of the glowing opening, where the light flood starts. */
+    opening: new THREE.Vector3(DOOR_X, 3.5, 0),
+    /** @param flare 0..1 the opening brightens as Sussy reaches it */
+    update(visibility: number, time: number, flare = 0) {
       group.visible = visibility > 0.002;
       frameMaterial.opacity = visibility;
-      const flicker = 0.4 + 0.08 * Math.sin(time * 2.1);
+      const flicker = (0.4 + 0.08 * Math.sin(time * 2.1)) * (1 - flare) + 1 * flare;
       glowMaterial.opacity = flicker * visibility;
       spillMaterial.opacity = flicker * 1.3 * visibility;
+    },
+  };
+}
+
+/**
+ * Stepping through the studio door: warm light spreads from the opening across the whole screen, the studio is
+ * swapped for the meadow behind it, and it eases away outdoors. A screen-space quad drawn last; driven by the
+ * story value so scrolling back plays it in reverse.
+ */
+export function createDoorFlood() {
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+    uniforms: { uCenter: { value: new THREE.Vector2() }, uAspect: { value: 1 }, uSpread: { value: 0 }, uStrength: { value: 0 } },
+    vertexShader: /* glsl */ `
+      varying vec2 vNdc;
+      void main() { vNdc = position.xy; gl_Position = vec4(position.xy, 0.0, 1.0); }`,
+    fragmentShader: /* glsl */ `
+      uniform vec2 uCenter; uniform float uAspect; uniform float uSpread; uniform float uStrength; varying vec2 vNdc;
+      ${dither}
+      void main() {
+        vec2 d = (vNdc - uCenter) * vec2(uAspect, 1.0);
+        float r = length(d);
+        // The lit area widens from the doorway until it covers the screen (corners included).
+        float radius = mix(0.18, 2.0 * uAspect + 2.2, uSpread * uSpread);
+        // Fully spread, it covers every pixel whatever the aspect ratio (the swap behind it must never show).
+        float lit = max(1.0 - smoothstep(radius * 0.35, radius, r), smoothstep(0.75, 0.98, uSpread));
+        float core = 1.0 - smoothstep(0.0, radius * 0.6, r);
+        vec3 col = mix(vec3(1.0, 0.74, 0.5), vec3(1.0, 0.95, 0.86), core) + (hash12(gl_FragCoord.xy) - 0.5) / 255.0;
+        gl_FragColor = vec4(col, clamp(lit * uStrength, 0.0, 1.0));
+      }`,
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+  mesh.frustumCulled = false;
+  mesh.renderOrder = 1000;
+  mesh.visible = false;
+  return {
+    mesh,
+    /** @param center the opening in normalised device coordinates */
+    update(spread: number, strength: number, center: THREE.Vector3, aspect: number) {
+      mesh.visible = strength > 0.002;
+      material.uniforms.uSpread.value = spread;
+      material.uniforms.uStrength.value = strength;
+      material.uniforms.uAspect.value = aspect;
+      // Once the light has spread, its centre no longer matters; keep it from swinging off-screen with the camera.
+      material.uniforms.uCenter.value.set(THREE.MathUtils.clamp(center.x, -1.2, 1.2), THREE.MathUtils.clamp(center.y, -1.2, 1.2));
     },
   };
 }
