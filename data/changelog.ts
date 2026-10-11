@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.0",
+    date: "2026-10-11",
+    title: "CV một trang",
+    notes: ["Trang /cv tạo tự động từ nội dung hai portfolio, có nút In / Lưu PDF và bản in A4 trắng đen gọn gàng."],
+  },
+  {
     version: "1.9",
     date: "2026-10-11",
     title: "Vẫy tay",

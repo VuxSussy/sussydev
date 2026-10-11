@@ -494,7 +494,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       <footer className="hud-footer">
         <div className="hud-meta">
           <strong>{profile.footerMeta}</strong>
-          <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link></span>
+          <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link> · <Link prefetch={false} href="/cv">CV</Link></span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}
