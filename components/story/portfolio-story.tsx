@@ -8,11 +8,12 @@ import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRe
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
-import { contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
+import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
+import { ChatBubble } from "./chat-bubble";
 import { LoadingScreen } from "./loading-screen";
 
 const LOCALE_KEY = "sussy-locale";
@@ -107,10 +108,22 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }, [mode]);
   // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
   const [sound, setSound] = useState(false);
+  const [bubble, setBubble] = useState<{ text: string; id: number } | null>(null);
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  // Sussy says a short line when a chapter starts (after the loader), then the bubble fades away.
+  useEffect(() => {
+    if (!ready || webglFailed) return;
+    const show = window.setTimeout(() => setBubble({ text: chatLines[locale][mode][chapter], id: Date.now() }), 350);
+    const hide = window.setTimeout(() => setBubble(null), 4600);
+    return () => {
+      window.clearTimeout(show);
+      window.clearTimeout(hide);
+    };
+  }, [chapter, ready, webglFailed, locale, mode]);
 
   const toggleLocale = () => {
     try { window.localStorage.setItem(LOCALE_KEY, locale === "vi" ? "en" : "vi"); } catch { /* ignore */ }
@@ -273,6 +286,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         <canvas ref={canvasRef} />
         {webglFailed && <Image className="stage-poster" src="/brand/sussy-poster.webp" alt="" width={720} height={960} unoptimized />}
       </div>
+
+      {bubble && <ChatBubble text={bubble.text} id={bubble.id} scene={sceneRef} />}
 
       <header className="hud-header">
         <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — ${t.toTop}`}>

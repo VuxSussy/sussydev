@@ -80,6 +80,8 @@ export class StoryScene {
   private robloxMix = 0;
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
+  private headFrame: THREE.Object3D | null = null;
+  private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
   private footsteps = new Footsteps();
@@ -190,6 +192,7 @@ export class StoryScene {
     const rig = buildR6Rig(gltf.scene, index.motors);
     rig.root.position.y = ROOT_STANDING;
     this.character.add(rig.root);
+    this.headFrame = rig.parts.Head;
     this.pendingModel = null;
     this.mixer = new THREE.AnimationMixer(rig.root);
     const action = (clip: THREE.AnimationClip) => {
@@ -240,6 +243,21 @@ export class StoryScene {
     }
     this.story = this.storyTarget = story;
     this.needsRender = true;
+  }
+
+  /**
+   * Screen position (CSS px, relative to the canvas) of a point just above Sussy's hat, for the chat bubble.
+   * Returns null before the avatar loads or when the point is off screen.
+   */
+  headScreenPosition(): { x: number; y: number } | null {
+    if (!this.headFrame) return null;
+    this.headFrame.getWorldPosition(this.headPoint);
+    this.headPoint.y += 1.9;
+    this.headPoint.project(this.camera);
+    const { x, y, z } = this.headPoint;
+    if (z > 1 || Math.abs(x) > 1.05 || Math.abs(y) > 1.05) return null;
+    const canvas = this.renderer.domElement;
+    return { x: ((x + 1) / 2) * canvas.clientWidth, y: ((1 - y) / 2) * canvas.clientHeight };
   }
 
   /** Footstep audio (off by default; must be enabled from a user gesture). */

@@ -80,6 +80,14 @@ button, a[href] { cursor: pointer; }
 .lang-toggle span[data-active="true"] { color: var(--background); background: var(--text-secondary); }
 .lang-toggle:hover span[data-active="false"] { color: var(--text-primary); }
 
+/* Roblox-style chat bubble above Sussy's head (positioned from the scene each frame). */
+.chat-bubble { position: fixed; left: 0; top: 0; z-index: 15; pointer-events: none; will-change: transform; visibility: hidden; }
+.chat-bubble p { position: relative; max-width: 15rem; padding: 0.55rem 0.95rem; border-radius: 12px; background: rgba(241, 239, 234, 0.95); color: #141416; font-size: 0.9rem; line-height: 1.35; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); animation: bubble-in 320ms var(--ease-out) both; }
+.chat-bubble p::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
+.site[data-mode="roblox"] .chat-bubble p { background: #ffffff; font-weight: 500; }
+@keyframes bubble-in { from { opacity: 0; transform: translateY(8px) scale(0.92); } to { opacity: 1; transform: none; } }
+.site[data-reduced-motion="true"] .chat-bubble p { animation: none; }
+
 /* ---------- Mode switch ---------- */
 .mode-switch { position: absolute; left: 50%; transform: translateX(-50%); display: flex; padding: 3px; border: 1px solid var(--border-strong); border-radius: 999px; background: rgba(var(--bg-rgb), 0.6); backdrop-filter: blur(10px); }
 .mode-switch a { position: relative; min-height: 34px; min-width: 4.6rem; display: grid; place-items: center; padding: 0 1rem; border-radius: 999px; font-size: 0.8125rem; letter-spacing: 0.06em; color: var(--text-secondary); transition: color 300ms, background 400ms var(--ease-out); }

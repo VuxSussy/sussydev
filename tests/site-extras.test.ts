@@ -47,3 +47,14 @@ it("localises every profile string while keeping icons, colours and slugs from t
     expect(en.intro).not.toBe(vi.intro);
   }
 });
+
+it("has a chat line for every chapter in both languages and modes", async () => {
+  const { chatLines } = await import("../data/i18n");
+  const { CHAPTERS } = await import("../lib/story");
+  for (const locale of ["vi", "en"] as const) {
+    for (const mode of ["dev", "roblox"] as const) {
+      expect(chatLines[locale][mode]).toHaveLength(CHAPTERS.length);
+      for (const line of chatLines[locale][mode]) expect(line.length).toBeLessThan(40);
+    }
+  }
+});
