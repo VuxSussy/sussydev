@@ -58,3 +58,15 @@ it("has a chat line for every chapter in both languages and modes", async () => 
     }
   }
 });
+
+it("lays milestones along Sussy's path only during the work chapter", async () => {
+  const { Milestones } = await import("../components/story/scene/milestones");
+  const { portfolio } = await import("../data/portfolio");
+  const milestones = new Milestones(portfolio.profiles.dev.projects, "#f0b07a");
+  milestones.update(1.5, Math.PI / 2);
+  expect(milestones.group.visible).toBe(false);
+  milestones.update(2.5, Math.PI / 2);
+  expect(milestones.group.visible).toBe(true);
+  expect(milestones.group.children).toHaveLength(portfolio.profiles.dev.projects.length);
+  milestones.dispose();
+});

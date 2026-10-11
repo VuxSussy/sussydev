@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.8",
+    date: "2026-10-11",
+    title: "Cột mốc bên đường",
+    notes: ["Ở chương Dự án, mỗi dự án là một biển báo bên đường: Sussy chạy ngang qua đúng biển của dự án bạn đang đọc."],
+  },
+  {
     version: "1.7",
     date: "2026-10-11",
     title: "Phím tắt & chạm",
