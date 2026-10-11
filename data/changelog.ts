@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.1",
+    date: "2026-10-11",
+    title: "Màn hình lớn, đường dài hơn",
+    notes: [
+      "Màn hình showcase rộng 14 stud, gần gấp rưỡi bản trước, và các màn hình cách nhau 26 stud nên giữa hai dự án có một quãng đường trống rõ ràng.",
+      "Đoạn showcase dài 3300 px. Chạy hết cỡ mất khoảng 3,5 giây, cuộn chậm thì Sussy đi bộ.",
+      "Panel thông tin dự án trượt vào từ bên trái khi Sussy tới màn hình đầu tiên và trượt ra sau màn hình cuối. Nội dung mỗi dự án cũng lướt vào từ trái.",
+      "Trên điện thoại, camera lệch về phía màn hình để thấy được cả màn hình lẫn Sussy.",
+    ],
+  },
+  {
     version: "4.0",
     date: "2026-10-11",
     title: "Một portfolio, một con đường",

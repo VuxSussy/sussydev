@@ -5,17 +5,20 @@ import { smoothstep, stopStory } from "@/lib/story";
 
 const SIDE_Z = -4.6;
 /** The screen stands ahead of the spot where Sussy slows down, so Sussy waits beside it rather than in front. */
-const AHEAD = 6.6;
+const AHEAD = 8.8;
 
 /** A big 16:9 outdoor TV showing the demo frame (the project's details are in the page's side panel). */
-const SCREEN_W = 10.4;
+const SCREEN_W = 14;
 const SCREEN_H = SCREEN_W * (9 / 16);
-const SCREEN_Y = 7.4;
+const SCREEN_Y = 9.1;
 /** TV bezel around the picture. */
-const BEZEL = 0.36;
+const BEZEL = 0.42;
+/** Housing depth; the picture, neon strips and LED sit just in front of its face. */
+const DEPTH = 0.6;
+const FACE = DEPTH / 2 + 0.012;
 /** Two legs carry the TV; their height reaches the bezel's lower edge. */
 const POST_H = SCREEN_Y - SCREEN_H / 2 - BEZEL;
-const POST_X = SCREEN_W / 2 - 1.6;
+const POST_X = SCREEN_W / 2 - 2.2;
 const FONT = "'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace";
 /** Canvas size of the screen picture. */
 const CANVAS_W = 1280;
@@ -145,8 +148,8 @@ type Post = {
 export class Milestones {
   readonly group = new THREE.Group();
   private posts: Post[] = [];
-  private postGeometry = new THREE.CylinderGeometry(0.16, 0.22, POST_H, 12);
-  private housingGeometry = new RoundedBoxGeometry(SCREEN_W + BEZEL * 2, SCREEN_H + BEZEL * 2, 0.55, 3, 0.16);
+  private postGeometry = new THREE.CylinderGeometry(0.2, 0.28, POST_H, 12);
+  private housingGeometry = new RoundedBoxGeometry(SCREEN_W + BEZEL * 2, SCREEN_H + BEZEL * 2, DEPTH, 3, 0.18);
   /** Small power LED on the bezel's bottom edge. */
   private ledGeometry = new THREE.SphereGeometry(0.06, 10, 8);
   private screenGeometry = new THREE.PlaneGeometry(SCREEN_W, SCREEN_H);
@@ -212,21 +215,21 @@ export class Milestones {
         toneMapped: false,
       });
       const screenMesh = new THREE.Mesh(this.screenGeometry, screen);
-      screenMesh.position.set(0, SCREEN_Y, 0.285);
+      screenMesh.position.set(0, SCREEN_Y, FACE);
       const glow = new THREE.MeshBasicMaterial({
         map: glowTexture, color: palette.neon, transparent: true, opacity: 0, blending: THREE.AdditiveBlending,
         depthWrite: false, toneMapped: false,
       });
       const glowMesh = new THREE.Mesh(this.glowGeometry, glow);
-      glowMesh.position.set(0, SCREEN_Y, -0.32);
+      glowMesh.position.set(0, SCREEN_Y, -DEPTH / 2 - 0.05);
       const neonTop = new THREE.MeshBasicMaterial({ color: palette.hot, toneMapped: false });
       const neonBottom = new THREE.MeshBasicMaterial({ color: palette.neon, toneMapped: false });
       const top = new THREE.Mesh(this.stripGeometry, neonTop);
-      top.position.set(0, SCREEN_Y + SCREEN_H / 2 + BEZEL * 0.55, 0.29);
+      top.position.set(0, SCREEN_Y + SCREEN_H / 2 + BEZEL * 0.55, FACE);
       const bottom = new THREE.Mesh(this.stripGeometry, neonBottom);
-      bottom.position.set(0, SCREEN_Y - SCREEN_H / 2 - BEZEL * 0.55, 0.29);
+      bottom.position.set(0, SCREEN_Y - SCREEN_H / 2 - BEZEL * 0.55, FACE);
       const led = new THREE.Mesh(this.ledGeometry, neonBottom);
-      led.position.set(SCREEN_W / 2 - 0.1, SCREEN_Y - SCREEN_H / 2 - BEZEL * 0.55, 0.3);
+      led.position.set(SCREEN_W / 2 - 0.1, SCREEN_Y - SCREEN_H / 2 - BEZEL * 0.55, FACE);
       this.materials.push(screen, glow, neonTop, neonBottom);
       root.add(...poles, housing, screenMesh, glowMesh, top, bottom, led);
       this.group.add(root);
@@ -260,9 +263,9 @@ export class Milestones {
       post.root.position.set(x - AHEAD, 0, z + SIDE_Z);
       post.root.rotation.y = -0.14;
       const distance = Math.abs(post.root.position.x - here);
-      const near = 1 - smoothstep(26, 42, distance);
+      const near = 1 - smoothstep(34, 54, distance);
       post.root.scale.setScalar(Math.max(near, 0.001));
-      const power = (1 - smoothstep(11, 24, distance)) * visibility;
+      const power = (1 - smoothstep(15, 30, distance)) * visibility;
       post.screen.uniforms.uPower.value = power;
       post.screen.uniforms.uTime.value = time;
       post.glow.opacity = 0.35 * power;
