@@ -13,8 +13,8 @@ export const metadata: Metadata = {
   title,
   description,
   robots: { index: true, follow: true },
-  openGraph: { title, description, type: 'website', locale: 'vi_VN', images: ['/brand/sussy-poster.png'] },
-  twitter: { card: 'summary_large_image', title, description, images: ['/brand/sussy-poster.png'] },
+  openGraph: { title, description, type: 'website', locale: 'vi_VN', images: ['/brand/og-dev.jpg'] },
+  twitter: { card: 'summary_large_image', title, description, images: ['/brand/og-dev.jpg'] },
 };
 
 export const viewport: Viewport = { themeColor: '#0b0b0d', colorScheme: 'dark' };

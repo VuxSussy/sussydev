@@ -75,7 +75,7 @@ Web đang dùng `run-v4` và `idle-v2`; tư thế ngồi được tạo trong `c
 npm run build:model
 ```
 
-`public/brand/sussy-head.png` (loading screen) và `sussy-poster.png` (fallback khi không có WebGL) được render từ cùng file Blender.
+`public/brand/sussy-head.webp` (loading screen, nhúng vào `lib/brand.ts`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-{dev,roblox}.jpg` tạo bằng `python3 scripts/og/make-og.py`.
 
 ## Hiệu năng & trợ năng
 
