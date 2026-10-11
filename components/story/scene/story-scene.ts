@@ -115,6 +115,8 @@ export class StoryScene {
   private waveTime = -1;
   private waveQuat = new THREE.Quaternion();
   private waveTilt = new THREE.Quaternion();
+  /** Seconds left for a queued wave to start (0 = none queued); dropped if the user has scrolled elsewhere. */
+  private waveQueue = 0;
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -381,10 +383,22 @@ export class StoryScene {
   /** Sussy waves with the arm nearer the camera (layered over running or sitting). */
   wave() {
     if (this.reducedMotion || !this.shoulders) return;
-    // Seated at sunset the body is turned towards the sun, so the right arm faces the viewer; otherwise the left.
-    this.waveSide = sitMix(this.storyTarget) > 0.5 ? 1 : -1;
-    this.waveTime = 0;
+    // Queued: it starts once the scene has caught up with the scroll (after a long jump the camera is still
+    // travelling), and the goodbye only once Sussy has actually sat down.
+    this.waveQueue = 3;
     this.needsRender = true;
+  }
+
+  private startQueuedWave(dt: number) {
+    if (this.waveQueue <= 0 || this.waveTime >= 0) return;
+    this.waveQueue = Math.max(0, this.waveQueue - dt);
+    const seated = sitMix(this.storyTarget) > 0.5;
+    const ready = seated ? sitMix(this.story) > 0.92 : Math.abs(this.story - this.storyTarget) < 0.12;
+    if (!ready) return;
+    this.waveQueue = 0;
+    // Seated at sunset the body is turned towards the sun, so the right arm faces the viewer; otherwise the left.
+    this.waveSide = seated ? 1 : -1;
+    this.waveTime = 0;
   }
 
   /** Make Sussy hop (click/tap on the character or the Space shortcut). Returns false when not possible. */
@@ -498,6 +512,7 @@ export class StoryScene {
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
+    if (!reduced) this.startQueuedWave(dt);
     if (this.waveTime >= 0 && this.shoulders && this.neckJoint) {
       this.waveTime = reduced ? -1 : this.waveTime + dt;
       if (this.waveTime >= 0) {

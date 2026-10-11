@@ -154,3 +154,20 @@ it("keeps initial DPR through shader warmup and waits for sustained recovery bef
   for (let i = 0; i < 240; i++) { timestamp += 1000 / 60; frame?.(timestamp); }
   expect(gpu.setPixelRatio).toHaveBeenLastCalledWith(1.5);
 });
+
+it("holds the goodbye wave until Sussy has sat down, then waves with the arm facing the viewer", async () => {
+  await scene.load();
+  const state = scene as unknown as { waveTime: number; waveSide: number; story: number };
+  tick();
+  scene.setStory(3.75); // a long jump: the scene's own story value is still near the start
+  scene.wave();
+  tick();
+  expect(state.waveTime).toBe(-1);
+  let started = -1;
+  for (let i = 0; i < 180 && started < 0; i++) {
+    tick();
+    if (state.waveTime >= 0) started = state.story;
+  }
+  expect(started).toBeGreaterThan(3.55); // seated (sitMix > 0.92)
+  expect(state.waveSide).toBe(1);
+});
