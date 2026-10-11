@@ -85,10 +85,10 @@ export const ROAD = {
   door: -9,
   /** First and last project screen stop; after the door there is a clear run before the first one. */
   firstStop: -42,
-  /** 18 studs between stops: each TV-sized screen stands on its own with open road between them. */
-  lastStop: -96,
+  /** 26 studs between stops: a stretch of open road between one big screen and the next. */
+  lastStop: -120,
   /** Where Sussy sits under the tree. */
-  sit: -122,
+  sit: -146,
 } as const;
 export const DOOR_STORY = 2.3;
 /**
@@ -103,6 +103,8 @@ export function setShowcase(start: number, end: number) {
   SHOWCASE.end = Math.min(Math.max(end, SHOWCASE.start + 0.12), 2.95);
 }
 export const resetShowcase = () => setShowcase(SHOWCASE_DEFAULT.start, SHOWCASE_DEFAULT.end);
+/** Sussy is on the showcase stretch (a little before the first screen to a little after the last). */
+export const showcaseActive = (story: number) => story >= SHOWCASE.start - 0.035 && story <= SHOWCASE.end + 0.03;
 /** The project whose screen Sussy is at (or walking to): the nearest stop. */
 export const showcaseIndex = (story: number, count: number) =>
   count > 1 ? Math.min(count - 1, Math.max(0, Math.round(((story - SHOWCASE.start) / (SHOWCASE.end - SHOWCASE.start)) * (count - 1)))) : 0;

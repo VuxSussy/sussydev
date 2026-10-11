@@ -71,8 +71,8 @@ it("plants one static TV per project along the road, with open road between them
   const xs = milestones.group.children.map((post) => post.position.x);
   milestones.update(2.8, 1, path);
   expect(milestones.group.children.map((post) => post.position.x)).toEqual(xs);
-  // Evenly spaced, each TV (10.4 studs wide) clear of the next by several studs.
-  xs.slice(1).forEach((x, i) => expect(xs[i] - x).toBeGreaterThan(10.4 + 5));
+  // Evenly spaced, each screen (14 studs wide) with a long stretch of open road before the next.
+  xs.slice(1).forEach((x, i) => expect(xs[i] - x).toBeGreaterThan(14 + 10));
   milestones.dispose();
 });
 
@@ -99,7 +99,7 @@ it("finds the roadside board nearest to Sussy", async () => {
   milestones.update(2.6, 1, path);
   // At a stop the TV stands just ahead of Sussy (beside, not behind her).
   const near = milestones.nearestBoard(path(stopStory(1, count))[0], out);
-  expect(near).toBeLessThan(8);
+  expect(near).toBeLessThan(10);
   expect(out.x).toBeLessThan(path(stopStory(1, count))[0]);
   expect(out.y).toBeGreaterThan(3);
   milestones.dispose();

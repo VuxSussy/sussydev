@@ -18,7 +18,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     facts: [
       { label: "Model nhân vật", value: "≈162 KB" },
       { label: "Test tự động", value: "71 + e2e" },
-      { label: "Đoạn showcase", value: "2700 px" },
+      { label: "Đoạn showcase", value: "3300 px" },
     ],
     sections: [
       {
@@ -39,7 +39,7 @@ export const caseStudies: Record<string, CaseStudy> = {
         title: "Từ studio ra hoàng hôn",
         paragraphs: [
           "Tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Phần dự án nối hai cảnh lại. Băng chuyền tắt, một cánh cửa sáng hiện ra, và khi Sussy bước qua thì ánh sáng trong khung cửa phủ kín màn hình. Studio đổi sang đồng cỏ ngay sau lớp sáng đó.",
-          "Ra khỏi cửa là một quãng đường trống, sau đó tới bốn chiếc TV bên đường, mỗi cái chiếu demo của một dự án. Panel bên trái đổi nội dung khi Sussy tới TV kế tiếp. Vị trí từng TV được đo từ trang HTML, nên TV nào cũng hiện đúng lúc panel nói về nó. Cuộn chậm thì Sussy đi bộ, cuộn nhanh thì chạy.",
+          "Ra khỏi cửa là một quãng đường trống, sau đó tới bốn màn hình lớn bên đường, mỗi cái chiếu demo của một dự án và cách nhau 26 stud. Panel bên trái trượt vào khi Sussy tới màn hình đầu tiên và đổi nội dung ở mỗi màn hình kế tiếp. Vị trí từng màn hình được đo từ trang HTML, nên màn hình nào cũng hiện đúng lúc panel nói về nó. Cuộn chậm thì Sussy đi bộ, cuộn nhanh thì chạy.",
           "Cây, bụi, cỏ và dương xỉ được dựng bằng script Python trong Blender. Bóng trong tán lá và viền nắng được tính sẵn vào màu đỉnh, nên trên web mỗi loại chỉ cần một vật liệu. Cỏ có hai loại, bụi cao và thảm thấp, tổng cộng khoảng mười nghìn instance trên desktop, đung đưa nhờ một shader gió nhỏ.",
         ],
       },

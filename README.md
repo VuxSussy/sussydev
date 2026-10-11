@@ -39,7 +39,7 @@ Mọi nội dung nằm trong `data/portfolio.ts` (`portfolio.profile`), bản ti
   Thêm tech mới = thêm một dòng `tech(tên, nhóm, ...)` với nhóm là `"language"`, `"framework"` hoặc `"tool"`, đặt
   vào đúng kệ của nó (danh sách phải xếp theo thứ tự Language → Framework → Tool); chiều dài chương tự giãn theo số lượng.
 - `projects`: mỗi dự án là một TV bên đường (ảnh `image` nếu có) và một trang trong panel bên trái. Vị trí các TV
-  được đo từ các mốc `.showcase-stops` trong trang (`setShowcase` trong `lib/story.ts`), mỗi mốc cao 900 px:
+  được đo từ các mốc `.showcase-stops` trong trang (`setShowcase` trong `lib/story.ts`), mỗi mốc cao 1100 px:
   thêm dự án thì đoạn showcase tự dài thêm.
 - `experience`, `about`.
 

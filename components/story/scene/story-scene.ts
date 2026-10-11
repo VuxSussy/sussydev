@@ -33,8 +33,8 @@ const KEYS: Key[] = [
   { s: 1.9, cam: [-3.0, 9.1, 22], target: [-3.0, 1.15, 2.8], yaw: Math.PI / 2 },
   // On the road the camera looks well ahead of Sussy: the roadside TV sits in the right half of the frame, clear of
   // the project panel on the left, with Sussy beside it.
-  { s: 2.2, cam: [-9.0, 6.0, 31], target: [-9.0, 5.0, 0], yaw: Math.PI / 2 + 0.3 },
-  { s: 3.2, cam: [-8.4, 5.6, 29], target: [-8.4, 4.6, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 2.2, cam: [-12.0, 7.6, 37], target: [-12.0, 6.6, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 3.2, cam: [-11.0, 7.0, 34], target: [-11.0, 6.0, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
   { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI + 0.26 },
   { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI + 0.26 },
@@ -87,10 +87,13 @@ function sampleKeys(s: number, portrait: boolean) {
     // At sunset the camera stays up and looks below Sussy, so the scene sits above the panel.
     const end = smoothstep(2.9, 3.4, s);
     const lift = (3.8 + 1.6 * techVisibility(s)) * (1 - end);
-    // On the road the project panel is a sheet along the bottom: look lower so the TVs and Sussy sit above it.
+    // On the road the project panel is a sheet along the bottom: look lower so the TVs and Sussy sit above it,
+    // and lean towards the TV (it stands ahead of Sussy, towards -X) so both share the narrow frame.
     const road = smoothstep(2.3, 2.5, s) * (1 - end);
     cam[1] += lift + 1.2 * end + 1.5 * road;
     target[1] += lift - 6.5 * end - 7.5 * road;
+    cam[0] -= 6.5 * road;
+    target[0] -= 6.5 * road;
   }
   const pos = characterPosition(s);
   cam[0] += pos[0];
@@ -214,7 +217,7 @@ export class StoryScene {
     this.keyLight.position.set(4, 7, 6);
     this.rimLight.position.set(-5, 5, -6);
     this.sky.material.depthTest = false;
-    this.sunset = createSunsetWorld({ grassCount: coarse ? 1800 : 4200, carpetCount: coarse ? 2600 : 6500 });
+    this.sunset = createSunsetWorld({ grassCount: coarse ? 2200 : 5000, carpetCount: coarse ? 3200 : 8000 });
     this.carousel = new TechCarousel(options.techs, ACCENT);
     this.scene.add(this.robloxProps.group, this.door.group, this.flood.mesh, this.fillLight, this.fillLight.target);
     this.milestones = new Milestones(portfolio.profile.projects);

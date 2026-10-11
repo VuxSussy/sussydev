@@ -8,7 +8,7 @@ import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
 import { portfolio, TECH_GROUPS, type ContactLink } from "@/data/portfolio";
-import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setShowcase, showcaseIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
+import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setShowcase, showcaseActive, showcaseIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { ChatBubble } from "./chat-bubble";
@@ -86,6 +86,7 @@ export function PortfolioStory() {
   const [chapter, setChapter] = useState(0);
   const [techIndex, setTechIndex] = useState(0);
   const [projectIndex, setProjectIndex] = useState(0);
+  const [showcaseOn, setShowcaseOn] = useState(false);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
   const studsRef = useRef<HTMLSpanElement>(null);
@@ -215,6 +216,7 @@ export function PortfolioStory() {
       setBeat(speechBeat(story));
       setTechIndex(Math.round(techPosition(story, techs.length)));
       setProjectIndex(showcaseIndex(story, portfolio.profile.projects.length));
+      setShowcaseOn(showcaseActive(story));
       if (readoutRef.current) readoutRef.current.textContent = `${String(Math.round((story / CHAPTERS.length) * 100)).padStart(3, "0")}%`;
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
@@ -439,7 +441,8 @@ export function PortfolioStory() {
               </ol>
             </div>
             <div className="showcase">
-              <div className="showcase-sticky">
+              {/* Slides in from the left while Sussy is on the showcase stretch, and out again after the last screen. */}
+              <div className={`showcase-dock${showcaseOn ? " is-active" : ""}`} aria-hidden={!showcaseOn} inert={!showcaseOn}>
                 <aside className="showcase-panel" aria-labelledby="showcase-title">
                   <p className="eyebrow">{t.project} {pad(projectIndex + 1)} / {pad(profile.projects.length)} <span className="eyebrow-line" aria-hidden="true" /></p>
                   <div className="showcase-body" key={projectIndex} aria-live="polite">

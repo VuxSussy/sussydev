@@ -15,7 +15,7 @@ export const SUN_DIRECTION = new THREE.Vector3(0.26, 0.05, -1).normalize();
 const TREE_BASE = new THREE.Vector3(SIT_SPOT.x - 3.4, 0, SIT_SPOT.y - 3.6);
 /** Smaller copies of the tree in the distance: one across the showcase stretch, one beyond the resting tree. */
 const BACKGROUND_TREES = [
-  { x: -57.5, z: -27, scale: 0.72, turn: 2.1 },
+  { x: -64, z: -30, scale: 0.8, turn: 2.1 },
   { x: SIT_SPOT.x - 30, z: -20, scale: 0.85, turn: 4.0 },
 ];
 
@@ -172,9 +172,9 @@ const smoothstep = (a: number, b: number, v: number) => {
 };
 
 function createGround() {
-  const geometry = new THREE.PlaneGeometry(260, 200, 160, 120);
+  const geometry = new THREE.PlaneGeometry(340, 200, 200, 120);
   geometry.rotateX(-Math.PI / 2);
-  geometry.translate(-40, 0, -30);
+  geometry.translate(-70, 0, -30);
   const pos = geometry.attributes.position as THREE.BufferAttribute;
   const colors = new Float32Array(pos.count * 3);
   const meadow = new THREE.Color("#4c6a2a");

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("portfolio story", () => {
-  test("loads the Dev portfolio with all four chapters and no console errors", async ({ page }) => {
+  test("loads the portfolio with all four chapters and no console errors", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
