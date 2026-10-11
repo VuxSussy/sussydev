@@ -1,6 +1,8 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+/* Tailwind supplies the preflight reset; utilities are only generated for the story/app sources
+   (the unused shadcn kit in components/ui is not scanned, keeping the render-blocking CSS small). */
+@import "tailwindcss" source(none);
+@source "../app";
+@source "../components/story";
 
 @custom-variant dark (&:is(.dark *));
 

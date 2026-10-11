@@ -15,11 +15,11 @@ export default function ChangelogPage() {
   return (
     <div className="site changelog-page">
       <header className="changelog-header">
-        <Link className="brand" href="/">
+        <Link prefetch={false} className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / LOG</strong>
         </Link>
-        <Link className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
+        <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
       </header>
       <main className="changelog-main">
         <p className="eyebrow">NHẬT KÝ <span className="eyebrow-line" aria-hidden="true" /> {changelog.length} PHIÊN BẢN</p>

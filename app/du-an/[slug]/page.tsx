@@ -33,11 +33,11 @@ export default async function CaseStudyPage({ params }: Params) {
   return (
     <div className="site case-page" data-mode={mode}>
       <header className="changelog-header">
-        <Link className="brand" href={mode === "dev" ? "/" : "/roblox"}>
+        <Link prefetch={false} className="brand" href={mode === "dev" ? "/" : "/roblox"}>
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / CASE</strong>
         </Link>
-        <Link className="outline-button" href={back}><ArrowLeft aria-hidden="true" size={16} /> Về dự án</Link>
+        <Link prefetch={false} className="outline-button" href={back}><ArrowLeft aria-hidden="true" size={16} /> Về dự án</Link>
       </header>
       <main className="changelog-main case-main">
         <p className="eyebrow">{project.year} <span className="eyebrow-line" aria-hidden="true" /> {project.category.toUpperCase()}</p>
@@ -57,14 +57,14 @@ export default async function CaseStudyPage({ params }: Params) {
             ))}
           </>
         ) : (
-          <p className="case-pending">Case study cho dự án này đang được viết. Quay lại sau nhé — mọi cập nhật sẽ có trong <Link href="/nhat-ky">Nhật ký</Link>.</p>
+          <p className="case-pending">Case study cho dự án này đang được viết. Quay lại sau nhé — mọi cập nhật sẽ có trong <Link prefetch={false} href="/nhat-ky">Nhật ký</Link>.</p>
         )}
         {others.length > 0 && (
           <nav className="case-others" aria-label="Case study khác">
             <p className="eyebrow">ĐỌC TIẾP</p>
             <ul>
               {others.map(({ project: other }) => (
-                <li key={other.slug}><Link href={`/du-an/${other.slug}`}><span>{other.title}</span><span>{other.category}</span><ArrowUpRight aria-hidden="true" size={16} /></Link></li>
+                <li key={other.slug}><Link prefetch={false} href={`/du-an/${other.slug}`}><span>{other.title}</span><span>{other.category}</span><ArrowUpRight aria-hidden="true" size={16} /></Link></li>
               ))}
             </ul>
           </nav>
