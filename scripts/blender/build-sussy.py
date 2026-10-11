@@ -8,7 +8,7 @@
 #   assets-src/sussy/textures/*    original textures (cache KTX2 decoded to PNG) + the face decal
 #
 # Quality pass only: original geometry is kept; we weld duplicate vertices, rebuild normals with
-# angle-based smoothing (Draco meshes ship without normals), subdivide the head once and assign PBR materials.
+# angle-based smoothing (Draco meshes ship without normals) and assign PBR materials.
 #
 # Body parts are the R6 blocks themselves; accessories (SpecialMesh FileMesh, scaled by `mesh.scale`) are
 # merged into the R6 part they hang from, so the R6 animation pack drives everything. Geometry is authored in Roblox space (Y up, faces -Z, studs)
@@ -35,11 +35,13 @@ GROUP_CENTER = {
     "RightLeg": Vector((0.5, -2, 0)), "LeftLeg": Vector((-0.5, -2, 0)),
 }
 # Accessory meshes by Roblox asset id -> (mesh file, R6 part it is worn on).
-# 4546389367 is an invisible shell around the head (Studio hides it), so it is skipped.
-ACCESSORIES = {"3963788594": ("Trilby", "Head"), "4820755895": ("Glasses", "Head"),
+# 4546389367 is Sussy's visible head: a white egg with eye holes inside a black inverted-hull shell
+# (outline + eyes). The 1-bit texture is black on top / white below, so the shells are split by UV v.
+ACCESSORIES = {"3963788594": ("Trilby", "Head"), "4820755895": ("Glasses", "Head"), "4546389367": ("Egg", "Head"),
                "123160367470095": ("TacBelts", "Torso"), "138076927962847": ("Scarf", "Torso")}
 R6_PARTS = {"Torso": "Torso", "Head": "Head", "Left Arm": "LeftArm", "Right Arm": "RightArm", "Left Leg": "LeftLeg", "Right Leg": "RightLeg"}
-SKIP_MESHES = {"4546389367"}
+# The dynamic head mesh is fully enclosed by the egg and never visible.
+SKIP_MESHES = {"108826953212433"}
 # The pixel glasses on the trilby brim come from the HumanoidDescription Face accessory (4820765156): Studio
 # renders it but the R6 model has no instance for it, so its transform is taken from the R15 rig of the same avatar.
 EXTRA_PARTS = [{
@@ -47,7 +49,7 @@ EXTRA_PARTS = [{
     "cframe": [0.24518, 2.03945, -0.37459, 0.8702, -0.03913, -0.49114, -0.06168, 0.98035, -0.18738, 0.48882, 0.19335, 0.85069],
     "mesh": {"id": "rbxassetid://4820755895", "scale": [1.2, 1.2, 1.2], "offset": [0, 0, 0]},
 }]
-SMOOTH_ANGLE = {"Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
+SMOOTH_ANGLE = {"Egg": 80, "Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
 
 
 def to_blender(v):
@@ -86,11 +88,12 @@ def load_rgba(file):
 MATS = {}
 
 
-def mat(name, color="ffffff", rough=0.55, metal=0.0, image=None, coat=0.0, sheen=0.0):
+def mat(name, color="ffffff", rough=0.55, metal=0.0, image=None, coat=0.0, sheen=0.0, cull=False):
     if name in MATS:
         return MATS[name]
     m = bpy.data.materials.new(name)
     m.use_nodes = True
+    m.use_backface_culling = cull  # glTF exports doubleSided = not culling
     bsdf = m.node_tree.nodes["Principled BSDF"]
     bsdf.inputs["Base Color"].default_value = (*lin(hex_rgb(color)), 1)
     bsdf.inputs["Roughness"].default_value = rough
@@ -106,7 +109,8 @@ def mat(name, color="ffffff", rough=0.55, metal=0.0, image=None, coat=0.0, sheen
     return m
 
 
-def load_mesh(name, scale):
+def load_mesh(name, scale, keep=None):
+    """Load a decoded Roblox mesh; `keep(v)` filters triangles by their mean (Blender-space) UV v."""
     data = json.load(open(os.path.join(SRC, "meshes", f"{name}.json")))
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
@@ -114,6 +118,8 @@ def load_mesh(name, scale):
     verts = [bm.verts.new((p[i] * scale[0], p[i + 1] * scale[1], p[i + 2] * scale[2])) for i in range(0, len(p), 3)]
     for t in range(0, len(idx), 3):
         tri = idx[t:t + 3]
+        if keep and uvs and not keep(sum(1 - uvs[i * 2 + 1] for i in tri) / 3):
+            continue
         try:
             f = bm.faces.new([verts[i] for i in tri])
         except ValueError:
@@ -123,16 +129,6 @@ def load_mesh(name, scale):
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     bm.normal_update()
     return bm
-
-
-def project_face(bm):
-    """The dynamic head's own texture is a FACS sheet; Studio shows the 'sus' eyes, so project the face decal."""
-    uv = bm.loops.layers.uv.active
-    for f in bm.faces:
-        front = f.normal.z < -0.2
-        for loop in f.loops:
-            x, y = loop.vert.co.x, loop.vert.co.y
-            loop[uv].uv = ((0.6 - x) / 1.2, (y + 0.6) / 1.2) if front else (0.02, 0.98)
 
 
 def tube(points, radius, ring=8):
@@ -237,10 +233,12 @@ def main():
         if mesh:
             matrix = matrix @ Matrix.Translation(mesh["offset"])
         scale = mesh["scale"] if mesh else [1, 1, 1]
-        if p["name"] == "Head":
-            bm = load_mesh("Head", scale)
-            project_face(bm)
-            group.add(bm, mat("Face", rough=0.42, image="face.png"), matrix, SMOOTH_ANGLE["Head"], subdivide=1)
+        if key == "Egg":
+            # Single-sided like Roblox: the outer black shell only shows at the rim and through the eye holes.
+            white = mat("EggWhite", "f4f4f1", 0.35, coat=0.35, cull=True)
+            black = mat("EggInk", "0c0c0f", 0.45, cull=True)
+            group.add(load_mesh("Egg", scale, keep=lambda v: v < 0.5), white, matrix, SMOOTH_ANGLE["Egg"])
+            group.add(load_mesh("Egg", scale, keep=lambda v: v >= 0.5), black, matrix, SMOOTH_ANGLE["Egg"])
         elif key:
             look = {
                 "Trilby": mat("Trilby", rough=0.58, image="trilby.png"),
