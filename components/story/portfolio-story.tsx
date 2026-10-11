@@ -250,7 +250,17 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           onTechSelect: (index) => selectSceneTech(index),
         });
         sceneRef.current = scene;
-        if (process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("debug")) (window as unknown as { __sussyScene?: StoryScene }).__sussyScene = scene;
+        if (process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("debug")) {
+          const debug = window as unknown as { __sussyScene?: StoryScene; __go?: (story: number, seconds?: number) => number };
+          debug.__sussyScene = scene;
+          // __go(3.9): scroll the copy to a story value and settle the scene there (for screenshots).
+          debug.__go = (story, seconds) => {
+            const top = scrollTopForStory(story, sectionRefs.current, window.innerHeight, window.scrollY);
+            if (top !== null) window.scrollTo({ top, behavior: "instant" });
+            scene?.seek(story, seconds);
+            return story;
+          };
+        }
         scene.setStory(storyFromSections(sectionRefs.current, window.innerHeight));
         await scene.load();
         if (disposed) return;
