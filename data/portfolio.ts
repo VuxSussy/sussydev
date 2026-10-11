@@ -22,9 +22,14 @@ export type Experience = {
   description: string;
 };
 
+/** The three shelves the tech stack is sorted into (in this order on the conveyor and in the chips). */
+export const TECH_GROUPS = ["language", "framework", "tool"] as const;
+export type TechGroup = (typeof TECH_GROUPS)[number];
+
 /** A tech shown on the 3D conveyor. `icon` is a 24×24 SVG path (simple-icons, CC0). */
 export type TechStack = {
   name: string;
+  group: TechGroup;
   category: string;
   blurb: string;
   color: string;
@@ -38,8 +43,8 @@ export type ContactLink = {
   value: string;
 };
 
-const tech = (name: string, category: string, blurb: string, icon: { path: string; hex: string }, color?: string): TechStack => ({
-  name, category, blurb, icon: icon.path, color: color ?? `#${icon.hex}`,
+const tech = (name: string, group: TechGroup, category: string, blurb: string, icon: { path: string; hex: string }, color?: string): TechStack => ({
+  name, group, category, blurb, icon: icon.path, color: color ?? `#${icon.hex}`,
 });
 
 export type Mode = "dev" | "roblox";
@@ -93,18 +98,18 @@ export const portfolio = {
         "Tôi xây giao diện web rõ ràng, nhanh và có nhịp chuyển động riêng — nơi code gọn và trải nghiệm là trọng tâm.",
       techTitle: ["Những công cụ", "tôi chạy cùng."],
       techStack: [
-        tech("TypeScript", "Ngôn ngữ", "Kiểu dữ liệu chặt chẽ cho mọi giao diện và công cụ tôi viết.", siTypescript),
-        tech("React", "Giao diện", "Component rõ ràng, trạng thái dễ đoán, trải nghiệm mượt.", siReact),
-        tech("Next.js", "Framework", "App Router, server components và hiệu năng tải trang.", siNextdotjs, "#e8e6e1"),
-        tech("Three.js", "3D Web", "Cảnh 3D, shader và chuyển động ngay trong trình duyệt.", siThreedotjs, "#e8e6e1"),
-        tech("Tailwind CSS", "Styling", "Hệ token nhất quán, dựng layout nhanh mà vẫn gọn.", siTailwindcss),
-        tech("Node.js", "Runtime", "Script build, công cụ nội bộ và API nhẹ.", siNodedotjs),
-        tech("Python", "Ngôn ngữ", "Tự động hoá, xử lý dữ liệu và pipeline cho asset.", siPython),
-        tech("C++", "Ngôn ngữ", "Thuật toán, cấu trúc dữ liệu và tư duy hiệu năng.", siCplusplus),
-        tech("Luau", "Roblox", "Gameplay, hệ thống di chuyển và UI cho trải nghiệm Roblox.", siLua, "#7d8bff"),
-        tech("Roblox Studio", "Game engine", "Dựng map, animation R6/R15 và kiểm thử nhiều người chơi.", siRobloxstudio),
-        tech("Blender", "3D", "Mô hình, UV và xuất GLB tối ưu cho web lẫn Roblox.", siBlender),
-        tech("Git", "Cộng tác", "Nhánh gọn, commit nhỏ và lịch sử dễ đọc.", siGit),
+        tech("TypeScript", "language", "Web · Công cụ", "Kiểu dữ liệu chặt chẽ cho mọi giao diện và công cụ tôi viết.", siTypescript),
+        tech("Python", "language", "Tự động hoá", "Tự động hoá, xử lý dữ liệu và pipeline cho asset.", siPython),
+        tech("C++", "language", "Thuật toán", "Thuật toán, cấu trúc dữ liệu và tư duy hiệu năng.", siCplusplus),
+        tech("Luau", "language", "Roblox", "Gameplay, hệ thống di chuyển và UI cho trải nghiệm Roblox.", siLua, "#7d8bff"),
+        tech("React", "framework", "Giao diện", "Component rõ ràng, trạng thái dễ đoán, trải nghiệm mượt.", siReact),
+        tech("Next.js", "framework", "Full-stack", "App Router, server components và hiệu năng tải trang.", siNextdotjs, "#e8e6e1"),
+        tech("Three.js", "framework", "3D Web", "Cảnh 3D, shader và chuyển động ngay trong trình duyệt.", siThreedotjs, "#e8e6e1"),
+        tech("Tailwind CSS", "framework", "Styling", "Hệ token nhất quán, dựng layout nhanh mà vẫn gọn.", siTailwindcss),
+        tech("Node.js", "framework", "Runtime", "Script build, công cụ nội bộ và API nhẹ.", siNodedotjs),
+        tech("Roblox Studio", "tool", "Game engine", "Dựng map, animation R6/R15 và kiểm thử nhiều người chơi.", siRobloxstudio),
+        tech("Blender", "tool", "3D", "Mô hình, UV và xuất GLB tối ưu cho web lẫn Roblox.", siBlender),
+        tech("Git", "tool", "Cộng tác", "Nhánh gọn, commit nhỏ và lịch sử dễ đọc.", siGit),
       ],
       workTitle: ["Những quãng đường", "đã chạy qua."],
       projects: [
@@ -167,16 +172,16 @@ export const portfolio = {
         "Tôi làm trải nghiệm Roblox bằng Luau: hệ thống di chuyển, gameplay nhiều người chơi, UI và animation — chạy mượt cả trên điện thoại.",
       techTitle: ["Bộ đồ nghề", "trong Studio."],
       techStack: [
-        tech("Luau", "Scripting", "Gameplay, server authority, DataStore và module tái sử dụng.", siLua, "#7d8bff"),
-        tech("Roblox Studio", "Engine", "Dựng map, rig R6/R15, animation và test nhiều người chơi.", siRobloxstudio),
-        tech("roblox-ts", "Scripting", "Viết TypeScript và biên dịch sang Luau cho dự án lớn.", siTypescript),
-        tech("Blender", "3D", "Model, UV, rig và tối ưu tri cho mobile.", siBlender),
-        tech("Figma", "UI", "Thiết kế HUD, menu và luồng onboarding trước khi dựng.", siFigma),
-        tech("Aseprite", "Pixel art", "Icon, badge và texture pixel cho UI trong game.", siAseprite),
-        tech("Git", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
-        tech("Python", "Tooling", "Script xử lý asset, trích animation và mesh tự động.", siPython),
-        tech("Discord", "Cộng đồng", "Devlog, playtest và nhận phản hồi từ người chơi.", siDiscord),
-        tech("Roblox", "Nền tảng", "Xuất bản, monetization và phân tích trải nghiệm.", siRoblox, "#e8e6e1"),
+        tech("Luau", "language", "Scripting", "Gameplay, server authority, DataStore và module tái sử dụng.", siLua, "#7d8bff"),
+        tech("Python", "language", "Tooling", "Script xử lý asset, trích animation và mesh tự động.", siPython),
+        tech("roblox-ts", "framework", "TypeScript → Luau", "Viết TypeScript và biên dịch sang Luau cho dự án lớn.", siTypescript),
+        tech("Roblox", "framework", "Engine API · Nền tảng", "Xuất bản, monetization và phân tích trải nghiệm.", siRoblox, "#e8e6e1"),
+        tech("Roblox Studio", "tool", "Engine · IDE", "Dựng map, rig R6/R15, animation và test nhiều người chơi.", siRobloxstudio),
+        tech("Blender", "tool", "3D", "Model, UV, rig và tối ưu tri cho mobile.", siBlender),
+        tech("Figma", "tool", "UI", "Thiết kế HUD, menu và luồng onboarding trước khi dựng.", siFigma),
+        tech("Aseprite", "tool", "Pixel art", "Icon, badge và texture pixel cho UI trong game.", siAseprite),
+        tech("Git", "tool", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
+        tech("Discord", "tool", "Cộng đồng", "Devlog, playtest và nhận phản hồi từ người chơi.", siDiscord),
       ],
       workTitle: ["Những server", "đã từng mở."],
       projects: [

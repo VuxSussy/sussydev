@@ -9,7 +9,7 @@ import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, Vo
 import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
-import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
+import { portfolio, TECH_GROUPS, type ContactLink, type Mode } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, speechBeat, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
@@ -312,7 +312,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const row = chipsRef.current;
     const chip = row?.querySelectorAll("button")[focusIndex];
     if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
-    row.scrollTo({ left: chip.offsetLeft - row.clientWidth / 2 + chip.offsetWidth / 2, behavior: reducedRef.current ? "auto" : "smooth" });
+    // Measured against the row itself: the chips sit inside their group, so offsetLeft is no longer row-relative.
+    const left = row.scrollLeft + chip.getBoundingClientRect().left - row.getBoundingClientRect().left;
+    row.scrollTo({ left: left - row.clientWidth / 2 + chip.offsetWidth / 2, behavior: reducedRef.current ? "auto" : "smooth" });
   }, [focusIndex]);
   const gmail = portfolio.contacts.find((c) => c.kind === "gmail")?.value ?? "";
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -413,26 +415,33 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
               <h2 id="tech-title">{profile.techTitle[0]}<br />{profile.techTitle[1]}</h2>
               <fieldset className="tech-chips" ref={chipsRef}>
                 <legend className="sr-only">{t.chooseTech}</legend>
-                {techs.map((tech, index) => (
-                  <button
-                    key={tech.name}
-                    type="button"
-                    aria-pressed={focusIndex === index}
-                    onClick={() => selectTech(index)}
-                    onKeyDown={(event) => {
-                      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-                      event.preventDefault();
-                      const next = (index + (event.key === "ArrowRight" ? 1 : -1) + techs.length) % techs.length;
-                      event.currentTarget.parentElement?.querySelectorAll("button")[next]?.focus();
-                      selectTech(next);
-                    }}
-                  >
-                    {tech.name}
-                  </button>
+                {TECH_GROUPS.map((group) => (
+                  <fieldset key={group} className="tech-group" data-group={group}>
+                    <legend className="tech-group-label">{t.techGroups[group]}</legend>
+                    <div className="tech-group-chips">
+                      {techs.map((tech, index) => tech.group !== group ? null : (
+                        <button
+                          key={tech.name}
+                          type="button"
+                          aria-pressed={focusIndex === index}
+                          onClick={() => selectTech(index)}
+                          onKeyDown={(event) => {
+                            if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                            event.preventDefault();
+                            const next = (index + (event.key === "ArrowRight" ? 1 : -1) + techs.length) % techs.length;
+                            chipsRef.current?.querySelectorAll("button")[next]?.focus();
+                            selectTech(next);
+                          }}
+                        >
+                          {tech.name}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
                 ))}
               </fieldset>
               <div className="tech-caption" aria-live="polite">
-                <p className="eyebrow">{pad(focusIndex + 1)} / {pad(techs.length)} <span className="eyebrow-line" aria-hidden="true" /> {focusTech.category.toUpperCase()}</p>
+                <p className="eyebrow">{pad(focusIndex + 1)} / {pad(techs.length)} <span className="eyebrow-line" aria-hidden="true" /> <span className="tech-kind" data-group={focusTech.group}>{t.techGroups[focusTech.group]}</span> · {focusTech.category.toUpperCase()}</p>
                 <p className="tech-name" style={{ "--tech-color": focusTech.color } as React.CSSProperties}>{focusTech.name}</p>
                 <p className="tech-blurb">{focusTech.blurb}</p>
               </div>

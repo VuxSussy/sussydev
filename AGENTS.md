@@ -65,8 +65,10 @@ Check desktop 1440×900 and mobile 375×812 for every visual change.
 
 - Sussy is the R6 model `R6_SussySuspector_1265476893` in the owner's Roblox Studio place. `assets-src/sussy/parts.json` is a
   dump of its part CFrames relative to HumanoidRootPart; meshes in `assets-src/sussy/meshes` are the original
-  Roblox meshes (decoded with `scripts/rbxmesh-to-json.mjs`). Auth-locked assets came from Studio's content cache
-  (`$TMPDIR/Roblox/rbx-storage`, KTX2 textures → `scripts/ktx2png.mjs`).
+  Roblox meshes (decoded with `scripts/rbxmesh-to-json.mjs`, LOD0 only: v6/v7 COREMESH holds every LOD's faces back
+  to back and the LODS chunk gives the offsets; keeping them all draws coarse copies over the mesh). Auth-locked assets
+  came from Studio's content cache (`$TMPDIR/Roblox/rbx-storage`, KTX2 textures → `scripts/ktx2png.mjs`).
+- `HttpService:PostAsync` from the Studio MCP plugin can fail; `export_rbxm` is the reliable way to get an instance out.
 - Blender 5.2 is at `/Applications/Blender.app`. When the Blender MCP addon is running (port 9876),
   `python3 scripts/blender/send-to-blender.py <script.py>` runs a script in the open session.
 - Roblox Studio MCP (if connected) can dump more data with `execute_luau`; `HttpService:PostAsync` to a localhost

@@ -187,10 +187,20 @@ button, a[href] { cursor: pointer; }
 
 .chapter-tech .chapter-sticky { justify-content: center; }
 .chapter-copy-top { gap: 1.25rem; }
-.tech-chips { margin: 0; padding: 0; border: 0; min-width: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; max-width: 30rem; }
+.tech-chips { margin: 0; padding: 0; border: 0; min-width: 0; display: grid; gap: 0.55rem; max-width: 38rem; }
+/* Language / Framework / Tool: one labelled shelf each, colour-coded like the conveyor's floor labels. */
+.tech-group { --group: #ffb86b; margin: 0; padding: 0; border: 0; min-width: 0; display: grid; grid-template-columns: 8.2rem 1fr; align-items: start; gap: 0.4rem; }
+.tech-group-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; min-width: 0; }
+.tech-group[data-group="framework"], .tech-kind[data-group="framework"] { --group: #6ee7ff; }
+.tech-group[data-group="tool"], .tech-kind[data-group="tool"] { --group: #c3a6ff; }
+/* Floated, the legend is laid out as an ordinary grid/flex item instead of sitting on the fieldset border. */
+.tech-group-label { float: left; padding: 0; min-height: 32px; display: inline-flex; align-items: center; gap: 0.45rem; font-family: var(--font-body); font-size: 0.6875rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--group); }
+.tech-group-label::before { content: ""; flex: none; width: 0.45rem; height: 0.45rem; border-radius: 2px; background: var(--group); box-shadow: 0 0 10px var(--group); }
+.tech-kind { --group: #ffb86b; color: var(--group); }
 .tech-chips button { min-height: 32px; padding: 0.35rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; font-size: 0.8125rem; color: var(--text-secondary); background: rgba(var(--bg-rgb), 0.72); backdrop-filter: blur(6px); transition: color 250ms, border-color 250ms, background 250ms; }
 .tech-chips button:hover { color: var(--text-primary); border-color: var(--border-strong); }
 .tech-chips button[aria-pressed="true"] { color: #141414; background: var(--text-primary); border-color: var(--text-primary); }
+.tech-group button[aria-pressed="true"] { box-shadow: 0 0 0 1px var(--group), 0 0 18px color-mix(in srgb, var(--group) 45%, transparent); }
 .tech-caption { display: grid; gap: 0.5rem; margin-top: 1.2rem; padding-top: 1.4rem; border-top: 1px solid var(--border); }
 .tech-name { font-family: var(--font-display); font-size: clamp(2.2rem, 4.6vw, 4.2rem); letter-spacing: -0.04em; line-height: 1; font-weight: 500; text-shadow: 0 0 40px color-mix(in srgb, var(--tech-color) 35%, transparent); }
 .tech-blurb { color: var(--text-secondary); max-width: 28rem; }
@@ -340,9 +350,13 @@ button, a[href] { cursor: pointer; }
   .contact-panel { max-width: none; }
   .chapter-tech .chapter-sticky { justify-content: flex-start; }
   .chapter-tech h2 { font-size: clamp(2rem, 9vw, 2.6rem); }
-  .tech-chips { flex-wrap: nowrap; overflow-x: auto; max-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scrollbar-width: none; mask-image: linear-gradient(to right, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent); }
+  .tech-chips { display: flex; flex-wrap: nowrap; gap: 0.4rem; overflow-x: auto; max-width: none; margin-inline: calc(var(--gutter) * -1); padding-inline: var(--gutter); scrollbar-width: none; mask-image: linear-gradient(to right, transparent, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent); }
   .tech-chips::-webkit-scrollbar { display: none; }
   .tech-chips button { flex: none; }
+  /* One scrolling row on phones; each shelf starts with its short label. */
+  .tech-group, .tech-group-chips { display: flex; flex: none; flex-wrap: nowrap; align-items: center; }
+  .tech-group + .tech-group { padding-left: 0.5rem; border-left: 1px solid var(--border); }
+  .tech-group-label { white-space: nowrap; }
   .tech-caption { margin-top: 0.4rem; padding-top: 1rem; }
   .tech-name { font-size: 2rem; }
   .tech-blurb { font-size: 0.9rem; }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, speechBeat, clamp01, damp, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, doorFlood, speechBeat, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -80,6 +80,20 @@ describe("tech conveyor and sunset", () => {
     expect([0, 3.4, 3.62, 4].map(sitMix)).toEqual([0, 0, 1, 1]);
     expect(sunsetMix(2.75)).toBeCloseTo(0.5);
     expect(sitMix(3.51)).toBeCloseTo(0.5);
+  });
+
+  it("swaps the studio for the meadow only while the doorway light covers the screen", () => {
+    expect(doorFlood(2.2)).toEqual({ spread: 0, strength: 0 });
+    expect(doorFlood(2.62).strength).toBe(0);
+    // Studio and meadow change hands entirely under full light (Sussy is in the doorway at ~2.40).
+    for (let s = 2.355; s <= 2.405; s += 0.005) expect(doorFlood(s).strength).toBeGreaterThan(0.99);
+    expect([2.35, 2.355].map(worldReveal)).toEqual([0, worldReveal(2.355)]);
+    expect(worldReveal(2.355)).toBeLessThan(0.05);
+    expect([2.4, 2.405].map(worldReveal)).toEqual([1, 1]);
+    expect([2.355, 2.4].map(studioExit)).toEqual([0, 1]);
+    // The light widens to cover the screen before the swap and stays wide while it fades.
+    expect(doorFlood(2.355).spread).toBeGreaterThan(0.97);
+    expect(doorFlood(2.5).spread).toBe(1);
   });
 
   it("scrubs chapter hops from story rather than elapsed frames", () => {

@@ -1,7 +1,7 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
-import type { TechStack } from "@/data/portfolio";
+import type { TechGroup, TechStack } from "@/data/portfolio";
 import { smoothstep } from "@/lib/story";
 
 const SPACING = 3.3;
@@ -9,6 +9,41 @@ const SPACING = 3.3;
 const LANE_Z = 6.2;
 /** Logo height above the plinth: low, so from the raised camera the logos read as "under Sussy's feet". */
 const LOGO_Y = 0.92;
+/** Extra space (in slots) between the Language, Framework and Tool shelves. */
+const GROUP_GAP = 0.75;
+/** Shelf colours, shared with the chips (app/globals.css `.tech-group`). */
+export const GROUP_COLORS: Record<TechGroup, string> = { language: "#ffb86b", framework: "#6ee7ff", tool: "#c3a6ff" };
+const GROUP_LABELS: Record<TechGroup, string> = { language: "LANGUAGE", framework: "FRAMEWORK", tool: "TOOL" };
+
+/** Slot of each tech along the lane: its index plus a gap before every new group. */
+export function laneSlots(techs: readonly Pick<TechStack, "group">[]) {
+  let gaps = 0;
+  return techs.map((tech, index) => {
+    if (index > 0 && tech.group !== techs[index - 1].group) gaps++;
+    return index + gaps * GROUP_GAP;
+  });
+}
+
+/** Floor label for the first tech of a shelf: neon group name, read from the raised camera. */
+function labelTexture(group: TechGroup) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 512;
+  canvas.height = 96;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return new THREE.Texture();
+  const color = GROUP_COLORS[group];
+  ctx.font = "700 54px 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace";
+  ctx.textBaseline = "middle";
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 18;
+  ctx.fillStyle = color;
+  ctx.fillRect(8, 30, 14, 36);
+  ctx.fillText(`${GROUP_LABELS[group]}`, 40, 50);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 8;
+  return texture;
+}
 
 type Item = {
   root: THREE.Group;
@@ -16,7 +51,10 @@ type Item = {
   logoMaterial: THREE.MeshStandardMaterial;
   ring: THREE.Mesh;
   ringMaterial: THREE.MeshBasicMaterial;
+  stripMaterial: THREE.MeshBasicMaterial;
+  label?: THREE.MeshBasicMaterial;
   color: THREE.Color;
+  slot: number;
 };
 
 /** Extruded simple-icons logo, centred, ~1.8 studs wide, facing +Z. */
@@ -51,9 +89,14 @@ export class TechCarousel {
   private plinthGeometry = new RoundedBoxGeometry(2.4, 0.24, 2.4, 3, 0.09);
   private ringGeometry = new THREE.RingGeometry(1.32, 1.4, 64);
   private plinthMaterial = new THREE.MeshStandardMaterial({ color: "#1c1c20", roughness: 0.55, metalness: 0.2 });
+  private stripGeometry = new THREE.BoxGeometry(2.2, 0.06, 0.08);
+  private labelGeometry = new THREE.PlaneGeometry(4.6, 4.6 * (96 / 512));
+  private textures: THREE.Texture[] = [];
+  private slots: number[];
 
   constructor(techs: readonly TechStack[], accent = "#f3b47c") {
     this.group.position.z = LANE_Z;
+    this.slots = laneSlots(techs);
     techs.forEach((tech, index) => {
       const root = new THREE.Group();
       root.userData.index = index;
@@ -71,10 +114,24 @@ export class TechCarousel {
       const ring = new THREE.Mesh(this.ringGeometry, ringMaterial);
       ring.rotation.x = -Math.PI / 2;
       ring.position.y = 0.25;
-      root.add(plinth, logo, ring);
+      // Shelf colour along the plinth's front edge, and the shelf's name on the floor before its first tech.
+      const stripMaterial = new THREE.MeshBasicMaterial({ color: GROUP_COLORS[tech.group], toneMapped: false, transparent: true });
+      const strip = new THREE.Mesh(this.stripGeometry, stripMaterial);
+      strip.position.set(0, 0.2, 1.22);
+      root.add(plinth, logo, ring, strip);
+      let label: THREE.MeshBasicMaterial | undefined;
+      if (index === 0 || techs[index - 1].group !== tech.group) {
+        const texture = labelTexture(tech.group);
+        this.textures.push(texture);
+        label = new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false, toneMapped: false });
+        const plate = new THREE.Mesh(this.labelGeometry, label);
+        plate.rotation.x = -Math.PI / 2;
+        plate.position.set(-1.2 + 2.3, 0.02, 2.15);
+        root.add(plate);
+      }
       this.pickables.push(logo, plinth);
       this.group.add(root);
-      this.items.push({ root, logo, logoMaterial, ring, ringMaterial, color });
+      this.items.push({ root, logo, logoMaterial, ring, ringMaterial, stripMaterial, label, color, slot: this.slots[index] });
     });
   }
 
@@ -97,11 +154,16 @@ export class TechCarousel {
     if (!this.group.visible) return;
     const rise = 1 - Math.pow(1 - visibility, 3);
     this.group.position.y = -3.2 * (1 - rise);
+    // The lane scrolls through slots (gaps between shelves included) while focus still steps tech by tech.
+    const last = this.slots.length - 1;
+    const below = Math.min(last, Math.max(0, Math.floor(position)));
+    const above = Math.min(last, below + 1);
+    const here = this.slots[below] + (this.slots[above] - this.slots[below]) * Math.min(1, Math.max(0, position - below));
     for (let i = 0; i < this.items.length; i++) {
       const item = this.items[i];
-      const offset = i - position;
+      const offset = item.slot - here;
       const distance = Math.abs(offset);
-      const f = Math.max(1 - distance, hovered === i ? 0.75 : 0);
+      const f = Math.max(1 - Math.abs(i - position), hovered === i ? 0.75 : 0);
       const edge = 1 - smoothstep(2.2, 4.2, distance);
       item.root.position.x = offset * SPACING;
       item.root.position.z = -Math.pow(distance, 1.6) * 0.35;
@@ -114,6 +176,8 @@ export class TechCarousel {
       item.logoMaterial.color.copy(item.color).multiplyScalar(0.5 + 0.5 * f);
       item.logoMaterial.emissiveIntensity = 0.06 + f * 0.3;
       item.ringMaterial.opacity = f * 0.85 * rise;
+      item.stripMaterial.opacity = (0.45 + 0.55 * f) * rise;
+      if (item.label) item.label.opacity = 0.9 * rise;
     }
   }
 
@@ -121,10 +185,15 @@ export class TechCarousel {
     this.plinthGeometry.dispose();
     this.ringGeometry.dispose();
     this.plinthMaterial.dispose();
+    this.stripGeometry.dispose();
+    this.labelGeometry.dispose();
+    for (const texture of this.textures) texture.dispose();
     for (const item of this.items) {
       item.logo.geometry.dispose();
       item.logoMaterial.dispose();
       item.ringMaterial.dispose();
+      item.stripMaterial.dispose();
+      item.label?.dispose();
     }
   }
 }

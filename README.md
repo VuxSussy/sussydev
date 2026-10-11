@@ -35,7 +35,8 @@ Mọi nội dung nằm trong `data/portfolio.ts`:
 
 - `contacts`: điện thoại, Gmail, LinkedIn, Facebook, GitHub, Roblox. Để trống `value` thì UI hiện "Đang cập nhật".
 - `techStack`: mỗi mục là một model 3D trên băng chuyền (logo SVG 24×24 từ `simple-icons`, extrude bằng Three.js).
-  Thêm tech mới = thêm một dòng `tech(...)`; chiều dài chương tự giãn theo số lượng.
+  Thêm tech mới = thêm một dòng `tech(tên, nhóm, ...)` với nhóm là `"language"`, `"framework"` hoặc `"tool"`, đặt
+  vào đúng kệ của nó (danh sách phải xếp theo thứ tự Language → Framework → Tool); chiều dài chương tự giãn theo số lượng.
 - `projects`, `experience`, `about`.
 
 ## Kiến trúc

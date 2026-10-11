@@ -4,8 +4,8 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, emoteWeight, jointNode, poseSampler, type ClipJson, type Motor } from "@/lib/rbx/rig";
-import { arriveMix, chapterJumpTime, damp, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
-import { createBlobShadow, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
+import { arriveMix, chapterJumpTime, damp, doorFlood, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
+import { createBlobShadow, createDoorFlood, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
 import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
@@ -32,8 +32,8 @@ const KEYS: Key[] = [
   { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42 },
   { s: 1.12, cam: [-3.4, 9.4, 22.5], target: [-3.4, 1.15, 2.8], yaw: Math.PI / 2 },
   { s: 1.9, cam: [-3.0, 9.1, 22], target: [-3.0, 1.15, 2.8], yaw: Math.PI / 2 },
-  { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
-  { s: 3.2, cam: [-6.0, 4.2, 22], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 2.2, cam: [-6.4, 4.8, 25], target: [-6.4, 3.7, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 3.2, cam: [-6.0, 4.6, 23.5], target: [-6.0, 3.4, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
   { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI + 0.26 },
   { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI + 0.26 },
@@ -114,6 +114,8 @@ export class StoryScene {
   private robloxProps = createRobloxProps();
   private robloxMix = 0;
   private door = createStudioDoor();
+  private flood = createDoorFlood();
+  private floodCenter = new THREE.Vector3();
   /** Warm fill from the camera side so Sussy's face is lit while the sun sits behind at the end. */
   private fillLight = new THREE.DirectionalLight("#ffb990", 0);
   private lastX = 0;
@@ -214,7 +216,7 @@ export class StoryScene {
     this.sunset = createSunsetWorld({ grassCount: coarse ? 1400 : 3200 });
     this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
     this.robloxMix = options.theme === "roblox" ? 1 : 0;
-    this.scene.add(this.robloxProps.group, this.door.group, this.fillLight, this.fillLight.target);
+    this.scene.add(this.robloxProps.group, this.door.group, this.flood.mesh, this.fillLight, this.fillLight.target);
     this.milestones = this.createMilestones(options.theme);
     this.scene.add(this.milestones.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
@@ -605,7 +607,9 @@ export class StoryScene {
     this.floor.material.uniforms.uOffset.value.copy(this.treadmill);
     this.floor.material.uniforms.uOpacity.value = 1 - exit;
     this.floor.mesh.visible = exit < 0.999;
-    this.door.update(smoothstep(1.98, 2.14, s) * (1 - smoothstep(2.62, 2.8, s)), time);
+    const flood = doorFlood(s);
+    // The door stays until the flood hides it, so the studio never visibly comes apart.
+    this.door.update(smoothstep(1.98, 2.14, s) * (1 - smoothstep(2.355, 2.395, s)), time, smoothstep(2.12, 2.3, s));
     this.shadow.mesh.position.set(key.pos[0], 0.02, key.pos[1]);
     this.shadow.mesh.rotation.z = key.yaw;
     this.shadow.material.opacity = (1 - 0.25 * sit) * (1 - 0.18 * hop);
@@ -648,6 +652,10 @@ export class StoryScene {
     this.fillLight.intensity = 1.4 * arrive;
     this.fillLight.position.set(key.pos[0] + 4, 6, key.pos[1] + 12);
     this.fillLight.target.position.set(key.pos[0], 2, key.pos[1]);
+
+    this.camera.updateMatrixWorld();
+    this.floodCenter.copy(this.door.opening).project(this.camera);
+    this.flood.update(flood.spread, flood.strength, this.floodCenter, this.camera.aspect);
 
     if (!reduced) this.adaptQuality(elapsed);
     this.renderer.render(this.scene, this.camera);

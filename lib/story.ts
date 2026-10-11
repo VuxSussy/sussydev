@@ -74,13 +74,22 @@ export const sunsetMix = (story: number) => smoothstep(2.3, 3.2, story);
 
 /**
  * The journey (Work chapter onwards): Sussy runs out of the studio and along the road.
- *   worldReveal  0→1 the meadow rises under the studio floor as Sussy nears the doorway
- *   studioExit   0→1 studio floor, doorway, conveyor and Roblox props fade away
+ *   doorFlood    the doorway's light floods the screen as Sussy steps through (Sussy is in the door at ≈2.40)
+ *   worldReveal  0→1 the meadow comes up behind that light, never in plain view
+ *   studioExit   0→1 studio floor, doorway, conveyor and Roblox props go, also behind the light
  *   journeyMix   0→1 position along the road, from the studio to the tree
  *   arriveMix    0→1 Sussy turns round at the tree to face the camera
  */
-export const worldReveal = (story: number) => smoothstep(2.2, 2.48, story);
-export const studioExit = (story: number) => smoothstep(2.3, 2.6, story);
+export function doorFlood(story: number) {
+  return {
+    /** 0→1 how far the light has spread from the doorway (it widens, then stays wide while it fades). */
+    spread: smootherstep(clamp01((story - 2.22) / 0.14)),
+    /** Light strength: builds as Sussy nears the door, holds while Sussy is inside it, then eases away outdoors. */
+    strength: smoothstep(2.25, 2.355, story) * (1 - smoothstep(2.405, 2.56, story)),
+  };
+}
+export const worldReveal = (story: number) => smoothstep(2.35, 2.4, story);
+export const studioExit = (story: number) => smoothstep(2.355, 2.4, story);
 export const journeyMix = (story: number) => smoothstep(2.12, 3.3, story);
 export const arriveMix = (story: number) => smoothstep(3.22, 3.42, story);
 
