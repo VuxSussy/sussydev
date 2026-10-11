@@ -152,6 +152,23 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }, []);
 
   const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory, techs.length]);
+
+  // Keyboard shortcuts: J / K next / previous chapter, H makes Sussy hop. Ignored while typing or with modifiers.
+  const onShortcut = useEffectEvent((event: KeyboardEvent) => {
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    const target = event.target;
+    if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return;
+    const key = event.key.toLowerCase();
+    if (key === "j" && chapter < CHAPTERS.length - 1) scrollToStory(chapter + 1.18);
+    else if (key === "k" && chapter > 0) scrollToStory(chapter === 1 ? 0 : chapter - 1 + 0.18);
+    else if (key === "h") sceneRef.current?.hop();
+  });
+  useEffect(() => {
+    const listener = (event: KeyboardEvent) => onShortcut(event);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
+  }, []);
+
   const selectSceneTech = useEffectEvent(selectTech);
   const getSceneProfile = useEffectEvent(() => ({ techs, theme: mode }));
 
