@@ -38,6 +38,45 @@ test.describe("portfolio story", () => {
     await expect(page.locator(".chapter-rail [aria-current='step']")).toContainText("02", { timeout: 10_000 });
   });
 
+  test("the header contact link lands on the seated sunset scene", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
+    await page.locator(".hud-header a[href='#lien-he']").click();
+    await expect(page.locator(".chapter-rail [aria-current='step']")).toContainText("04", { timeout: 10_000 });
+    // 093% = story 3.75: Sussy has sat down under the tree (the contact chapter starts while still running).
+    await expect(page.locator(".hud-readout")).toContainText(/09\d%/, { timeout: 10_000 });
+  });
+
+  test("copy fades out before it slides under the fixed header", async ({ page }) => {
+    const supported = await page.evaluate(() => CSS.supports("animation-timeline", "view()"));
+    test.skip(!supported, "scroll-driven animations");
+    await page.goto("/");
+    // The title sits in a sticky block: scroll on until its top edge has passed under the header bar.
+    const top = await page.evaluate(async () => {
+      const title = document.getElementById("tech-title")!;
+      for (let i = 0; i < 600 && title.getBoundingClientRect().top > 40; i++) {
+        window.scrollBy(0, 40);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      return title.getBoundingClientRect().top;
+    });
+    expect(top).toBeLessThanOrEqual(40);
+    await expect
+      .poll(async () => page.locator("#tech-title").evaluate((el) => Number(getComputedStyle(el).opacity)))
+      .toBeLessThan(0.05);
+    // Back in the middle of the view, it is fully visible again.
+    await page.evaluate(async () => {
+      const title = document.getElementById("tech-title")!;
+      for (let i = 0; i < 600 && title.getBoundingClientRect().top < window.innerHeight * 0.35; i++) {
+        window.scrollBy(0, -40);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+    });
+    await expect
+      .poll(async () => page.locator("#tech-title").evaluate((el) => Number(getComputedStyle(el).opacity)))
+      .toBeGreaterThan(0.95);
+  });
+
   test("has no horizontal overflow", async ({ page }) => {
     for (const path of ["/", "/roblox", "/nhat-ky", "/cv", "/du-an/sussy"]) {
       await page.goto(path);

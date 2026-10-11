@@ -99,41 +99,84 @@ export function clipFromJson(json: ClipJson): THREE.AnimationClip {
   return new THREE.AnimationClip(json.name, json.duration, tracks);
 }
 
-/** A seated pose (the pack has none): legs forward, hands resting on the knees, gentle breathing. */
+/*
+ * Joint frames (from the Motor6D C0s; the character faces -Z):
+ *   Root / Neck   X = pitch (negative leans back / looks up), Y = roll (positive tilts to the character's left),
+ *                 Z = yaw.
+ *   Shoulders     Z = swing forward (right +, left -), X = raise sideways (negative lifts the arm outwards on
+ *                 both sides).
+ *   Hips          same as the shoulders.
+ * `limb(forward, out)` = Rz(forward) * Rx(-out): spread the limb out to the side first, then swing it forward.
+ */
+const AXIS_X = new THREE.Vector3(1, 0, 0);
+const AXIS_Y = new THREE.Vector3(0, 1, 0);
+const AXIS_Z = new THREE.Vector3(0, 0, 1);
+const tmpA = new THREE.Quaternion();
+const tmpB = new THREE.Quaternion();
+
+function limb(forward: number, out: number, target = new THREE.Quaternion()) {
+  return target.setFromAxisAngle(AXIS_Z, forward).multiply(tmpA.setFromAxisAngle(AXIS_X, -out));
+}
+
+/** Yaw * pitch * roll for the root and neck joints. */
+function spine(pitch: number, roll = 0, yaw = 0) {
+  return new THREE.Quaternion()
+    .setFromAxisAngle(AXIS_Z, yaw)
+    .multiply(tmpA.setFromAxisAngle(AXIS_X, pitch))
+    .multiply(tmpB.setFromAxisAngle(AXIS_Y, roll));
+}
+
+/**
+ * A relaxed seated pose (the pack has none), loosely after a character resting against a tree: leaning back a
+ * little, legs forward and slightly apart (not mirror-perfect), hands resting on the thighs. An 8 s loop adds
+ * breathing, and the head tilts and glances aside once before settling back on the viewer.
+ */
 export function createSitClip(): THREE.AnimationClip {
-  const z = new THREE.Vector3(0, 0, 1);
-  const x = new THREE.Vector3(1, 0, 0);
-  const q = (axis: THREE.Vector3, angle: number) => new THREE.Quaternion().setFromAxisAngle(axis, angle).toArray();
-  const times = [0, 1.8, 3.6];
-  const track = (part: string, frames: number[][]) =>
-    new THREE.QuaternionKeyframeTrack(`${jointNode(part)}.quaternion`, times, frames.flat());
+  const times = [0, 1.6, 2.6, 4, 5.4, 6.6, 8];
+  const breath = [0, 1, 0.2, 1, 0.1, 0.9, 0];
+  const track = (part: string, frames: THREE.Quaternion[]) =>
+    new THREE.QuaternionKeyframeTrack(`${jointNode(part)}.quaternion`, times, frames.flatMap((q) => q.toArray()));
   const still = (part: string) => new THREE.VectorKeyframeTrack(`${jointNode(part)}.position`, [0], [0, 0, 0]);
-  return new THREE.AnimationClip("sit", 3.6, [
-    track("Torso", [q(x, -0.1), q(x, -0.135), q(x, -0.1)]),
-    track("Head", [q(x, -0.16), q(x, -0.2), q(x, -0.16)]),
-    track("Right Arm", [q(z, 1.0), q(z, 0.98), q(z, 1.0)]),
-    track("Left Arm", [q(z, -1.0), q(z, -0.98), q(z, -1.0)]),
-    track("Right Leg", [q(z, Math.PI / 2), q(z, Math.PI / 2), q(z, Math.PI / 2)]),
-    track("Left Leg", [q(z, -Math.PI / 2), q(z, -Math.PI / 2), q(z, -Math.PI / 2)]),
+  // Head: turned back towards the viewer (the body faces the sunset), glances at the sunset, comes back.
+  // Negative yaw turns the face towards the character's right.
+  const headYaw = [-0.22, -0.2, 0.14, 0.18, -0.16, -0.22, -0.22];
+  const headRoll = [0.06, 0.1, 0.02, 0, -0.04, 0.05, 0.06];
+  return new THREE.AnimationClip("sit", 8, [
+    track("Torso", breath.map((b) => spine(-0.2 - 0.018 * b))),
+    track("Head", breath.map((b, i) => spine(0.04 + 0.03 * b, headRoll[i], headYaw[i]))),
+    track("Right Arm", breath.map((b) => limb(0.62 + 0.03 * b, -0.2))),
+    track("Left Arm", breath.map((b) => limb(-(0.58 + 0.03 * b), -0.17))),
+    track("Right Leg", breath.map(() => limb(Math.PI / 2 + 0.03, 0.1))),
+    track("Left Leg", breath.map(() => limb(-(Math.PI / 2 - 0.07), 0.15))),
     ...R6_JOINTS.map(({ part }) => still(part)),
   ]);
 }
 
 /** Duration of the wave gesture in seconds. */
-export const WAVE_DURATION = 2;
-
-/**
- * Right-arm wave pose (a Motor6D transform for the right shoulder). A negative rotation about the shoulder's
- * local X axis (world -Z at rest) lifts the arm out to the side and up; a small oscillation waves it three times.
- */
-export function waveRotation(t: number, out = new THREE.Quaternion()) {
-  const swing = Math.sin((t / WAVE_DURATION) * Math.PI * 6) * 0.3;
-  return out.setFromAxisAngle(WAVE_AXIS, -(2.25 + swing));
-}
-
-/** 0..1 weight of the wave over its duration: quick raise, hold, lower. */
+export const WAVE_DURATION = 2.4;
+/** 0..1 weight of the wave over its duration: eased raise, hold while waving, eased lower. */
 export function waveWeight(t: number) {
   if (t < 0 || t > WAVE_DURATION) return 0;
-  return Math.sin(Math.min(t / 0.35, 1) * (Math.PI / 2)) * (1 - Math.max(0, (t - 1.65) / 0.35));
+  const ease = (x: number) => x * x * (3 - 2 * x);
+  return ease(Math.min(t / 0.45, 1)) * (1 - ease(Math.min(Math.max((t - (WAVE_DURATION - 0.5)) / 0.5, 0), 1)));
 }
-const WAVE_AXIS = new THREE.Vector3(1, 0, 0);
+
+/**
+ * The waving shoulder for time `t`, blended from the shoulder's current (clip) rotation.
+ * Instead of slerping (which sweeps an arm held forward across the face), the clip's forward swing is faded out
+ * while the arm rises sideways, so the hand always travels outside the body. Three side-to-side waves at the top.
+ * @param side 1 = right arm, -1 = left arm (forward swing is +Z on the right shoulder, -Z on the left)
+ */
+export function waveShoulder(t: number, current: THREE.Quaternion, side: 1 | -1, out = new THREE.Quaternion()) {
+  const w = waveWeight(t);
+  // Split the current pose into its forward swing (about the joint's Z axis) and whatever is left (residual),
+  // so that at w = 0 the result is exactly the clip pose (no pop when the wave starts or ends).
+  const forward = 2 * Math.atan2(current.z, current.w);
+  const residual = tmpB.setFromAxisAngle(AXIS_Z, -forward).multiply(current);
+  const waving = Math.min(Math.max((t - 0.35) / (WAVE_DURATION - 0.85), 0), 1);
+  const swing = Math.sin(waving * Math.PI * 6) * 0.3 * Math.sin(Math.PI * waving);
+  // Raised out to the side (not straight up) and slightly behind the face, so it never hides the face.
+  limb(forward * (1 - w) - side * 0.12 * w, (2.3 + swing) * w, out);
+  return out.multiply(IDENTITY.clone().slerp(residual, 1 - w));
+}
+const IDENTITY = new THREE.Quaternion();

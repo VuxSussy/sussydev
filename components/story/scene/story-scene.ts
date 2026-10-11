@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type TechStack } from "@/data/portfolio";
-import { buildR6Rig, clipFromJson, createSitClip, waveRotation, waveWeight, type ClipJson, type Motor } from "@/lib/rbx/rig";
+import { buildR6Rig, clipFromJson, createSitClip, WAVE_DURATION, waveShoulder, waveWeight, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { arriveMix, chapterJumpTime, damp, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
 import { createBlobShadow, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
@@ -35,8 +35,8 @@ const KEYS: Key[] = [
   { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   { s: 3.2, cam: [-6.0, 4.2, 22], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
-  { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI },
-  { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI },
+  { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI + 0.26 },
+  { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI + 0.26 },
 ];
 
 /** Sussy's position on the ground: in the studio until the Work chapter, then along the road to the tree. */
@@ -45,6 +45,8 @@ export function characterPosition(story: number) {
   return [ROAD_START.x + (SIT_SPOT.x - ROAD_START.x) * t, ROAD_START.y + (SIT_SPOT.y - ROAD_START.y) * t] as const;
 }
 
+/** Neck joint Y axis: positive rolls the head towards the character's left. */
+const NECK_ROLL = new THREE.Vector3(0, 1, 0);
 const ROOT_STANDING = 3;
 const ROOT_SEATED = 1.5;
 const RUN_SPEED = 13;
@@ -105,10 +107,14 @@ export class StoryScene {
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
   private headFrame: THREE.Object3D | null = null;
-  private rightShoulder: THREE.Object3D | null = null;
+  private shoulders: { right: THREE.Object3D; left: THREE.Object3D } | null = null;
+  private neckJoint: THREE.Object3D | null = null;
+  /** Which arm waves: the one nearer the camera (left while running in the hero, right when seated). */
+  private waveSide: 1 | -1 = -1;
   /** Seconds into the wave gesture (-1 = not waving). */
   private waveTime = -1;
   private waveQuat = new THREE.Quaternion();
+  private waveTilt = new THREE.Quaternion();
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -244,7 +250,8 @@ export class StoryScene {
       run: action(clipFromJson(run)), idle: action(clipFromJson(idle)), sit: action(createSitClip()),
       jump: oneShot(clipFromJson(jump)), land: oneShot(clipFromJson(land)),
     };
-    this.rightShoulder = rig.joints["Right Arm"];
+    this.shoulders = { right: rig.joints["Right Arm"], left: rig.joints["Left Arm"] };
+    this.neckJoint = rig.joints.Head;
     this.story = this.storyTarget;
     await this.renderer.compileAsync(this.scene, this.camera);
     if (this.disposed) return;
@@ -315,9 +322,15 @@ export class StoryScene {
   seek(story: number, seconds = 2) {
     this.storyTarget = this.story = story;
     let t = Math.max(this.debugClock, performance.now()) + 1000;
+    this.seeking = true;
     for (let i = 0; i < seconds * 60; i++) this.frame((t += 1000 / 60));
+    this.seeking = false;
     this.debugClock = t;
   }
+
+  /** Debug only: while true, the render loop holds the last seeked frame (for frame-by-frame inspection). */
+  frozen = false;
+  private seeking = false;
 
   setReducedMotion(value: boolean) {
     this.reducedMotion = value;
@@ -365,9 +378,11 @@ export class StoryScene {
     if (this.overCharacter) this.hop();
   };
 
-  /** Sussy waves with the right arm (layered over running or sitting). */
+  /** Sussy waves with the arm nearer the camera (layered over running or sitting). */
   wave() {
-    if (this.reducedMotion || !this.rightShoulder) return;
+    if (this.reducedMotion || !this.shoulders) return;
+    // Seated at sunset the body is turned towards the sun, so the right arm faces the viewer; otherwise the left.
+    this.waveSide = sitMix(this.storyTarget) > 0.5 ? 1 : -1;
     this.waveTime = 0;
     this.needsRender = true;
   }
@@ -419,6 +434,7 @@ export class StoryScene {
   }
 
   private frame = (timestamp: number) => {
+    if (this.frozen && !this.seeking) return;
     this.timer.update(timestamp);
     if (document.hidden || !this.actions || !this.mixer) return;
     const reduced = this.reducedMotion;
@@ -482,11 +498,15 @@ export class StoryScene {
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
-    if (this.waveTime >= 0 && this.rightShoulder) {
+    if (this.waveTime >= 0 && this.shoulders && this.neckJoint) {
       this.waveTime = reduced ? -1 : this.waveTime + dt;
-      // Blend the shoulder from whatever the current clip does into the wave pose and back.
-      if (this.waveTime >= 0) this.rightShoulder.quaternion.slerp(waveRotation(this.waveTime, this.waveQuat), waveWeight(this.waveTime));
-      if (this.waveTime > 2) this.waveTime = -1;
+      if (this.waveTime >= 0) {
+        // Layered over whatever the clip does: the arm rises sideways and waves; the head leans away from it.
+        const joint = this.waveSide === 1 ? this.shoulders.right : this.shoulders.left;
+        joint.quaternion.copy(waveShoulder(this.waveTime, joint.quaternion, this.waveSide, this.waveQuat));
+        this.neckJoint.quaternion.multiply(this.waveTilt.setFromAxisAngle(NECK_ROLL, this.waveSide * 0.1 * waveWeight(this.waveTime)));
+      }
+      if (this.waveTime > WAVE_DURATION) this.waveTime = -1;
     }
 
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
