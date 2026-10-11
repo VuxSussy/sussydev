@@ -2,11 +2,12 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import type { TechStack } from "@/data/portfolio";
+import { portfolio, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { chapterJumpTime, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
 import { createBlobShadow, createRobloxProps, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
+import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
 import { disposeObjects } from "./dispose";
 
@@ -78,6 +79,7 @@ export class StoryScene {
   /** Roblox-mode set dressing, faded in/out with the active theme. */
   private robloxProps = createRobloxProps();
   private robloxMix = 0;
+  private milestones!: Milestones;
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
   private headFrame: THREE.Object3D | null = null;
@@ -152,6 +154,8 @@ export class StoryScene {
     this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
     this.robloxMix = options.theme === "roblox" ? 1 : 0;
     this.scene.add(this.robloxProps.group);
+    this.milestones = this.createMilestones(options.theme);
+    this.scene.add(this.milestones.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
     this.keyLight.target.position.set(0, 2, 0);
 
@@ -238,6 +242,10 @@ export class StoryScene {
       this.carousel.dispose();
       this.carousel = new TechCarousel(techs, theme === "roblox" ? "#6cb4ff" : "#f3b47c");
       this.scene.add(this.carousel.group);
+      this.scene.remove(this.milestones.group);
+      this.milestones.dispose();
+      this.milestones = this.createMilestones(theme);
+      this.scene.add(this.milestones.group);
       this.hovered = -1;
       this.treadmill.set(0, 0);
     }
@@ -258,6 +266,10 @@ export class StoryScene {
     if (z > 1 || Math.abs(x) > 1.05 || Math.abs(y) > 1.05) return null;
     const canvas = this.renderer.domElement;
     return { x: ((x + 1) / 2) * canvas.clientWidth, y: ((1 - y) / 2) * canvas.clientHeight };
+  }
+
+  private createMilestones(theme: SceneTheme) {
+    return new Milestones(portfolio.profiles[theme].projects, theme === "roblox" ? "#6cb4ff" : "#f0b07a");
   }
 
   /** Footstep audio (off by default; must be enabled from a user gesture). */
@@ -442,6 +454,7 @@ export class StoryScene {
     const lane = this.carousel.group.position.z;
     this.carousel.group.position.x = (this.camera.position.x * lane) / Math.max(this.camera.position.z, 1);
     this.carousel.update(techPosition(s, this.options.techs.length), visibility, this.hovered, time);
+    this.milestones.update(s, key.yaw);
     this.updateHover(visibility);
 
     // Studio → sunset.
@@ -491,6 +504,7 @@ export class StoryScene {
   dispose() {
     if (this.disposed) return;
     this.footsteps.dispose();
+    this.milestones.dispose();
     this.disposed = true;
     this.loadAbort.abort();
     this.renderer.setAnimationLoop(null);
