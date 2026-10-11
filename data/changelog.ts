@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.2",
+    date: "2026-10-11",
+    title: "CI",
+    notes: ["Mỗi lần đẩy code lên GitHub, CI tự chạy lint, kiểm tra kiểu, test và build."],
+  },
+  {
     version: "2.1",
     date: "2026-10-11",
     title: "Kiểm thử trên trình duyệt",
