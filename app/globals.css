@@ -98,8 +98,8 @@ button, a[href] { cursor: pointer; }
 .site[data-mode="roblox"] .mode-switch a[aria-current="page"] { background: var(--accent); color: #06101f; }
 .mode-curtain { position: fixed; inset: 0; z-index: 80; display: grid; place-content: center; justify-items: center; gap: 1.1rem; background: var(--background); opacity: 0; pointer-events: none; transition: opacity 240ms var(--ease-out); }
 .mode-curtain.is-active { opacity: 1; pointer-events: auto; }
-.mode-curtain .loader-head { animation-play-state: paused; }
-.mode-curtain.is-active .loader-head { animation-play-state: running; }
+.mode-curtain :is(.loader-head, .loader-shadow) { animation-play-state: paused; }
+.mode-curtain.is-active :is(.loader-head, .loader-shadow) { animation-play-state: running; }
 /* Text movement: copy blocks rise in as they enter the view and fade out before they slide under the fixed HUD
    (header on top, footer at the bottom), so scrolling text never overlaps the logo or the controls.
    Scroll-driven, so it follows the scrollbar exactly in both directions; browsers without support skip it. */
@@ -303,16 +303,19 @@ button, a[href] { cursor: pointer; }
 /* ---------- Loader ---------- */
 .loader { position: fixed; inset: 0; z-index: 90; display: grid; place-content: center; justify-items: center; gap: 1.1rem; background: radial-gradient(ellipse at 50% 45%, var(--bg-raise), var(--background) 70%); transition: opacity 800ms var(--ease-out), visibility 800ms; }
 .loader.is-done { opacity: 0; visibility: hidden; }
-.loader-stage { position: relative; width: 12rem; height: 13.5rem; perspective: 700px; display: grid; justify-items: center; }
-.loader-head { width: 11rem; height: 11rem; object-fit: contain; animation: coin-spin 2.4s linear infinite; filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.45)); }
-.loader-shadow { position: absolute; bottom: 0; width: 6.5rem; height: 0.9rem; border-radius: 50%; background: radial-gradient(rgba(0, 0, 0, 0.6), transparent 70%); animation: shadow-pulse 1.2s ease-in-out infinite alternate; }
+/* Sussy's bare egg head rolls back and forth along a strip of ground. Rotation is proportional to the distance
+   travelled (12rem across a 7rem head: 12 / (7 * pi) * 360 = 196 deg), so it rolls instead of sliding. */
+.loader-stage { position: relative; width: 20rem; max-width: 86vw; height: 8.6rem; display: grid; justify-items: center; align-items: end; }
+.loader-stage::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: 0.45rem; height: 1px; background: linear-gradient(90deg, transparent, var(--border-strong) 18%, var(--border-strong) 82%, transparent); }
+.loader-head { position: relative; z-index: 1; width: 7rem; height: 7rem; margin-bottom: 0.5rem; object-fit: contain; animation: egg-roll 1.7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.4)); }
+.loader-shadow { position: absolute; bottom: 0.2rem; width: 5.4rem; height: 0.6rem; border-radius: 50%; background: radial-gradient(rgba(0, 0, 0, 0.55), transparent 70%); animation: egg-roll-shadow 1.7s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
 .loader-label { font-size: 0.8125rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-secondary); }
 .loader-bar { width: 10rem; height: 1px; background: var(--border); overflow: hidden; }
 .loader-bar span { display: block; height: 100%; background: var(--text-primary); transform-origin: left; transition: transform 400ms var(--ease-out); }
 .loader-percent { font-family: var(--font-display); font-size: 1.4rem; font-weight: 300; font-variant-numeric: tabular-nums; }
 
-@keyframes coin-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
-@keyframes shadow-pulse { from { transform: scaleX(0.55); opacity: 0.5; } to { transform: scaleX(1); opacity: 1; } }
+@keyframes egg-roll { from { transform: translateX(-6rem) rotate(-98deg); } to { transform: translateX(6rem) rotate(98deg); } }
+@keyframes egg-roll-shadow { from { transform: translateX(-6rem); } to { transform: translateX(6rem); } }
 @keyframes fade-in { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: none; } }
 
 /* ---------- Responsive ---------- */

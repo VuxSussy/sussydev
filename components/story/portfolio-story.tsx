@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { SUSSY_HEAD_SRC } from "@/lib/brand";
+import { SUSSY_EGG_SRC } from "@/lib/brand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -322,7 +322,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     <div className="site" data-mode={mode} data-reduced-motion={reducedMotion} aria-busy={switchingMode !== null}>
       <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
       <div className={`mode-curtain${switchingMode ? " is-active" : ""}`} aria-hidden={switchingMode === null}>
-        <Image className="loader-head" src={SUSSY_HEAD_SRC} alt="" width={256} height={256} unoptimized />
+        <div className="loader-stage" aria-hidden="true">
+          <Image className="loader-head" src={SUSSY_EGG_SRC} alt="" width={256} height={256} unoptimized />
+          <span className="loader-shadow" />
+        </div>
         <output className="loader-label" aria-live="polite">{localizedProfile(switchingMode ?? mode, locale).loadingLabel}</output>
       </div>
       <a className="skip-link" href="#main">{t.skip}</a>
