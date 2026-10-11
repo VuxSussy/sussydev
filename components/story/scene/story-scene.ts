@@ -30,8 +30,8 @@ type Key = { s: number; cam: [number, number, number]; target: [number, number, 
 const KEYS: Key[] = [
   { s: 0, cam: [-2.5, 3.7, 17.5], target: [-2.5, 2.6, 0], yaw: Math.PI - 0.5 },
   { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42 },
-  { s: 1.12, cam: [-3.4, 8.4, 21.5], target: [-3.4, 2.1, 1.4], yaw: Math.PI / 2 },
-  { s: 1.9, cam: [-3.0, 8.1, 21], target: [-3.0, 2.1, 1.4], yaw: Math.PI / 2 },
+  { s: 1.12, cam: [-3.4, 8.6, 22.5], target: [-3.4, 1.7, 2.8], yaw: Math.PI / 2 },
+  { s: 1.9, cam: [-3.0, 8.3, 22], target: [-3.0, 1.7, 2.8], yaw: Math.PI / 2 },
   { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   { s: 3.2, cam: [-6.0, 4.2, 22], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
@@ -47,6 +47,8 @@ export function characterPosition(story: number) {
 
 /** Neck joint Y axis: positive rolls the head towards the character's left. */
 const NECK_ROLL = new THREE.Vector3(0, 1, 0);
+/** Story value until which Sussy keeps running even without scrolling (the opening shot). */
+const INTRO_RUN_END = 0.55;
 const ROOT_STANDING = 3;
 const ROOT_SEATED = 1.5;
 const RUN_SPEED = 13;
@@ -119,6 +121,9 @@ export class StoryScene {
   private waveQueue = 0;
   /** False after a scroll until the mouse moves again (hover only counts when the user points). */
   private pointerFresh = false;
+  /** Seconds since the last scroll still counted as "scrolling", and the damped run (1) / idle (0) blend. */
+  private scrollPulse = 0;
+  private activity = 1;
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -265,6 +270,7 @@ export class StoryScene {
   setStory(story: number) {
     if (story !== this.storyTarget) {
       this.needsRender = true;
+      this.scrollPulse = 0.28;
       // Scrolling moves the conveyor under a resting mouse: that is not the user pointing at a tech.
       this.pointerFresh = false;
     }
@@ -518,11 +524,21 @@ export class StoryScene {
     const reveal = worldReveal(s);
     const exit = studioExit(s);
     this.character.children[0].position.y = rootY;
-    const moving = (1 - sit) * (1 - jumpW - landW);
+    // Sussy runs while the page is being scrolled and settles into idle when it stops — except in the opening
+    // shot, where the run is the introduction.
+    this.scrollPulse = Math.max(0, this.scrollPulse - dt);
+    const scrolling = this.scrollPulse > 0 || Math.abs(this.storyTarget - this.story) > 0.004;
+    // The hello wave is a stop: Sussy stands, turns to the viewer and waves (Roblox emote style), then runs on.
+    const greeting = this.waveTime >= 0 && this.waveSide === -1 ? waveWeight(this.waveTime) : 0;
+    const running = reduced || greeting > 0 ? 0 : s < INTRO_RUN_END || scrolling ? 1 : 0;
+    this.activity = damp(this.activity, running, running ? 6 : greeting > 0 ? 7 : 2.5, dt);
+    this.character.rotation.y = key.yaw + (Math.PI - key.yaw) * 0.55 * greeting;
+    const upright = (1 - sit) * (1 - jumpW - landW);
+    const moving = upright * this.activity;
     this.actions.jump.setEffectiveWeight(jumpW);
     this.actions.land.setEffectiveWeight(landW);
     this.actions.run.setEffectiveWeight(reduced ? 0 : moving);
-    this.actions.idle.setEffectiveWeight(reduced ? moving : 0);
+    this.actions.idle.setEffectiveWeight(reduced ? upright : upright - moving);
     this.actions.sit.setEffectiveWeight(sit);
     this.actions.run.timeScale = 1 - 0.3 * smoothstep(3.15, 3.42, s);
     if (reduced) this.mixer.setTime(0);
@@ -534,7 +550,10 @@ export class StoryScene {
       if (this.waveTime >= 0) {
         // Layered over whatever the clip does: the arm rises sideways and waves; the head leans away from it.
         const joint = this.waveSide === 1 ? this.shoulders.right : this.shoulders.left;
-        joint.quaternion.copy(waveShoulder(this.waveTime, joint.quaternion, this.waveSide, this.waveQuat));
+        // Standing: the Roblox wave emote (arm up, a little out and forward); seated, with the body turned, a lower
+        // wave held slightly behind the face keeps the face clear.
+        const seated = this.waveSide === 1;
+        joint.quaternion.copy(waveShoulder(this.waveTime, joint.quaternion, this.waveSide, this.waveQuat, 2.35, seated ? -0.12 : 0.22));
         this.neckJoint.quaternion.multiply(this.waveTilt.setFromAxisAngle(NECK_ROLL, this.waveSide * 0.1 * waveWeight(this.waveTime)));
       }
       if (this.waveTime > WAVE_DURATION) this.waveTime = -1;

@@ -166,17 +166,19 @@ export function waveWeight(t: number) {
  * Instead of slerping (which sweeps an arm held forward across the face), the clip's forward swing is faded out
  * while the arm rises sideways, so the hand always travels outside the body. Three side-to-side waves at the top.
  * @param side 1 = right arm, -1 = left arm (forward swing is +Z on the right shoulder, -Z on the left)
+ * @param lift how far the arm rises (radians from hanging): ~2.35 is the Roblox wave emote (arm up, ~45° out, clear of a wide hat brim)
+ * @param reach how far the raised arm comes forward of the body plane (negative = behind the face)
  */
-export function waveShoulder(t: number, current: THREE.Quaternion, side: 1 | -1, out = new THREE.Quaternion()) {
+export function waveShoulder(t: number, current: THREE.Quaternion, side: 1 | -1, out = new THREE.Quaternion(), lift = 2.35, reach = 0.22) {
   const w = waveWeight(t);
   // Split the current pose into its forward swing (about the joint's Z axis) and whatever is left (residual),
   // so that at w = 0 the result is exactly the clip pose (no pop when the wave starts or ends).
   const forward = 2 * Math.atan2(current.z, current.w);
   const residual = tmpB.setFromAxisAngle(AXIS_Z, -forward).multiply(current);
   const waving = Math.min(Math.max((t - 0.35) / (WAVE_DURATION - 0.85), 0), 1);
-  const swing = Math.sin(waving * Math.PI * 6) * 0.3 * Math.sin(Math.PI * waving);
-  // Raised out to the side (not straight up) and slightly behind the face, so it never hides the face.
-  limb(forward * (1 - w) - side * 0.12 * w, (2.3 + swing) * w, out);
+  const swing = Math.sin(waving * Math.PI * 6) * 0.26 * Math.sin(Math.PI * waving);
+  // Raised outside the body; `reach` tips it in front of (or behind) the body plane.
+  limb(forward * (1 - w) + side * reach * w, (lift + swing) * w, out);
   return out.multiply(IDENTITY.clone().slerp(residual, 1 - w));
 }
 const IDENTITY = new THREE.Quaternion();

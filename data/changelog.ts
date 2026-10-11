@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.7",
+    date: "2026-10-11",
+    title: "Chào kiểu Roblox",
+    notes: [
+      "Lời chào ở màn đầu giống emote Roblox: Sussy dừng chạy, quay về phía bạn, giơ tay chếch lên ngoài vành mũ và vẫy, rồi chạy tiếp.",
+      "Không cuộn thì Sussy đứng thở (idle); chỉ chạy khi trang đang cuộn, trừ màn xuất hiện.",
+      "Băng chuyền tech lùi ra trước và hạ thấp nên không còn chạm vào Sussy; logo dùng đúng màu thương hiệu, không còn nhợt.",
+      "Khăn choàng và thắt lưng dùng normal gốc của Roblox (đọc từ thuộc tính GENERIC của mesh Draco) nên mượt như trong Studio.",
+    ],
+  },
+  {
     version: "2.6",
     date: "2026-10-11",
     title: "Vẫy tay và ngồi thư thả",

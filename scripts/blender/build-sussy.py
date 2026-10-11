@@ -7,8 +7,9 @@
 #                                  (from assetdelivery or Studio's local content cache)
 #   assets-src/sussy/textures/*    original textures (cache KTX2 decoded to PNG) + the face decal
 #
-# Quality pass only: original geometry is kept; we weld duplicate vertices, rebuild normals with
-# angle-based smoothing (Draco meshes ship without normals) and assign PBR materials.
+# Quality pass only: original geometry is kept. Accessories keep Roblox's own vertex normals (v7 Draco meshes
+# store them as a GENERIC attribute) so cloth like the scarf shades as smoothly as in Studio; meshes without
+# normals are welded and get angle-based smoothing. PBR materials are assigned per piece.
 #
 # Body parts are the R6 blocks themselves; accessories (SpecialMesh FileMesh, scaled by `mesh.scale`) are
 # merged into the R6 part they hang from, so the R6 animation pack drives everything. Geometry is authored in Roblox space (Y up, faces -Z, studs)
@@ -52,6 +53,11 @@ EXTRA_PARTS = [{
     "mesh": {"id": "rbxassetid://4820755895", "scale": [1.2, 1.2, 1.2], "offset": [0, 0, 0]},
 }]
 SMOOTH_ANGLE = {"Egg": 80, "Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
+# Meshes whose original Roblox normals are used as custom split normals (the egg keeps its rebuilt normals:
+# its black shell is an inverted hull).
+ORIGINAL_NORMALS = {"Scarf", "TacBelts", "Trilby", "Glasses"}
+# bmesh -> per-vertex normals (Roblox space), filled by load_mesh(..., normals=True).
+VERTEX_NORMALS = {}
 
 
 def to_blender(v):
@@ -111,8 +117,9 @@ def mat(name, color="ffffff", rough=0.55, metal=0.0, image=None, coat=0.0, sheen
     return m
 
 
-def load_mesh(name, scale, keep=None):
-    """Load a decoded Roblox mesh; `keep(v)` filters triangles by their mean (Blender-space) UV v."""
+def load_mesh(name, scale, keep=None, normals=False):
+    """Load a decoded Roblox mesh; `keep(v)` filters triangles by their mean (Blender-space) UV v.
+    With `normals`, the file's vertex normals are kept (no welding, so vertex order matches them)."""
     data = json.load(open(os.path.join(SRC, "meshes", f"{name}.json")))
     bm = bmesh.new()
     uv = bm.loops.layers.uv.new("UVMap")
@@ -128,7 +135,12 @@ def load_mesh(name, scale, keep=None):
             continue
         for loop, i in zip(f.loops, tri):
             loop[uv].uv = (uvs[i * 2], 1 - uvs[i * 2 + 1]) if uvs else (0.5, 0.5)
-    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    n = data.get("normal") or []
+    if normals and len(n) == len(p):
+        # Normals transform with the inverse scale (non-uniform SpecialMesh scale).
+        VERTEX_NORMALS[id(bm)] = [Vector((n[i] / scale[0], n[i + 1] / scale[1], n[i + 2] / scale[2])) for i in range(0, len(n), 3)]
+    else:
+        bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
     bm.normal_update()
     return bm
 
@@ -179,6 +191,7 @@ class Group:
     def build(self):
         objects = []
         for i, (bm, material, matrix, angle, subdivide) in enumerate(self.pieces):
+            original = VERTEX_NORMALS.pop(id(bm), None)
             bmesh.ops.transform(bm, matrix=matrix, verts=bm.verts)
             for v in bm.verts:
                 v.co = to_blender(v.co)
@@ -188,7 +201,11 @@ class Group:
             bm.free()
             mesh.materials.append(material)
             mesh.shade_smooth()
-            mesh.set_sharp_from_angle(angle=math.radians(angle))
+            if original:
+                rotate = matrix.to_3x3()
+                mesh.normals_split_custom_set_from_vertices([to_blender(rotate @ nv).normalized() for nv in original])
+            else:
+                mesh.set_sharp_from_angle(angle=math.radians(angle))
             obj = bpy.data.objects.new(f"{self.name}_{i}", mesh)
             bpy.context.scene.collection.objects.link(obj)
             if subdivide:
@@ -245,10 +262,11 @@ def main():
             look = {
                 "Trilby": mat("Trilby", rough=0.58, image="trilby.png"),
                 "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.3),
-                "Scarf": mat("Scarf", rough=0.66, image="scarf.png"),
-                "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png"),
+                # Single-sided like Roblox: the cloth's inner layer must not show through with flipped shading.
+                "Scarf": mat("Scarf", rough=0.66, image="scarf.png", cull=True),
+                "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png", cull=True),
             }[key]
-            group.add(load_mesh(key, scale), look, matrix, SMOOTH_ANGLE[key])
+            group.add(load_mesh(key, scale, normals=key in ORIGINAL_NORMALS), look, matrix, SMOOTH_ANGLE[key])
         else:
             # Plain R6 block, softened with a small bevel so it catches light like Studio's plastic.
             group.add(rounded_box(p["size"], 0.045), body[p["color"]], matrix, 30)

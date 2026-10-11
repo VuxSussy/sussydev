@@ -82,7 +82,7 @@ export const caseStudies: Record<string, CaseStudy> = {
       {
         title: "Blender: chỉ nâng chất lượng",
         paragraphs: [
-          "Thân và tay chân là khối R6 bo cạnh nhẹ; phụ kiện gắn vào đúng part R6 mà chúng đeo. Pass Blender hàn đỉnh trùng, dựng lại normal theo góc (mesh Draco không có normal), subdivide phần đầu và gán vật liệu PBR — hình dạng gốc không đổi.",
+          "Thân và tay chân là khối R6 bo cạnh nhẹ; phụ kiện gắn vào đúng part R6 mà chúng đeo và gán vật liệu PBR — hình dạng gốc không đổi. Mesh bản 7 nén Draco không có thuộc tính NORMAL chuẩn: Roblox cất normal (và tangent) trong các thuộc tính GENERIC. Đọc đúng normal gốc đó thay vì tự dựng lại theo góc giúp khăn choàng và thắt lưng mượt như trong Studio; khăn và thắt lưng cũng chỉ render một mặt giống Roblox.",
           "Cái đầu trứng mắt “sus” không phải là đầu: đó là một accessory gồm hai lớp vỏ — quả trứng trắng có khoét lỗ mắt, bọc ngoài là lớp vỏ đen đảo pháp tuyến (inverted hull). Nhờ backface culling, lớp đen chỉ lộ ra ở viền và qua lỗ mắt. Texture 1-bit nửa đen nửa trắng nên hai lớp được tách theo toạ độ UV.",
           "Cặp kính pixel trên vành mũ không có instance trong model R6 mà đến từ accessory Face trong HumanoidDescription, nên transform của nó được lấy từ bản R15 của cùng avatar.",
         ],
