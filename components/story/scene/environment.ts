@@ -1,10 +1,17 @@
 import * as THREE from "three";
 
-/** Where Sussy sits on the hill (Roblox studs, HumanoidRootPart x/z). */
-export const SIT_SPOT = new THREE.Vector2(-1.2, -1.0);
+/**
+ * The journey: Sussy leaves the studio at the origin through a doorway and runs along a dirt road towards -X,
+ * ending at a tree where Sussy sits facing the camera with the sunset behind. Units are Roblox studs.
+ */
+export const ROAD_START = new THREE.Vector2(0, 0);
+/** Where Sussy sits (HumanoidRootPart x/z), at the end of the road. */
+export const SIT_SPOT = new THREE.Vector2(-64, 0);
+/** Studio exit doorway along the road. */
+export const DOOR_X = -9;
 export const SUN_DIRECTION = new THREE.Vector3(0.26, 0.05, -1).normalize();
-/** Tree beside Sussy's left shoulder, so the trunk frames the seated silhouette. */
-const TREE_BASE = new THREE.Vector3(SIT_SPOT.x - 1.7, 0, SIT_SPOT.y - 0.35);
+/** Tree right behind the seated Sussy (Sussy faces +Z, towards the camera). */
+const TREE_BASE = new THREE.Vector3(SIT_SPOT.x - 3.4, 0, SIT_SPOT.y - 3.6);
 
 export type SceneTheme = "dev" | "roblox";
 
@@ -164,33 +171,68 @@ export function createBlobShadow() {
 
 /** Gentle hilltop: flat where Sussy sits, rolling down towards the horizon. */
 export function groundHeight(x: number, z: number) {
-  const dx = x - SIT_SPOT.x;
-  const dz = z - SIT_SPOT.y;
-  const r = Math.sqrt(dx * dx + dz * dz);
-  const slope = -Math.pow(Math.max(r - 5, 0), 1.35) * 0.09;
-  const roll = Math.sin(x * 0.13 + 1.3) * Math.sin(z * 0.11) * 0.7 * Math.min(1, Math.max(r - 6, 0) / 10);
-  return slope + roll;
+  // Flat corridor along the road (z ~ 0) and around the tree; rolling meadow further out, falling away far off.
+  const fromRoad = Math.abs(z);
+  const corridor = smoothstep(4, 16, fromRoad);
+  const roll = (Math.sin(x * 0.13 + 1.3) * Math.sin(z * 0.11) * 1.1 + Math.sin(x * 0.05 - z * 0.04) * 0.8) * corridor;
+  const fall = -Math.pow(Math.max(fromRoad - 34, 0), 1.25) * 0.06;
+  return roll + fall;
 }
 
+const smoothstep = (a: number, b: number, v: number) => {
+  const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
 function createGround() {
-  const geometry = new THREE.PlaneGeometry(240, 240, 140, 140);
+  const geometry = new THREE.PlaneGeometry(260, 200, 160, 120);
   geometry.rotateX(-Math.PI / 2);
+  geometry.translate(-40, 0, -30);
   const pos = geometry.attributes.position as THREE.BufferAttribute;
   const colors = new Float32Array(pos.count * 3);
-  const near = new THREE.Color("#5d6a3a");
+  const meadow = new THREE.Color("#5f6b37");
+  const dry = new THREE.Color("#8a7a42");
   const far = new THREE.Color("#3a3446");
   const tmp = new THREE.Color();
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
     const z = pos.getZ(i);
     pos.setY(i, groundHeight(x, z));
-    const d = Math.min(1, Math.hypot(x - SIT_SPOT.x, z - SIT_SPOT.y) / 70);
-    tmp.copy(near).lerp(far, d).multiplyScalar(0.92 + Math.sin(x * 0.7) * Math.cos(z * 0.6) * 0.06);
+    const patch = 0.5 + 0.5 * Math.sin(x * 0.21 + Math.cos(z * 0.17) * 2);
+    tmp.copy(meadow).lerp(dry, patch * 0.35).lerp(far, Math.min(1, Math.max(0, (Math.abs(z) - 20) / 70)));
     colors.set([tmp.r, tmp.g, tmp.b], i * 3);
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
   return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }));
+}
+
+/** Packed-dirt road from the studio doorway to the tree, slightly wobbly, with soft edges. */
+function createRoad() {
+  const length = ROAD_START.x - SIT_SPOT.x + 10;
+  const geometry = new THREE.PlaneGeometry(length, 3.6, 120, 6);
+  geometry.rotateX(-Math.PI / 2);
+  geometry.translate(ROAD_START.x + 4 - length / 2, 0, 0);
+  const pos = geometry.attributes.position as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 4);
+  const dirt = new THREE.Color("#7a5b3d");
+  const dust = new THREE.Color("#a07a52");
+  const tmp = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const z = pos.getZ(i) + Math.sin(x * 0.18) * 0.35;
+    pos.setZ(i, z);
+    pos.setY(i, groundHeight(x, z) + 0.03);
+    const edge = Math.abs(pos.getZ(i) - Math.sin(x * 0.18) * 0.35) / 1.8;
+    tmp.copy(dirt).lerp(dust, 0.5 + 0.5 * Math.sin(x * 1.3) * Math.cos(z * 3.1));
+    colors.set([tmp.r, tmp.g, tmp.b, 1 - smoothstep(0.55, 1, edge)], i * 4);
+  }
+  geometry.setAttribute("color", new THREE.BufferAttribute(colors, 4));
+  geometry.computeVertexNormals();
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, roughness: 1, depthWrite: false });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.renderOrder = -1;
+  return mesh;
 }
 
 /** Layered distant ridges for depth (display-referred colours, fogged). */
@@ -203,79 +245,59 @@ function createRidges() {
   ];
   for (const layer of layers) {
     const shape = new THREE.Shape();
-    const width = 420;
+    const width = 460;
     shape.moveTo(-width / 2, -40);
-    for (let i = 0; i <= 120; i++) {
-      const x = -width / 2 + (i / 120) * width;
+    for (let i = 0; i <= 140; i++) {
+      const x = -width / 2 + (i / 140) * width;
       const y = layer.height * (0.55 + 0.3 * Math.sin(x * 0.021 + layer.seed) + 0.15 * Math.sin(x * 0.067 + layer.seed * 2.3)) - 6;
       shape.lineTo(x, y);
     }
     shape.lineTo(width / 2, -40);
     const mesh = new THREE.Mesh(new THREE.ShapeGeometry(shape), new THREE.MeshBasicMaterial({ color: layer.color, fog: true }));
-    mesh.position.z = layer.z;
+    mesh.position.set(-40, 0, layer.z);
     group.add(mesh);
   }
   return group;
 }
 
-function createTree() {
+/**
+ * Studio exit: a dark frame with warm light spilling through, standing across the road. Sussy runs through it
+ * at the start of the Work chapter; it fades with the studio.
+ */
+export function createStudioDoor() {
   const group = new THREE.Group();
-  group.position.copy(TREE_BASE);
-  const bark = new THREE.MeshStandardMaterial({ color: "#3a2a24", roughness: 0.92 });
-  const trunkCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, -0.6, 0), new THREE.Vector3(0.12, 1.4, 0.05), new THREE.Vector3(-0.1, 3.0, 0.1), new THREE.Vector3(0.25, 4.6, -0.15),
-  ]);
-  group.add(new THREE.Mesh(new THREE.TubeGeometry(trunkCurve, 24, 0.46, 10), bark));
-  const flare = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.95, 0.9, 10), bark);
-  flare.position.y = -0.1;
-  group.add(flare);
-  const branches = [
-    [new THREE.Vector3(0.2, 3.8, -0.1), new THREE.Vector3(1.4, 5.2, -0.9), new THREE.Vector3(2.2, 6.0, -1.3)],
-    [new THREE.Vector3(0.1, 4.2, 0), new THREE.Vector3(-1.0, 5.6, 0.4), new THREE.Vector3(-1.8, 6.4, 0.6)],
-    [new THREE.Vector3(0.25, 4.5, -0.1), new THREE.Vector3(0.6, 6.0, -0.4), new THREE.Vector3(0.7, 7.1, -0.6)],
-  ];
-  for (const points of branches) {
-    group.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 12, 0.17, 7), bark));
+  group.position.set(DOOR_X, 0, 0);
+  // Turned towards the camera so the glowing opening reads as a doorway (still wide enough to run through).
+  group.rotation.y = 0.85;
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: "#1d1d22", roughness: 0.5, metalness: 0.3, transparent: true });
+  const post = new THREE.BoxGeometry(0.5, 7.2, 0.5);
+  for (const z of [-2.6, 2.6]) {
+    const mesh = new THREE.Mesh(post, frameMaterial);
+    mesh.position.set(0, 3.6, z);
+    group.add(mesh);
   }
-
-  const canopy = new THREE.Group();
-  const clumps = 38;
-  const leaf = new THREE.InstancedMesh(
-    new THREE.IcosahedronGeometry(1, 1),
-    new THREE.MeshStandardMaterial({ roughness: 0.85, flatShading: true }),
-    clumps,
-  );
-  const m = new THREE.Matrix4();
-  const q = new THREE.Quaternion();
-  const s = new THREE.Vector3();
-  const p = new THREE.Vector3();
-  const c = new THREE.Color();
-  let seed = 7;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < clumps; i++) {
-    const a = rand() * Math.PI * 2;
-    const r = Math.sqrt(rand());
-    p.set(0.7 + Math.cos(a) * r * 3.4, 6.5 + (rand() - 0.35) * 2.2, -0.4 + Math.sin(a) * r * 2.8);
-    q.setFromEuler(new THREE.Euler(rand() * 3, rand() * 3, rand() * 3));
-    const k = 0.95 + rand() * 0.95;
-    s.set(k * 1.15, k * 0.85, k);
-    m.compose(p, q, s);
-    leaf.setMatrixAt(i, m);
-    leaf.setColorAt(i, c.set("#4f6b3a").lerp(new THREE.Color("#8a8a3f"), rand() * 0.55));
-  }
-  canopy.add(leaf);
-  group.add(canopy);
-  return { group, canopy };
+  const lintel = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.5, 5.7), frameMaterial);
+  lintel.position.y = 7.2;
+  group.add(lintel);
+  const glowMaterial = new THREE.MeshBasicMaterial({
+    color: "#ffbf86", transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide,
+  });
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(4.7, 6.95), glowMaterial);
+  glow.rotation.y = Math.PI / 2;
+  glow.position.y = 3.5;
+  group.add(glow);
+  return {
+    group,
+    update(visibility: number, time: number) {
+      group.visible = visibility > 0.002;
+      frameMaterial.opacity = visibility;
+      glowMaterial.opacity = (0.4 + 0.08 * Math.sin(time * 2.1)) * visibility;
+    },
+  };
 }
 
-function createGrass(count: number) {
-  const blade = new THREE.PlaneGeometry(0.09, 0.75, 1, 4);
-  blade.translate(0, 0.375, 0);
-  const pos = blade.attributes.position as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) pos.setX(i, pos.getX(i) * (1 - pos.getY(i) / 0.8));
-  blade.computeVertexNormals();
-  const uniforms = { uTime: { value: 0 } };
-  const material = new THREE.MeshStandardMaterial({ color: "#7d8a45", roughness: 0.8, side: THREE.DoubleSide });
+/** Wind sway for instanced foliage (vertex Y is height above the root). */
+function addWind(material: THREE.Material, uniforms: { uTime: { value: number } }, strength: number) {
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uTime = uniforms.uTime;
     shader.vertexShader = shader.vertexShader
@@ -285,36 +307,56 @@ function createGrass(count: number) {
         `#include <begin_vertex>
         float bend = position.y * position.y;
         vec4 root = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
-        transformed.x += sin(uTime * 1.6 + root.x * 0.45 + root.z * 0.3) * 0.16 * bend;
-        transformed.z += cos(uTime * 1.2 + root.x * 0.3) * 0.07 * bend;`,
+        transformed.x += sin(uTime * 1.6 + root.x * 0.45 + root.z * 0.3) * ${strength.toFixed(3)} * bend;
+        transformed.z += cos(uTime * 1.2 + root.x * 0.3) * ${(strength * 0.45).toFixed(3)} * bend;`,
       );
   };
-  const mesh = new THREE.InstancedMesh(blade, material, count);
+}
+
+/** Float copy of a (possibly meshopt-quantised) glTF mesh geometry with its world transform applied. */
+export function bakedGeometry(mesh: THREE.Mesh) {
+  const source = mesh.geometry;
+  const geometry = new THREE.BufferGeometry();
+  for (const [name, attribute] of Object.entries(source.attributes)) {
+    const { count, itemSize } = attribute;
+    const array = new Float32Array(count * itemSize);
+    for (let i = 0; i < count; i++) for (let k = 0; k < itemSize; k++) array[i * itemSize + k] = attribute.getComponent(i, k);
+    geometry.setAttribute(name, new THREE.BufferAttribute(array, itemSize));
+  }
+  if (source.index) geometry.setIndex(source.index.clone());
+  geometry.applyMatrix4(mesh.matrixWorld);
+  geometry.computeBoundingSphere();
+  return geometry;
+}
+
+function scatter(
+  geometry: THREE.BufferGeometry, material: THREE.Material, count: number,
+  place: (rand: () => number) => { x: number; z: number; scale: number } | null, seed: number,
+) {
+  const mesh = new THREE.InstancedMesh(geometry, material, count);
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
-  const c = new THREE.Color();
-  let seed = 3;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  for (let i = 0; i < count; i++) {
-    const a = rand() * Math.PI * 2;
-    const r = 1.2 + Math.sqrt(rand()) * 22;
-    const x = SIT_SPOT.x + Math.cos(a) * r;
-    const z = SIT_SPOT.y + Math.sin(a) * r;
-    if (Math.hypot(x - TREE_BASE.x, z - TREE_BASE.z) < 1.1) continue;
-    q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), rand() * Math.PI);
-    const k = 0.6 + rand() * 0.9;
-    m.compose(new THREE.Vector3(x, groundHeight(x, z) - 0.05, z), q, new THREE.Vector3(k, k * (0.8 + rand() * 0.6), k));
-    mesh.setMatrixAt(i, m);
-    mesh.setColorAt(i, c.set("#6d7c3c").lerp(new THREE.Color("#b09a52"), rand() * 0.5));
+  const up = new THREE.Vector3(0, 1, 0);
+  let state = seed;
+  const rand = () => ((state = (state * 16807) % 2147483647) / 2147483647);
+  let n = 0;
+  for (let tries = 0; n < count && tries < count * 4; tries++) {
+    const spot = place(rand);
+    if (!spot) continue;
+    q.setFromAxisAngle(up, rand() * Math.PI * 2);
+    m.compose(new THREE.Vector3(spot.x, groundHeight(spot.x, spot.z) - 0.04, spot.z), q, new THREE.Vector3(spot.scale, spot.scale * (0.85 + rand() * 0.35), spot.scale));
+    mesh.setMatrixAt(n++, m);
   }
-  return { mesh, uniforms };
+  mesh.count = n;
+  mesh.instanceMatrix.needsUpdate = true;
+  return mesh;
 }
 
 function createFireflies(count: number) {
   const positions = new Float32Array(count * 3);
   const phases = new Float32Array(count);
   for (let i = 0; i < count; i++) {
-    positions.set([TREE_BASE.x + (Math.random() - 0.3) * 12, 0.6 + Math.random() * 4.5, TREE_BASE.z + (Math.random() - 0.7) * 10], i * 3);
+    positions.set([TREE_BASE.x + (Math.random() - 0.5) * 14, 0.6 + Math.random() * 4.5, TREE_BASE.z + (Math.random() - 0.3) * 10], i * 3);
     phases[i] = Math.random() * Math.PI * 2;
   }
   const geometry = new THREE.BufferGeometry();
@@ -346,24 +388,93 @@ function createFireflies(count: number) {
   return { points: new THREE.Points(geometry, material), material };
 }
 
+/**
+ * Outdoor world (meadow, road, ridges, fireflies). Vegetation modelled in Blender (public/models/nature/nature.glb)
+ * is added once it loads via `addVegetation`.
+ */
 export function createSunsetWorld({ grassCount }: { grassCount: number }) {
   const group = new THREE.Group();
   const ground = createGround();
+  const road = createRoad();
   const ridges = createRidges();
-  const tree = createTree();
-  const grass = createGrass(grassCount);
   const fireflies = createFireflies(60);
-  group.add(ground, ridges, tree.group, grass.mesh, fireflies.points);
+  const wind = { uTime: { value: 0 } };
+  let canopy: THREE.Object3D | null = null;
+  group.add(ground, road, ridges, fireflies.points);
   return {
     group,
-    update(time: number, visibility: number, pixelRatio: number) {
+    /** Instance the Blender-made tree, bushes, grass tufts and ferns. */
+    addVegetation(source: THREE.Object3D) {
+      source.updateMatrixWorld(true);
+      const find = (name: string) => {
+        const node = source.getObjectByName(name);
+        let mesh: THREE.Mesh | undefined;
+        node?.traverse((child) => {
+          if (!mesh && (child as THREE.Mesh).isMesh) mesh = child as THREE.Mesh;
+        });
+        return mesh ? { geometry: bakedGeometry(mesh), material: mesh.material as THREE.Material } : undefined;
+      };
+      // meshopt keeps the dequantisation transform on the node, so geometry is baked before re-placing it.
+      const trunk = find("TreeTrunk");
+      const leaves = find("TreeCanopy");
+      if (trunk && leaves) {
+        const tree = new THREE.Group();
+        canopy = new THREE.Mesh(leaves.geometry, leaves.material);
+        tree.add(new THREE.Mesh(trunk.geometry, trunk.material), canopy);
+        tree.position.copy(TREE_BASE);
+        tree.rotation.y = 0.6;
+        tree.scale.setScalar(1.0);
+        group.add(tree);
+      }
+      const near = (x: number, z: number, r: number) => Math.hypot(x - TREE_BASE.x, z - TREE_BASE.z) < r;
+      // Nothing tall between the camera and the seated Sussy.
+      const sightline = (x: number, z: number) => Math.abs(x - SIT_SPOT.x - 0.5) < 4.5 && z > SIT_SPOT.y - 1.5 && z < SIT_SPOT.y + 14;
+      const onRoad = (x: number, z: number) => Math.abs(z - Math.sin(x * 0.18) * 0.35) < 2.2 && x > SIT_SPOT.x - 4;
+      const grass = find("GrassClump");
+      if (grass) {
+        const material = grass.material.clone();
+        addWind(material, wind, 0.18);
+        group.add(scatter(grass.geometry, material, grassCount, (rand) => {
+          const alongRoad = rand() < 0.65;
+          const x = alongRoad ? SIT_SPOT.x - 18 + rand() * (ROAD_START.x - SIT_SPOT.x + 10) : SIT_SPOT.x + (rand() - 0.5) * 36;
+          const z = alongRoad ? (rand() < 0.5 ? -1 : 1) * (2.1 + Math.pow(rand(), 1.6) * 14) : SIT_SPOT.y + (rand() - 0.6) * 30;
+          if (onRoad(x, z) || near(x, z, 1.2) || (x > DOOR_X + 2 && Math.abs(z) < 16)) return null;
+          // Keep the spot where Sussy sits (and the camera's view of it) clear.
+          if (Math.hypot(x - SIT_SPOT.x, z - SIT_SPOT.y - 2) < 2.6) return null;
+          return { x, z, scale: 0.8 + rand() * 0.8 };
+        }, 11));
+      }
+      const fern = find("Fern");
+      if (fern) {
+        const material = fern.material.clone();
+        addWind(material, wind, 0.08);
+        group.add(scatter(fern.geometry, material, Math.round(grassCount / 18), (rand) => {
+          const aroundTree = rand() < 0.45;
+          const a = rand() * Math.PI * 2;
+          const x = aroundTree ? TREE_BASE.x + Math.cos(a) * (1.4 + rand() * 4) : SIT_SPOT.x - 10 + rand() * (ROAD_START.x - SIT_SPOT.x + 2);
+          const z = aroundTree ? TREE_BASE.z + Math.sin(a) * (1.2 + rand() * 3) : (rand() < 0.5 ? -1 : 1) * (2.4 + rand() * 3);
+          if (onRoad(x, z) || x > DOOR_X + 2 || sightline(x, z)) return null;
+          return { x, z, scale: 1.2 + rand() * 0.9 };
+        }, 23));
+      }
+      const bush = find("Bush");
+      if (bush) {
+        group.add(scatter(bush.geometry, bush.material, 26, (rand) => {
+          const x = SIT_SPOT.x - 20 + rand() * (ROAD_START.x - SIT_SPOT.x + 8);
+          const z = (rand() < 0.35 ? 1 : -1) * (5 + rand() * 14);
+          if (x > DOOR_X + 2 || near(x, z, 3) || sightline(x, z)) return null;
+          return { x, z, scale: 0.9 + rand() * 1.1 };
+        }, 31));
+      }
+    },
+    /** @param glow 0..1 sunset progress (fireflies come out near the end) */
+    update(time: number, visibility: number, pixelRatio: number, glow = visibility) {
       group.visible = visibility > 0.001;
       if (!group.visible) return;
-      grass.uniforms.uTime.value = time;
-      tree.canopy.rotation.z = Math.sin(time * 0.55) * 0.012;
-      tree.canopy.rotation.x = Math.sin(time * 0.4 + 1) * 0.008;
+      wind.uTime.value = time;
+      if (canopy) canopy.rotation.z = Math.sin(time * 0.5) * 0.008;
       fireflies.material.uniforms.uTime.value = time;
-      fireflies.material.uniforms.uOpacity.value = visibility;
+      fireflies.material.uniforms.uOpacity.value = smoothstep(0.6, 1, glow);
       fireflies.material.uniforms.uPixelRatio.value = pixelRatio;
     },
   };

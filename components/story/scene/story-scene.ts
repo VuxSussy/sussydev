@@ -4,8 +4,8 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, waveRotation, waveWeight, type ClipJson, type Motor } from "@/lib/rbx/rig";
-import { chapterJumpTime, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
-import { createBlobShadow, createRobloxProps, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
+import { arriveMix, chapterJumpTime, damp, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
+import { createBlobShadow, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
 import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
@@ -21,19 +21,29 @@ export type StorySceneOptions = {
   onTechSelect?: (index: number) => void;
 };
 
-type Key = { s: number; cam: [number, number, number]; target: [number, number, number]; yaw: number; pos: [number, number] };
+type Key = { s: number; cam: [number, number, number]; target: [number, number, number]; yaw: number };
 
-/** Camera / character keyframes along the story (Roblox studs; Sussy faces -Z at yaw 0). */
+/**
+ * Camera / character keyframes along the story. `cam` and `target` are offsets from Sussy's position, which
+ * follows the road (`characterPosition`); Sussy faces -Z at yaw 0, -X at yaw π/2 and the camera (+Z) at yaw π.
+ */
 const KEYS: Key[] = [
-  { s: 0, cam: [-2.5, 3.7, 17.5], target: [-2.5, 2.6, 0], yaw: Math.PI - 0.5, pos: [0, 0] },
-  { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42, pos: [0, 0] },
-  { s: 1.12, cam: [-3.4, 8.4, 21.5], target: [-3.4, 2.1, 1.4], yaw: Math.PI / 2, pos: [0, 0] },
-  { s: 1.9, cam: [-3.0, 8.1, 21], target: [-3.0, 2.1, 1.4], yaw: Math.PI / 2, pos: [0, 0] },
-  { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3, pos: [0, 0] },
-  { s: 2.82, cam: [-6.0, 4.0, 22.5], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3, pos: [0, 0] },
-  { s: 3.42, cam: [SIT_SPOT.x - 3.6, 5.6, SIT_SPOT.y + 31], target: [SIT_SPOT.x - 3.6, 3.2, SIT_SPOT.y - 12], yaw: 0, pos: [SIT_SPOT.x, SIT_SPOT.y] },
-  { s: 4, cam: [SIT_SPOT.x - 3.3, 5.0, SIT_SPOT.y + 27], target: [SIT_SPOT.x - 3.3, 3.2, SIT_SPOT.y - 12], yaw: 0, pos: [SIT_SPOT.x, SIT_SPOT.y] },
+  { s: 0, cam: [-2.5, 3.7, 17.5], target: [-2.5, 2.6, 0], yaw: Math.PI - 0.5 },
+  { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42 },
+  { s: 1.12, cam: [-3.4, 8.4, 21.5], target: [-3.4, 2.1, 1.4], yaw: Math.PI / 2 },
+  { s: 1.9, cam: [-3.0, 8.1, 21], target: [-3.0, 2.1, 1.4], yaw: Math.PI / 2 },
+  { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 3.2, cam: [-6.0, 4.2, 22], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
+  // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
+  { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI },
+  { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI },
 ];
+
+/** Sussy's position on the ground: in the studio until the Work chapter, then along the road to the tree. */
+export function characterPosition(story: number) {
+  const t = journeyMix(story);
+  return [ROAD_START.x + (SIT_SPOT.x - ROAD_START.x) * t, ROAD_START.y + (SIT_SPOT.y - ROAD_START.y) * t] as const;
+}
 
 const ROOT_STANDING = 3;
 const ROOT_SEATED = 1.5;
@@ -60,11 +70,18 @@ function sampleKeys(s: number, portrait: boolean) {
     cam[0] -= shift;
     target[0] -= shift;
     for (let k = 0; k < 3; k++) cam[k] = target[k] + (cam[k] - target[k]) * 1.45;
-    const lift = 3.8 + 1.6 * techVisibility(s) - 9.8 * smoothstep(2.9, 3.4, s);
-    cam[1] += lift;
-    target[1] += lift;
+    // At sunset the camera stays up and looks below Sussy, so the scene sits above the panel.
+    const end = smoothstep(2.9, 3.4, s);
+    const lift = (3.8 + 1.6 * techVisibility(s)) * (1 - end);
+    cam[1] += lift + 1.2 * end;
+    target[1] += lift - 6.5 * end;
   }
-  return { cam, target, yaw: lerp(a.yaw, b.yaw), pos: [lerp(a.pos[0], b.pos[0]), lerp(a.pos[1], b.pos[1])] as const };
+  const pos = characterPosition(s);
+  cam[0] += pos[0];
+  cam[2] += pos[1];
+  target[0] += pos[0];
+  target[2] += pos[1];
+  return { cam, target, yaw: lerp(a.yaw, b.yaw), pos };
 }
 
 export class StoryScene {
@@ -79,6 +96,10 @@ export class StoryScene {
   /** Roblox-mode set dressing, faded in/out with the active theme. */
   private robloxProps = createRobloxProps();
   private robloxMix = 0;
+  private door = createStudioDoor();
+  /** Warm fill from the camera side so Sussy's face is lit while the sun sits behind at the end. */
+  private fillLight = new THREE.DirectionalLight("#ffb990", 0);
+  private lastX = 0;
   private milestones!: Milestones;
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
@@ -157,7 +178,7 @@ export class StoryScene {
     this.sunset = createSunsetWorld({ grassCount: coarse ? 1400 : 3200 });
     this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
     this.robloxMix = options.theme === "roblox" ? 1 : 0;
-    this.scene.add(this.robloxProps.group);
+    this.scene.add(this.robloxProps.group, this.door.group, this.fillLight, this.fillLight.target);
     this.milestones = this.createMilestones(options.theme);
     this.scene.add(this.milestones.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
@@ -178,6 +199,10 @@ export class StoryScene {
     const total = 6;
     const tick = () => { if (!this.disposed) this.options.onProgress?.(++done / total); };
     const fetchJson = <T,>(url: string) => fetch(url, { signal: this.loadAbort.signal }).then((r) => { if (!r.ok) throw new Error(url); return r.json() as Promise<T>; }).then((j) => { tick(); return j; });
+    // Vegetation (Blender-made tree, bushes, grass, ferns) streams in alongside; the scene works without it.
+    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/nature/nature.glb")
+      .then((nature) => { if (!this.disposed) this.sunset.addVegetation(nature.scene); })
+      .catch(() => {});
     const [gltf, index, run, idle, jump, land] = await Promise.all([
       new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/sussy/sussy-r6.glb").then((g) => {
         if (this.disposed) disposeObjects(g.scene);
@@ -432,6 +457,8 @@ export class StoryScene {
       this.actions.land.time = Math.min(Math.max(t - 0.62, 0), this.actions.land.getClip().duration);
     }
     const rootY = ROOT_STANDING + (ROOT_SEATED - ROOT_STANDING) * sit + hop;
+    const reveal = worldReveal(s);
+    const exit = studioExit(s);
     this.character.children[0].position.y = rootY;
     const moving = (1 - sit) * (1 - jumpW - landW);
     this.actions.jump.setEffectiveWeight(jumpW);
@@ -453,14 +480,17 @@ export class StoryScene {
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
     if (!reduced) {
-      const speed = RUN_SPEED * moving * (1 - sunset) * dt;
-      this.studsRun += speed;
+      const speed = RUN_SPEED * moving * (1 - reveal) * dt;
+      // Studs: treadmill distance in the studio, real distance along the road afterwards.
+      this.studsRun += speed + Math.abs(key.pos[0] - this.lastX);
       this.treadmill.x -= Math.sin(key.yaw) * speed;
       this.treadmill.y += Math.cos(key.yaw) * speed;
     }
+    this.lastX = key.pos[0];
     this.floor.material.uniforms.uOffset.value.copy(this.treadmill);
-    this.floor.material.uniforms.uOpacity.value = 1 - sunset;
-    this.floor.mesh.visible = sunset < 0.999;
+    this.floor.material.uniforms.uOpacity.value = 1 - exit;
+    this.floor.mesh.visible = exit < 0.999;
+    this.door.update(smoothstep(1.98, 2.14, s) * (1 - smoothstep(2.62, 2.8, s)), time);
     this.shadow.mesh.position.set(key.pos[0], 0.02, key.pos[1]);
     this.shadow.mesh.rotation.z = key.yaw;
     this.shadow.material.opacity = (1 - 0.25 * sit) * (1 - 0.18 * hop);
@@ -472,7 +502,7 @@ export class StoryScene {
     const lane = this.carousel.group.position.z;
     this.carousel.group.position.x = (this.camera.position.x * lane) / Math.max(this.camera.position.z, 1);
     this.carousel.update(techPosition(s, this.options.techs.length), visibility, this.hovered, time);
-    this.milestones.update(s, key.yaw);
+    this.milestones.update(s, reveal, characterPosition);
     this.updateHover(visibility);
 
     // Studio → sunset.
@@ -482,11 +512,12 @@ export class StoryScene {
     this.sky.material.uniforms.uNight.value = this.dusk * sunset;
     this.sky.material.uniforms.uTime.value = time;
     this.sky.mesh.position.copy(this.camera.position);
-    const rise = 1 - Math.pow(1 - sunset, 3);
+    // The meadow rises under the fading studio floor as Sussy reaches the doorway.
+    const rise = 1 - Math.pow(1 - reveal, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
-    this.sunset.update(time, sunset, this.renderer.getPixelRatio());
+    this.sunset.update(time, reveal, this.renderer.getPixelRatio(), sunset);
     this.robloxMix = reduced ? (this.options.theme === "roblox" ? 1 : 0) : damp(this.robloxMix, this.options.theme === "roblox" ? 1 : 0, 3, dt);
-    this.robloxProps.update(time, this.robloxMix * (1 - sunset));
+    this.robloxProps.update(time, this.robloxMix * (1 - exit));
     this.fog.color.copy(this.studioFog).lerp(COLORS.fog, sunset);
     this.fog.near = 30 - 10 * sunset;
     this.fog.far = 160 + 80 * sunset;
@@ -498,6 +529,10 @@ export class StoryScene {
     this.hemi.color.copy(COLORS.sky).lerp(COLORS.sunsetSky, sunset);
     this.hemi.groundColor.copy(COLORS.ground).lerp(COLORS.sunsetGround, sunset);
     this.scene.environmentIntensity = 0.45 - 0.2 * sunset;
+    const arrive = arriveMix(s);
+    this.fillLight.intensity = 1.4 * arrive;
+    this.fillLight.position.set(key.pos[0] + 4, 6, key.pos[1] + 12);
+    this.fillLight.target.position.set(key.pos[0], 2, key.pos[1]);
 
     if (!reduced) this.adaptQuality(elapsed);
     this.renderer.render(this.scene, this.camera);

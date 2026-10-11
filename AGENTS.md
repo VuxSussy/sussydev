@@ -18,6 +18,7 @@ npx tsc --noEmit       # must be clean
 npm run build          # vinext build — must succeed
 npm run extract:anims -- "<file.rbxm>" public/anims
 npm run build:model    # Blender headless build + meshopt optimize → public/models/sussy/sussy-r6.glb
+npm run build:nature   # Blender headless tree/bush/grass/fern + meshopt → public/models/nature/nature.glb
 ```
 
 If the dev server reports "Network connection lost" after adding a route, restart it.
@@ -71,4 +72,5 @@ Check desktop 1440×900 and mobile 375×812 for every visual change.
 - Roblox Studio MCP (if connected) can dump more data with `execute_luau`; `HttpService:PostAsync` to a localhost
   listener works for exporting large payloads.
 - After `build-sussy.py`, always run `npm run optimize:model` (meshopt). The rig keeps node transforms on meshes
-  because they carry meshopt dequantization.
+  because they carry meshopt dequantization. Code that re-places glTF nodes (vegetation) must bake them first
+  with `bakedGeometry()` (environment.ts), otherwise the geometry collapses to the -1..1 quantised range.

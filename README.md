@@ -78,6 +78,19 @@ Web đang dùng `run-v4` và `idle-v2`; tư thế ngồi được tạo trong `c
 npm run build:model
 ```
 
+### Cây, cỏ và con đường hoàng hôn
+
+`scripts/blender/build-nature.py` dựng cây (thân thuôn, rễ, cành, tán lá là các khối cầu mềm), bụi, cụm cỏ và dương xỉ
+trong Blender. Toàn bộ sắc độ (bóng tối trong tán, viền nắng ấm phía mặt trời) nằm trong màu đỉnh nên web chỉ cần một vật liệu
+cho mỗi loại. Cỏ, dương xỉ và bụi được instance hàng nghìn lần dọc con đường; gió là một shader nhỏ chèn qua `onBeforeCompile`.
+
+```bash
+npm run build:nature   # Blender headless + meshopt → public/models/nature/nature.glb (≈145 KB)
+```
+
+Lưu ý: meshopt lượng tử hoá vị trí đỉnh và đặt phép giải lượng tử lên node, nên `bakedGeometry()` trong
+`components/story/scene/environment.ts` đưa ma trận node vào geometry trước khi đặt lại vị trí cây hay instance cỏ.
+
 `public/brand/sussy-head.webp` (loading screen, nhúng vào `lib/brand.ts`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-{dev,roblox}.jpg` tạo bằng `python3 scripts/og/make-og.py`.
 
 ## Hiệu năng & trợ năng

@@ -8,6 +8,16 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.4",
+    date: "2026-10-11",
+    title: "Hành trình ra hoàng hôn",
+    notes: [
+      "Có câu chuyện nối tech stack với đoạn cuối: hết băng chuyền, Sussy chạy qua một cánh cửa sáng ra khỏi studio, theo con đường đất qua đồi cỏ, ngang các cột mốc dự án, rồi tới gốc cây lúc trời ngả hoàng hôn.",
+      "Cây, bụi, cỏ và dương xỉ được dựng lại trong Blender: tán lá mềm và tròn, màu đỉnh có sẵn bóng tối bên trong cùng viền nắng ấm; cỏ và dương xỉ đung đưa theo gió.",
+      "Ở đoạn cuối Sussy ngồi quay mặt ra màn hình, cây ở một bên, mặt trời lặn ở bên kia.",
+    ],
+  },
+  {
     version: "2.3",
     date: "2026-10-11",
     title: "Đúng mặt Sussy",
