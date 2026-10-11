@@ -9,7 +9,7 @@ A scroll-driven Roblox developer portfolio built with React, TypeScript and Thre
 - Tailwind CSS 4 and Lucide icons
 - Blender for avatar refinement and procedural landscape assets
 - Vitest and Playwright for regression tests
-- Cloudflare Workers / Wrangler for the configured production runtime
+- Nitro for Vercel deployment; Cloudflare Workers / Wrangler remains available locally
 
 ## Local Development
 
@@ -49,3 +49,14 @@ Playwright tests require the browser configured in `playwright.config.ts`. The p
 The R6 avatar comes from Roblox Studio and is refined in Blender. Animation extraction reads Roblox `.rbxm` files; the movement fixture credits are documented in `tests/fixtures/README.md`. Tool logos use Simple Icons. Brand names and logos belong to their respective owners.
 
 Personal details and project claims should be updated with verified information before using this portfolio for applications.
+
+## Vercel Deployment
+
+The `prototype` branch preserves the previous static website. The current application is maintained on `main`.
+
+```sh
+NITRO_PRESET=vercel npm run build
+vercel deploy --prebuilt --prod
+```
+
+`vercel.json` also configures a Vercel source build. Vercel uses Nitro to generate server functions and static assets.

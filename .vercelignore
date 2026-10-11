@@ -1,0 +1,7 @@
+assets-src/
+outputs/
+work/
+test-results/
+playwright-report/
+*.tsbuildinfo
+.env*
