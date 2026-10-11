@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { ROAD } from "@/lib/story";
 
 /**
  * The journey: Sussy leaves the studio at the origin through a doorway and runs along a dirt road towards -X,
@@ -6,26 +7,23 @@ import * as THREE from "three";
  */
 export const ROAD_START = new THREE.Vector2(0, 0);
 /** Where Sussy sits (HumanoidRootPart x/z), at the end of the road. */
-export const SIT_SPOT = new THREE.Vector2(-64, 0);
+export const SIT_SPOT = new THREE.Vector2(ROAD.sit, 0);
 /** Studio exit doorway along the road. */
-export const DOOR_X = -9;
+export const DOOR_X = ROAD.door;
 export const SUN_DIRECTION = new THREE.Vector3(0.26, 0.05, -1).normalize();
 /** Tree right behind the seated Sussy (Sussy faces +Z, towards the camera). */
 const TREE_BASE = new THREE.Vector3(SIT_SPOT.x - 3.4, 0, SIT_SPOT.y - 3.6);
+/** Smaller copies of the tree in the distance: one across the showcase stretch, one beyond the resting tree. */
+const BACKGROUND_TREES = [
+  { x: -57.5, z: -27, scale: 0.72, turn: 2.1 },
+  { x: SIT_SPOT.x - 30, z: -20, scale: 0.85, turn: 4.0 },
+];
 
-export type SceneTheme = "dev" | "roblox";
-
-/** Studio look per portfolio: neutral charcoal for Dev, a night-time Roblox baseplate for Roblox. */
-const THEMES = {
-  dev: {
-    skyBottom: [0.043, 0.043, 0.05], skyTop: [0.085, 0.085, 0.095], skyGlow: [0.07, 0.066, 0.06],
-    floorNear: [0.11, 0.11, 0.122], floorFar: [0.06, 0.06, 0.068], line: [1, 1, 1], lineStrength: 0.06, studs: 0,
-  },
-  roblox: {
-    skyBottom: [0.03, 0.045, 0.075], skyTop: [0.07, 0.105, 0.17], skyGlow: [0.06, 0.12, 0.22],
-    floorNear: [0.1, 0.135, 0.2], floorFar: [0.045, 0.065, 0.105], line: [0.42, 0.66, 1.0], lineStrength: 0.12, studs: 1,
-  },
-} satisfies Record<SceneTheme, Record<string, number[] | number>>;
+/** Studio look: a night-time Roblox baseplate (navy sky and floor, blue grid lines, studs). */
+const STUDIO = {
+  skyBottom: [0.03, 0.045, 0.075], skyTop: [0.07, 0.105, 0.17], skyGlow: [0.06, 0.12, 0.22],
+  floorNear: [0.1, 0.135, 0.2], floorFar: [0.045, 0.065, 0.105], line: [0.42, 0.66, 1.0], lineStrength: 0.12, studs: 1,
+};
 
 const vec3 = (v: number[]) => new THREE.Vector3(v[0], v[1], v[2]);
 
@@ -34,8 +32,8 @@ const dither = /* glsl */ `
 `;
 
 /** Sky dome blending the dark studio backdrop into a soft sunset. Colours are display-referred. */
-export function createSky(theme: SceneTheme) {
-  const t = THEMES[theme];
+export function createSky() {
+  const t = STUDIO;
   const material = new THREE.ShaderMaterial({
     side: THREE.BackSide,
     depthWrite: false,
@@ -89,17 +87,12 @@ export function createSky(theme: SceneTheme) {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(400, 48, 24), material);
   mesh.frustumCulled = false;
   mesh.renderOrder = -10;
-  return { mesh, material, setTheme(theme: SceneTheme) {
-    const t = THEMES[theme];
-    material.uniforms.uBottom.value.set(...t.skyBottom);
-    material.uniforms.uTop.value.set(...t.skyTop);
-    material.uniforms.uGlow.value.set(...t.skyGlow);
-  } };
+  return { mesh, material };
 }
 
 /** Unlit studio floor with a soft radial falloff and a grid that scrolls like a treadmill. */
-export function createStudioFloor(theme: SceneTheme) {
-  const t = THEMES[theme];
+export function createStudioFloor() {
+  const t = STUDIO;
   const material = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
@@ -139,14 +132,7 @@ export function createStudioFloor(theme: SceneTheme) {
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(70, 70), material);
   mesh.rotation.x = -Math.PI / 2;
   mesh.renderOrder = -5;
-  return { mesh, material, setTheme(theme: SceneTheme) {
-    const t = THEMES[theme];
-    material.uniforms.uNear.value.set(...t.floorNear);
-    material.uniforms.uFar.value.set(...t.floorFar);
-    material.uniforms.uLine.value.set(...t.line);
-    material.uniforms.uLineStrength.value = t.lineStrength;
-    material.uniforms.uStuds.value = t.studs;
-  } };
+  return { mesh, material };
 }
 
 /** Soft contact shadow that follows the character (cheaper and softer than shadow maps). */
@@ -191,8 +177,8 @@ function createGround() {
   geometry.translate(-40, 0, -30);
   const pos = geometry.attributes.position as THREE.BufferAttribute;
   const colors = new Float32Array(pos.count * 3);
-  const meadow = new THREE.Color("#5f6b37");
-  const dry = new THREE.Color("#8a7a42");
+  const meadow = new THREE.Color("#4c6a2a");
+  const dry = new THREE.Color("#7c7a3a");
   const far = new THREE.Color("#3a3446");
   const tmp = new THREE.Color();
   for (let i = 0; i < pos.count; i++) {
@@ -205,7 +191,27 @@ function createGround() {
   }
   geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
   geometry.computeVertexNormals();
-  return new THREE.Mesh(geometry, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 }));
+  const material = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95 });
+  // Turf, not bare earth: value noise in clumps and fine streaks breaks up the flat colour between the blades.
+  material.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec2 vTurf;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvTurf = (modelMatrix * vec4(transformed, 1.0)).xz;");
+    shader.fragmentShader = shader.fragmentShader
+      .replace("#include <common>", `#include <common>
+        varying vec2 vTurf;
+        float turfHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float turfNoise(vec2 p) {
+          vec2 i = floor(p), f = fract(p);
+          vec2 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(turfHash(i), turfHash(i + vec2(1.0, 0.0)), u.x), mix(turfHash(i + vec2(0.0, 1.0)), turfHash(i + vec2(1.0, 1.0)), u.x), u.y);
+        }`)
+      .replace("#include <color_fragment>", `#include <color_fragment>
+        float clumps = turfNoise(vTurf * 0.35) * 0.6 + turfNoise(vTurf * 1.3) * 0.4;
+        float streaks = turfNoise(vTurf * vec2(9.0, 2.2)) * turfNoise(vTurf * vec2(2.4, 11.0));
+        diffuseColor.rgb *= 0.74 + 0.36 * clumps + 0.22 * streaks;`);
+  };
+  return new THREE.Mesh(geometry, material);
 }
 
 /** Packed-dirt road from the studio doorway to the tree, slightly wobbly, with soft edges. */
@@ -588,7 +594,11 @@ function createBirds(count: number) {
  * Outdoor world (meadow, road, ridges, fireflies, falling leaves, a flock of birds). Vegetation modelled in Blender (public/models/nature/nature.glb)
  * is added once it loads via `addVegetation`.
  */
-export function createSunsetWorld({ grassCount }: { grassCount: number }) {
+/**
+ * @param grassCount tall tufts along the verges
+ * @param carpetCount short carpet patches that cover the ground between them
+ */
+export function createSunsetWorld({ grassCount, carpetCount = grassCount }: { grassCount: number; carpetCount?: number }) {
   const group = new THREE.Group();
   const ground = createGround();
   const road = createRoad();
@@ -615,14 +625,29 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
       // meshopt keeps the dequantisation transform on the node, so geometry is baked before re-placing it.
       const trunk = find("TreeTrunk");
       const leaves = find("TreeCanopy");
+      const cards = find("TreeLeaves");
       if (trunk && leaves) {
+        const crown = new THREE.Group();
+        crown.add(new THREE.Mesh(leaves.geometry, leaves.material));
+        if (cards) {
+          const material = cards.material.clone();
+          material.side = THREE.DoubleSide;
+          crown.add(new THREE.Mesh(cards.geometry, material));
+        }
         const tree = new THREE.Group();
-        canopy = new THREE.Mesh(leaves.geometry, leaves.material);
-        tree.add(new THREE.Mesh(trunk.geometry, trunk.material), canopy);
+        canopy = crown;
+        tree.add(new THREE.Mesh(trunk.geometry, trunk.material), crown);
         tree.position.copy(TREE_BASE);
         tree.rotation.y = 0.6;
-        tree.scale.setScalar(1.0);
         group.add(tree);
+        // Two smaller trees further off give the meadow some depth (same meshes, nothing extra to load).
+        for (const spot of BACKGROUND_TREES) {
+          const copy = tree.clone();
+          copy.position.set(spot.x, groundHeight(spot.x, spot.z) - 0.1, spot.z);
+          copy.rotation.y = spot.turn;
+          copy.scale.setScalar(spot.scale);
+          group.add(copy);
+        }
       }
       const near = (x: number, z: number, r: number) => Math.hypot(x - TREE_BASE.x, z - TREE_BASE.z) < r;
       // Nothing tall between the camera and the seated Sussy.
@@ -633,7 +658,7 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
         const material = grass.material.clone();
         addWind(material, wind, 0.18);
         group.add(scatter(grass.geometry, material, grassCount, (rand) => {
-          const alongRoad = rand() < 0.65;
+          const alongRoad = rand() < 0.75;
           const x = alongRoad ? SIT_SPOT.x - 18 + rand() * (ROAD_START.x - SIT_SPOT.x + 10) : SIT_SPOT.x + (rand() - 0.5) * 36;
           const z = alongRoad ? (rand() < 0.5 ? -1 : 1) * (2.1 + Math.pow(rand(), 1.6) * 14) : SIT_SPOT.y + (rand() - 0.6) * 30;
           if (onRoad(x, z) || near(x, z, 1.2) || (x > DOOR_X + 2 && Math.abs(z) < 16)) return null;
@@ -643,6 +668,18 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
           const nearSide = z > 0 && z < 12 ? 0.5 : 1;
           return { x, z, scale: (0.8 + rand() * 0.8) * nearSide };
         }, 11));
+      }
+      const carpet = find("GrassShort");
+      if (carpet) {
+        const material = carpet.material.clone();
+        addWind(material, wind, 0.1);
+        // Evenly over the band the camera sees along the road, so no bare ground shows between the tufts.
+        group.add(scatter(carpet.geometry, material, carpetCount, (rand) => {
+          const x = SIT_SPOT.x - 26 + rand() * (DOOR_X - 2 - (SIT_SPOT.x - 26));
+          const z = -26 + rand() * 40;
+          if (onRoad(x, z) || near(x, z, 1.4) || Math.hypot(x - SIT_SPOT.x, z - SIT_SPOT.y - 1.5) < 2.2) return null;
+          return { x, z, scale: 0.9 + rand() * 0.7 };
+        }, 41));
       }
       const fern = find("Fern");
       if (fern) {

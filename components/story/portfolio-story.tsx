@@ -1,20 +1,18 @@
 "use client";
 
 import Image from "next/image";
-import { SUSSY_EGG_SRC } from "@/lib/brand";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
-import { portfolio, TECH_GROUPS, type ContactLink, type Mode } from "@/data/portfolio";
-import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, speechBeat, storyForTech, storyFromSections, techPosition } from "@/lib/story";
+import { portfolio, TECH_GROUPS, type ContactLink } from "@/data/portfolio";
+import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setShowcase, showcaseIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { ChatBubble } from "./chat-bubble";
-import { LoadingScreen } from "./loading-screen";
+import { LOADER_MIN_MS, LoadingScreen } from "./loading-screen";
 
 const LOCALE_KEY = "sussy-locale";
 const LOCALE_EVENT = "sussy-locale-change";
@@ -55,9 +53,6 @@ function subscribeReducedMotion(callback: () => void) {
   };
 }
 
-const MODES: readonly Mode[] = ["dev", "roblox"];
-const modeHref = (mode: Mode) => (mode === "dev" ? "/" : "/roblox");
-
 function contactHref(contact: ContactLink) {
   if (!contact.value) return undefined;
   if (contact.kind === "phone") return `tel:${contact.value.replace(/\s+/g, "")}`;
@@ -70,42 +65,39 @@ function contactText(contact: ContactLink) {
   return contact.value.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
-export function PortfolioStory({ mode }: { mode: Mode }) {
-  const router = useRouter();
-  // The 3D scene and scroll maths use the source tech list; only the copy is localised.
-  const techs = portfolio.profiles[mode].techStack;
+// The 3D scene and scroll maths use the source tech list; only the copy is localised.
+const techs = portfolio.profile.techStack;
+
+export function PortfolioStory() {
   const locale = useSyncExternalStore(subscribeLocale, readLocale, () => "vi" as Locale);
-  const profile = useMemo(() => localizedProfile(mode, locale), [mode, locale]);
+  const profile = useMemo(() => localizedProfile(locale), [locale]);
   const t = ui[locale];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const sectionRefs = useRef<(HTMLElement | null)[]>([]);
   const sceneRef = useRef<StoryScene | null>(null);
   const readoutRef = useRef<HTMLSpanElement>(null);
   const chipsRef = useRef<HTMLFieldSetElement>(null);
+  const stopsRef = useRef<HTMLOListElement>(null);
   const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, () => false);
   const reducedRef = useRef(reducedMotion);
-  const storyRef = useRef(0);
-  const previousMode = useRef(mode);
-  const pendingStory = useRef<number | null>(null);
-  const switchTimer = useRef<number | undefined>(undefined);
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [webglFailed, setWebglFailed] = useState(false);
   const [chapter, setChapter] = useState(0);
   const [techIndex, setTechIndex] = useState(0);
+  const [projectIndex, setProjectIndex] = useState(0);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
   const studsRef = useRef<HTMLSpanElement>(null);
 
   // Roblox leaderstats: poll the scene's running distance a few times per second (no React re-render).
   useEffect(() => {
-    if (mode !== "roblox") return;
     const timer = window.setInterval(() => {
       const studs = sceneRef.current?.studsRun ?? 0;
       if (studsRef.current) studsRef.current.textContent = Math.floor(studs).toLocaleString("vi-VN");
     }, 250);
     return () => window.clearInterval(timer);
-  }, [mode]);
+  }, []);
   // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
   const [sound, setSound] = useState(false);
   const [bubble, setBubble] = useState<{ text: string; id: number } | null>(null);
@@ -113,6 +105,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+  // The roadside screens show the project basics in the current language.
+  useEffect(() => {
+    if (ready) sceneRef.current?.setProjects(profile.projects);
+  }, [ready, profile]);
 
   // Sussy says a short line at each story beat (after the loader), then the bubble fades away.
   const [beat, setBeat] = useState(0);
@@ -123,7 +119,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const delay = greeted.current ? 350 : 1500;
     const show = window.setTimeout(() => {
       greeted.current = true;
-      setBubble({ text: chatLines[locale][mode][beat], id: Date.now() });
+      setBubble({ text: chatLines[locale][beat], id: Date.now() });
       // Hello on arrival, goodbye once seated at the sunset.
       if (beat === 0 || beat === CHAPTERS.length - 1) sceneRef.current?.wave();
     }, delay);
@@ -132,7 +128,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       window.clearTimeout(show);
       window.clearTimeout(hide);
     };
-  }, [beat, ready, webglFailed, locale, mode]);
+  }, [beat, ready, webglFailed, locale]);
 
   const toggleLocale = () => {
     try { window.localStorage.setItem(LOCALE_KEY, locale === "vi" ? "en" : "vi"); } catch { /* ignore */ }
@@ -143,7 +139,6 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     setSound(next);
     sceneRef.current?.setSound(next);
   };
-  const [switchingMode, setSwitchingMode] = useState<Mode | null>(null);
 
   useEffect(() => {
     reducedRef.current = reducedMotion;
@@ -160,7 +155,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     if (top !== null) window.scrollTo({ top, behavior: reducedRef.current ? "instant" : "smooth" });
   }, []);
 
-  const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory, techs.length]);
+  const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory]);
 
   // Keyboard shortcuts: J / K next / previous chapter, H makes Sussy hop. Ignored while typing or with modifiers.
   const onShortcut = useEffectEvent((event: KeyboardEvent) => {
@@ -179,34 +174,29 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }, []);
 
   const selectSceneTech = useEffectEvent(selectTech);
-  const getSceneProfile = useEffectEvent(() => ({ techs, theme: mode }));
-
-  const switchMode = (next: Mode) => {
-    if (next === mode || switchingMode !== null) return;
-    pendingStory.current = storyFromSections(sectionRefs.current, window.innerHeight);
-    setSwitchingMode(next);
-    sceneRef.current?.setDeparting(!reducedRef.current);
-    switchTimer.current = window.setTimeout(() => router.push(modeHref(next), { scroll: false }), reducedRef.current ? 0 : 240);
-  };
-
-  useLayoutEffect(() => {
-    if (previousMode.current === mode) return;
-    previousMode.current = mode;
-    const story = pendingStory.current ?? storyRef.current;
-    pendingStory.current = null;
-    const top = scrollTopForStory(story, sectionRefs.current, window.innerHeight, window.scrollY);
-    if (top !== null) window.scrollTo({ top, behavior: "instant" });
-    storyRef.current = story;
-    setChapter(chapterIndex(story));
-    setTechIndex(Math.round(techPosition(story, techs.length)));
-    setHoveredTech(-1);
-    sceneRef.current?.setProfile(mode, techs, story);
-    sceneRef.current?.setDeparting(false);
-    const frame = requestAnimationFrame(() => setSwitchingMode(null));
-    return () => cancelAnimationFrame(frame);
-  }, [mode, techs]);
-
-  useEffect(() => () => window.clearTimeout(switchTimer.current), []);
+  // Line the roadside screens up with the showcase's stop markers: screen i is beside Sussy while marker i is
+  // mid-viewport (the story value is read at the viewport's centre line, so a marker's centre is its story value).
+  useEffect(() => {
+    const list = stopsRef.current;
+    const section = sectionRefs.current[2];
+    if (!list || !section) return;
+    const measure = () => {
+      const cards = list.children;
+      if (!cards.length) return;
+      // Stops measured from the page, so the side panel switches exactly as Sussy reaches the next screen.
+      const box = section.getBoundingClientRect();
+      const storyAt = (card: Element) => {
+        const rect = card.getBoundingClientRect();
+        return 2 + (rect.top + rect.height / 2 - box.top) / Math.max(box.height, 1);
+      };
+      setShowcase(storyAt(cards[0]), storyAt(cards[cards.length - 1]));
+      sceneRef.current?.refresh();
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   // Scroll → story value → scene + overlay state.
   useEffect(() => {
@@ -215,16 +205,16 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const update = () => {
       frame = 0;
       // Scroll distance drives Sussy's pace (walk on a gentle scroll, run on a fast one); instant jumps
-      // (portfolio switch, restored position) are not scrolling.
+      // (chapter links, restored position) are not scrolling.
       const delta = window.scrollY - lastY;
       if (Math.abs(delta) < window.innerHeight * 1.5) sceneRef.current?.addScroll(delta);
       lastY = window.scrollY;
       const story = storyFromSections(sectionRefs.current, window.innerHeight);
-      storyRef.current = story;
       sceneRef.current?.setStory(story);
       setChapter(chapterIndex(story));
       setBeat(speechBeat(story));
       setTechIndex(Math.round(techPosition(story, techs.length)));
+      setProjectIndex(showcaseIndex(story, portfolio.profile.projects.length));
       if (readoutRef.current) readoutRef.current.textContent = `${String(Math.round((story / CHAPTERS.length) * 100)).padStart(3, "0")}%`;
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
@@ -236,7 +226,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [techs.length]);
+  }, []);
 
   // Mount the WebGL scene (code-split so text renders first).
   useEffect(() => {
@@ -251,7 +241,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         if (disposed) return;
         scene = new StoryScene({
           canvas,
-          ...getSceneProfile(),
+          techs,
           reducedMotion: reducedRef.current,
           onProgress: (value) => !disposed && setProgress(value),
           onTechHover: (index) => !disposed && setHoveredTech(index),
@@ -272,7 +262,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         scene.setStory(storyFromSections(sectionRefs.current, window.innerHeight));
         await scene.load();
         if (disposed) return;
-        const wait = Math.max(0, 700 - (performance.now() - start));
+        // The loader's roll takes at least LOADER_MIN_MS (less when motion is reduced).
+        const wait = Math.max(0, (reducedRef.current ? 400 : LOADER_MIN_MS) - (performance.now() - start));
         readyTimer = window.setTimeout(() => !disposed && setReady(true), wait);
       })
       .catch(() => {
@@ -302,10 +293,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     }
   }
 
-  // Clamped: right after a portfolio switch the indices still belong to the previous (possibly longer) stack
-  // until the layout effect resets them (e.g. Dev's 12th tech at the last stop -> Roblox has 10).
   const focusIndex = Math.min(Math.max(hoveredTech >= 0 ? hoveredTech : techIndex, 0), profile.techStack.length - 1);
   const focusTech = profile.techStack[focusIndex];
+  const currentProject = profile.projects[projectIndex] ?? profile.projects[0];
 
   // Keep the active chip centred when the chip row scrolls horizontally (mobile).
   useEffect(() => {
@@ -321,15 +311,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   const atEnd = chapter === CHAPTERS.length - 1;
 
   return (
-    <div className="site" data-mode={mode} data-reduced-motion={reducedMotion} aria-busy={switchingMode !== null}>
+    <div className="site" data-reduced-motion={reducedMotion}>
       <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
-      <div className={`mode-curtain${switchingMode ? " is-active" : ""}`} aria-hidden={switchingMode === null}>
-        <div className="loader-stage" aria-hidden="true">
-          <Image className="loader-head" src={SUSSY_EGG_SRC} alt="" width={256} height={256} unoptimized />
-          <span className="loader-shadow" />
-        </div>
-        <output className="loader-label" aria-live="polite">{localizedProfile(switchingMode ?? mode, locale).loadingLabel}</output>
-      </div>
       <a className="skip-link" href="#main">{t.skip}</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
@@ -346,17 +329,6 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-sub">{profile.brandSub}</span>
         </a>
-        <nav className="mode-switch" aria-label={t.chooseMode}>
-          {MODES.map((item) => (
-            <Link prefetch={false} key={item} href={modeHref(item)} scroll={false} aria-current={item === mode ? "page" : undefined} onClick={(event) => {
-              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-              event.preventDefault();
-              switchMode(item);
-            }}>
-              {portfolio.profiles[item].label}
-            </Link>
-          ))}
-        </nav>
         <div className="hud-actions">
           <button type="button" className="lang-toggle" onClick={toggleLocale} aria-label={`${t.language}: ${locale === "vi" ? "English" : "Tiếng Việt"}`}>
             <span aria-hidden="true" data-active={locale === "vi"}>VI</span>
@@ -374,12 +346,10 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         </div>
       </header>
 
-      {mode === "roblox" && (
-        <aside className="leaderstats" aria-label="Leaderstats">
-          <div className="ls-row ls-head"><span>{t.player}</span><span>Stage</span><span>Studs</span></div>
-          <div className="ls-row"><span>{portfolio.character}</span><span>{chapter + 1}</span><span ref={studsRef}>0</span></div>
-        </aside>
-      )}
+      <aside className="leaderstats" aria-label="Leaderstats">
+        <div className="ls-row ls-head"><span>{t.player}</span><span>Stage</span><span>Studs</span></div>
+        <div className="ls-row"><span>{portfolio.character}</span><span>{chapter + 1}</span><span ref={studsRef}>0</span></div>
+      </aside>
 
       <nav className="chapter-rail" aria-label={t.chapters}>
         <ol>
@@ -453,19 +423,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           <div className="work-inner">
             <p className="eyebrow">03 / 04 <span className="eyebrow-line" aria-hidden="true" /> {t.workEyebrow}</p>
             <h2 id="work-title">{profile.workTitle[0]}<br />{profile.workTitle[1]}</h2>
-            <div className="work-list">
-              {profile.projects.map((project, index) => (
-                <article className="glass-card project-card" key={project.title}>
-                  <p className="card-meta"><span>{pad(index + 1)}</span><span>{project.year} · {project.category}</span></p>
-                  <h3>{project.title}</h3>
-                  <p>{project.summary}</p>
-                  {caseStudies[project.slug] ? (
-                    <p className="card-foot"><Link prefetch={false} href={`/du-an/${project.slug}`}>{t.readCase}</Link></p>
-                  ) : (
-                    project.impact && <p className="card-foot">{project.impact}</p>
-                  )}
-                </article>
-              ))}
+            <div className="glass-card about-card">
+              <h3 className="card-title">{t.about}</h3>
+              {profile.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
             </div>
             <div className="glass-card experience-card">
               <h3 className="card-title">{t.experience}</h3>
@@ -478,9 +438,37 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
                 ))}
               </ol>
             </div>
-            <div className="glass-card about-card">
-              <h3 className="card-title">{t.about}</h3>
-              {profile.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+            <div className="showcase">
+              <div className="showcase-sticky">
+                <aside className="showcase-panel" aria-labelledby="showcase-title">
+                  <p className="eyebrow">{t.project} {pad(projectIndex + 1)} / {pad(profile.projects.length)} <span className="eyebrow-line" aria-hidden="true" /></p>
+                  <div className="showcase-body" key={projectIndex} aria-live="polite">
+                    <p className="card-meta"><span>{currentProject.year}</span><span>{currentProject.category}</span></p>
+                    <h3 id="showcase-title">{currentProject.title}</h3>
+                    <p className="showcase-summary">{currentProject.summary}</p>
+                    {caseStudies[currentProject.slug] ? (
+                      <p className="card-foot"><Link prefetch={false} href={`/du-an/${currentProject.slug}`}>{t.readCase}</Link></p>
+                    ) : (
+                      currentProject.impact && <p className="card-foot">{currentProject.impact}</p>
+                    )}
+                  </div>
+                  <nav className="showcase-dots" aria-label={t.projectsNav}>
+                    {profile.projects.map((project, index) => (
+                      <button
+                        key={project.slug}
+                        type="button"
+                        aria-label={`${pad(index + 1)} · ${project.title}`}
+                        aria-current={index === projectIndex ? "true" : undefined}
+                        onClick={() => scrollToStory(stopStory(index, profile.projects.length) + 0.0005)}
+                      />
+                    ))}
+                  </nav>
+                </aside>
+              </div>
+              {/* One marker per roadside screen: their positions set where Sussy stops (see setShowcase). */}
+              <ol className="showcase-stops" ref={stopsRef} aria-hidden="true">
+                {profile.projects.map((project) => <li key={project.slug} />)}
+              </ol>
             </div>
           </div>
         </section>

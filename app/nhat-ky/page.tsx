@@ -6,7 +6,7 @@ import { portfolio } from "@/data/portfolio";
 
 export const metadata: Metadata = {
   title: "Nhật ký phát triển — Sussy",
-  description: "Mỗi phiên bản của portfolio Sussy: website luôn tiếp tục được nâng cấp.",
+  description: "Những gì đã thay đổi trên portfolio Sussy qua từng phiên bản.",
 };
 
 const formatDate = (iso: string) => new Date(`${iso}T00:00:00`).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });

@@ -1,4 +1,4 @@
-"""Build the 1200×630 social cards (public/brand/og-{dev,roblox}.jpg).
+"""Build the 1200×630 social card (public/brand/og-roblox.jpg).
 
 The character render (assets-src/sussy/og-character.png, 520×630, transparent) comes from Blender; the card is an SVG
 rasterised with headless Chrome, then saved as JPEG with `sips`.
@@ -12,9 +12,7 @@ import tempfile
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CARDS = {
-    "dev": dict(bg1="#1b1b20", bg2="#0b0b0d", glow="#f0b07a", code="001", sub="A PORTFOLIO RUN",
-                h1="Code gọn.", h2="Chạy không ngừng.", role="Frontend Developer · Three.js · Roblox"),
-    "roblox": dict(bg1="#142035", bg2="#0a0f18", glow="#6cb4ff", code="002", sub="A ROBLOX RUN",
+    "roblox": dict(bg1="#142035", bg2="#0a0f18", glow="#6cb4ff", code="001", sub="A ROBLOX RUN",
                    h1="Dựng map.", h2="Viết luật chơi.", role="Roblox Developer · Luau · Studio"),
 }
 

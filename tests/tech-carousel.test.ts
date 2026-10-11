@@ -4,9 +4,9 @@ import { portfolio } from "../data/portfolio";
 import { TechCarousel } from "../components/story/scene/tech-carousel";
 
 it("reuses pick meshes and restores the same focus and placement when scrolling backwards", () => {
-  const carousel = new TechCarousel(portfolio.profiles.dev.techStack);
+  const carousel = new TechCarousel(portfolio.profile.techStack);
   const pickables = carousel.pickables;
-  expect(pickables).toHaveLength(24);
+  expect(pickables).toHaveLength(portfolio.profile.techStack.length * 2);
   expect(carousel.pickables).toBe(pickables);
   carousel.update(4.5, 1, -1, 0);
   const snapshot = () => JSON.stringify(carousel.group.toJSON());
