@@ -117,6 +117,8 @@ export class StoryScene {
   private waveTilt = new THREE.Quaternion();
   /** Seconds left for a queued wave to start (0 = none queued); dropped if the user has scrolled elsewhere. */
   private waveQueue = 0;
+  /** False after a scroll until the mouse moves again (hover only counts when the user points). */
+  private pointerFresh = false;
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -261,7 +263,11 @@ export class StoryScene {
   }
 
   setStory(story: number) {
-    if (story !== this.storyTarget) this.needsRender = true;
+    if (story !== this.storyTarget) {
+      this.needsRender = true;
+      // Scrolling moves the conveyor under a resting mouse: that is not the user pointing at a tech.
+      this.pointerFresh = false;
+    }
     this.storyTarget = story;
   }
 
@@ -355,6 +361,13 @@ export class StoryScene {
   }
 
   private onPointerMove = (event: PointerEvent) => {
+    // Touch moves are scrolls; taps are handled in onClick.
+    if (event.pointerType === "touch") return;
+    this.setPointer(event);
+  };
+
+  private setPointer(event: MouseEvent) {
+    this.pointerFresh = true;
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
     // Sussy is clickable (hop easter egg); raycast on pointer move only, not every frame.
@@ -362,7 +375,7 @@ export class StoryScene {
     this.overCharacter = this.canHop() && this.raycaster.intersectObject(this.character, true).length > 0;
     if (this.hovered < 0) this.renderer.domElement.style.cursor = this.overCharacter ? "pointer" : "";
     this.needsRender = true;
-  };
+  }
 
   private canHop() {
     return !this.reducedMotion && sitMix(this.story) < 0.05 && this.clickHopTime < 0;
@@ -371,13 +384,13 @@ export class StoryScene {
   private onPointerLeave = () => { this.pointer.set(-10, -10); this.overCharacter = false; this.needsRender = true; };
 
   private onClick = (event: MouseEvent) => {
-    if (this.hovered >= 0) {
-      this.options.onTechSelect?.(this.hovered);
-      return;
-    }
-    // Touch taps arrive without a preceding pointermove, so hit-test at the click position too.
-    this.onPointerMove(event as PointerEvent);
-    if (this.overCharacter) this.hop();
+    // Hit-test at the click position (touch taps arrive without a preceding pointermove).
+    this.setPointer(event);
+    const tech = this.pickTech(techVisibility(this.story));
+    if (tech >= 0) this.options.onTechSelect?.(tech);
+    else if (this.overCharacter) this.hop();
+    // A finger leaves no hover behind.
+    if ((event as PointerEvent).pointerType === "touch") this.onPointerLeave();
   };
 
   /** Sussy waves with the arm nearer the camera (layered over running or sitting). */
@@ -409,15 +422,18 @@ export class StoryScene {
     return true;
   }
 
+  /** Index of the tech tile under the pointer (-1 = none). */
+  private pickTech(visibility: number) {
+    if (visibility <= 0.6 || this.pointer.x <= -2) return -1;
+    this.carousel.group.updateMatrixWorld(true);
+    this.camera.updateMatrixWorld();
+    this.raycaster.setFromCamera(this.pointer, this.camera);
+    const hit = this.raycaster.intersectObjects(this.carousel.pickables, false).find((hit) => hit.object.parent?.visible);
+    return hit ? (hit.object.userData.index as number) : -1;
+  }
+
   private updateHover(visibility: number) {
-    let hovered = -1;
-    if (visibility > 0.6 && this.pointer.x > -2) {
-      this.carousel.group.updateMatrixWorld(true);
-      this.camera.updateMatrixWorld();
-      this.raycaster.setFromCamera(this.pointer, this.camera);
-      const hit = this.raycaster.intersectObjects(this.carousel.pickables, false).find((hit) => hit.object.parent?.visible);
-      if (hit) hovered = hit.object.userData.index as number;
-    }
+    const hovered = this.pointerFresh ? this.pickTech(visibility) : -1;
     if (hovered !== this.hovered) {
       this.hovered = hovered;
       this.renderer.domElement.style.cursor = hovered >= 0 || this.overCharacter ? "pointer" : "";
