@@ -1,5 +1,5 @@
 /* Tailwind supplies the preflight reset; utilities are only generated for the story/app sources
-   (the unused shadcn kit in components/ui is not scanned, keeping the render-blocking CSS small). */
+   (only application sources are scanned, keeping the render-blocking CSS small). */
 @import "tailwindcss" source(none);
 @source "../app";
 @source "../components/story";
