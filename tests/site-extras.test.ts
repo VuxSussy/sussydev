@@ -70,3 +70,12 @@ it("lays milestones along Sussy's path only during the work chapter", async () =
   expect(milestones.group.children).toHaveLength(portfolio.profiles.dev.projects.length);
   milestones.dispose();
 });
+
+it("raises the wave quickly, holds it and lowers it back to zero", async () => {
+  const { waveWeight, WAVE_DURATION } = await import("../lib/rbx/rig");
+  expect(waveWeight(-0.1)).toBe(0);
+  expect(waveWeight(0)).toBe(0);
+  expect(waveWeight(1)).toBeCloseTo(1);
+  expect(waveWeight(WAVE_DURATION)).toBeCloseTo(0);
+  expect(waveWeight(WAVE_DURATION + 0.1)).toBe(0);
+});

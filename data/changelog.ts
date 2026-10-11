@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.9",
+    date: "2026-10-11",
+    title: "Vẫy tay",
+    notes: ["Sussy vẫy tay chào khi bạn mới đến và khi ngồi ngắm hoàng hôn, kèm câu chat."],
+  },
+  {
     version: "1.8",
     date: "2026-10-11",
     title: "Cột mốc bên đường",

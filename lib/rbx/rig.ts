@@ -118,3 +118,22 @@ export function createSitClip(): THREE.AnimationClip {
     ...R6_JOINTS.map(({ part }) => still(part)),
   ]);
 }
+
+/** Duration of the wave gesture in seconds. */
+export const WAVE_DURATION = 2;
+
+/**
+ * Right-arm wave pose (a Motor6D transform for the right shoulder). A negative rotation about the shoulder's
+ * local X axis (world -Z at rest) lifts the arm out to the side and up; a small oscillation waves it three times.
+ */
+export function waveRotation(t: number, out = new THREE.Quaternion()) {
+  const swing = Math.sin((t / WAVE_DURATION) * Math.PI * 6) * 0.3;
+  return out.setFromAxisAngle(WAVE_AXIS, -(2.25 + swing));
+}
+
+/** 0..1 weight of the wave over its duration: quick raise, hold, lower. */
+export function waveWeight(t: number) {
+  if (t < 0 || t > WAVE_DURATION) return 0;
+  return Math.sin(Math.min(t / 0.35, 1) * (Math.PI / 2)) * (1 - Math.max(0, (t - 1.65) / 0.35));
+}
+const WAVE_AXIS = new THREE.Vector3(1, 0, 0);
