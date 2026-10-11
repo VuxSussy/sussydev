@@ -17,7 +17,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     stack: ["Vinext / Next.js App Router", "React 19", "TypeScript", "Three.js", "Blender", "Vitest"],
     facts: [
       { label: "Model nhân vật", value: "≈255 KB" },
-      { label: "Test tự động", value: "57" },
+      { label: "Test tự động", value: "60 + e2e" },
       { label: "Portfolio", value: "2 chế độ" },
     ],
     sections: [
