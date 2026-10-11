@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type TechStack } from "@/data/portfolio";
-import { buildR6Rig, clipFromJson, createSitClip, type ClipJson, type Motor } from "@/lib/rbx/rig";
+import { buildR6Rig, clipFromJson, createSitClip, waveRotation, waveWeight, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { chapterJumpTime, damp, sitMix, smoothstep, smootherstep, sunsetMix, techPosition, techVisibility } from "@/lib/story";
 import { createBlobShadow, createRobloxProps, createSky, createStudioFloor, createSunsetWorld, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
@@ -83,6 +83,10 @@ export class StoryScene {
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
   private headFrame: THREE.Object3D | null = null;
+  private rightShoulder: THREE.Object3D | null = null;
+  /** Seconds into the wave gesture (-1 = not waving). */
+  private waveTime = -1;
+  private waveQuat = new THREE.Quaternion();
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -214,6 +218,7 @@ export class StoryScene {
       run: action(clipFromJson(run)), idle: action(clipFromJson(idle)), sit: action(createSitClip()),
       jump: oneShot(clipFromJson(jump)), land: oneShot(clipFromJson(land)),
     };
+    this.rightShoulder = rig.joints["Right Arm"];
     this.story = this.storyTarget;
     await this.renderer.compileAsync(this.scene, this.camera);
     if (this.disposed) return;
@@ -323,6 +328,13 @@ export class StoryScene {
     if (this.overCharacter) this.hop();
   };
 
+  /** Sussy waves with the right arm (layered over running or sitting). */
+  wave() {
+    if (this.reducedMotion || !this.rightShoulder) return;
+    this.waveTime = 0;
+    this.needsRender = true;
+  }
+
   /** Make Sussy hop (click/tap on the character or the Space shortcut). Returns false when not possible. */
   hop() {
     if (!this.canHop()) return false;
@@ -431,6 +443,12 @@ export class StoryScene {
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
+    if (this.waveTime >= 0 && this.rightShoulder) {
+      this.waveTime = reduced ? -1 : this.waveTime + dt;
+      // Blend the shoulder from whatever the current clip does into the wave pose and back.
+      if (this.waveTime >= 0) this.rightShoulder.quaternion.slerp(waveRotation(this.waveTime, this.waveQuat), waveWeight(this.waveTime));
+      if (this.waveTime > 2) this.waveTime = -1;
+    }
 
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
