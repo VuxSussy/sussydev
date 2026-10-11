@@ -105,7 +105,9 @@ export class StoryScene {
   private actions: Record<"run" | "walk" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
   /** The Roblox R6 wave emote (rbxassetid://128777973), sampled and layered over the mixer like an Action track. */
   private waveEmote: ReturnType<typeof poseSampler> | null = null;
-  private jointsByNode = new Map<string, THREE.Object3D>();
+  /** Mixer-driven joint and its procedural offset node, by joint node name. */
+  private jointsByNode = new Map<string, { joint: THREE.Object3D; offset: THREE.Object3D }>();
+  private offsets: THREE.Object3D[] = [];
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
   /** Roblox-mode set dressing, faded in/out with the active theme. */
@@ -120,13 +122,14 @@ export class StoryScene {
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
   private headFrame: THREE.Object3D | null = null;
-  private neckJoint: THREE.Object3D | null = null;
+  private neckOffset: THREE.Object3D | null = null;
   /** Seated waves only move the right arm, so the sitting pose stays (standing waves play the whole emote). */
   private waveSeated = false;
   /** Seconds into the wave emote (-1 = not waving). */
   private waveTime = -1;
   private poseQ = new THREE.Quaternion();
   private poseP = new THREE.Vector3();
+  private inverseQ = new THREE.Quaternion();
   /** Seconds left for a queued wave to start (0 = none queued); dropped if the user has scrolled elsewhere. */
   private waveQueue = 0;
   /** False after a scroll until the mouse moves again (hover only counts when the user points). */
@@ -279,8 +282,12 @@ export class StoryScene {
       jump: oneShot(clipFromJson(jump)), land: oneShot(clipFromJson(land)),
     };
     this.waveEmote = poseSampler(clipFromJson(wave));
-    for (const [part, joint] of Object.entries(rig.joints)) this.jointsByNode.set(jointNode(part), joint);
-    this.neckJoint = rig.joints.Head;
+    for (const [part, joint] of Object.entries(rig.joints)) {
+      const offset = rig.offsets[part as keyof typeof rig.offsets];
+      this.jointsByNode.set(jointNode(part), { joint, offset });
+      this.offsets.push(offset);
+    }
+    this.neckOffset = rig.offsets.Head;
     this.story = this.storyTarget;
     await this.renderer.compileAsync(this.scene, this.camera);
     if (this.disposed) return;
@@ -572,6 +579,11 @@ export class StoryScene {
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
+    // Procedural layers start from scratch every frame (absolute values, nothing accumulates).
+    for (const offset of this.offsets) {
+      offset.quaternion.identity();
+      offset.position.set(0, 0, 0);
+    }
     if (!reduced) this.startQueuedWave(dt);
     if (this.waveTime >= 0 && this.waveEmote) {
       this.waveTime = reduced ? -1 : this.waveTime + dt;
@@ -652,10 +664,16 @@ export class StoryScene {
     const arm = jointNode("Right Arm");
     for (const node of emote.joints.keys()) {
       if (this.waveSeated && node !== arm) continue;
-      const joint = this.jointsByNode.get(node);
-      if (!joint || !emote.sample(node, t, this.poseQ, this.poseP)) continue;
-      joint.quaternion.slerp(this.poseQ, weight);
-      joint.position.lerp(this.poseP, weight);
+      const entry = this.jointsByNode.get(node);
+      if (!entry || !emote.sample(node, t, this.poseQ, this.poseP)) continue;
+      // Desired transform D = blend(mixer pose J, emote pose) expressed as the offset O with J * O = D:
+      // O.q = J.q^-1 * D.q and O.p = J.q^-1 * (D.p - J.p). The mixer's joint itself is never touched.
+      const { joint, offset } = entry;
+      this.poseQ.copy(joint.quaternion).slerp(this.poseQ, weight);
+      this.poseP.copy(joint.position).lerp(this.poseP, weight).sub(joint.position);
+      this.inverseQ.copy(joint.quaternion).invert();
+      offset.quaternion.copy(this.inverseQ).multiply(this.poseQ);
+      offset.position.copy(this.poseP).applyQuaternion(this.inverseQ);
     }
   }
 
@@ -693,9 +711,10 @@ export class StoryScene {
     const neckYaw = THREE.MathUtils.clamp(this.look.x, -LOOK_YAW, LOOK_YAW);
     const bodyYaw = THREE.MathUtils.clamp(this.look.x - neckYaw, -BODY_TURN, BODY_TURN) * still;
     this.character.rotation.y += bodyYaw;
-    if (this.neckJoint) {
+    if (this.neckOffset) {
       const headYaw = THREE.MathUtils.clamp(this.look.x - bodyYaw, -LOOK_YAW, LOOK_YAW);
-      this.neckJoint.quaternion
+      // On the neck's offset node (reset every frame), never on the mixer-driven joint.
+      this.neckOffset.quaternion
         .multiply(this.lookQ.setFromAxisAngle(AXIS_Z, headYaw))
         .multiply(this.lookQ.setFromAxisAngle(AXIS_X, -THREE.MathUtils.clamp(this.look.y, -LOOK_PITCH, LOOK_PITCH)));
     }

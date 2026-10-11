@@ -232,3 +232,25 @@ it("turns the head towards the focused tech while standing on the conveyor", asy
   for (let i = 0; i < 240; i++) tick();
   expect(Math.abs(state.look.x)).toBeLessThan(0.05);
 });
+
+it("never spins the head: frames where the mixer output does not change leave the pose unchanged", async () => {
+  await scene.load();
+  scene.setStory(1.5); // looking at the focused tech
+  for (let i = 0; i < 240; i++) tick();
+  const head = () => {
+    const call = gpu.render.mock.lastCall;
+    if (!call) throw new Error("No rendered frame");
+    const part = (call[0] as THREE.Scene).getObjectByName("HeadFrame")!;
+    return part.getWorldQuaternion(new THREE.Quaternion());
+  };
+  const before = head();
+  // Same timestamp => dt = 0 => the mixer finds nothing changed and skips writing the joints.
+  for (let i = 0; i < 120; i++) frame?.(timestamp);
+  expect(head().angleTo(before)).toBeLessThan(1e-4);
+  // A wave in progress on dt = 0 frames must not compound either.
+  scene.wave();
+  for (let i = 0; i < 30; i++) tick();
+  const waving = head();
+  for (let i = 0; i < 120; i++) frame?.(timestamp);
+  expect(head().angleTo(waving)).toBeLessThan(1e-4);
+});
