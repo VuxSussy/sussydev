@@ -77,8 +77,21 @@ if (/version [2345]\./.test(version)) {
         decoderModule.destroy(arr);
         return res;
       };
+      const readGeneric = (comps) => {
+        for (let i = 0; i < mesh.num_attributes(); i++) {
+          const attr = decoder.GetAttribute(mesh, i);
+          if (attr.attribute_type() !== decoderModule.GENERIC || attr.num_components() !== comps) continue;
+          const arr = new decoderModule.DracoFloat32Array();
+          decoder.GetAttributeFloatForAllPoints(mesh, attr, arr);
+          const res = Array.from({ length: n * comps }, (_, k) => arr.GetValue(k));
+          decoderModule.destroy(arr);
+          return res;
+        }
+        return null;
+      };
       out.position = read(decoderModule.POSITION, 3);
-      out.normal = read(decoderModule.NORMAL, 3) ?? [];
+      // Roblox v7 meshes store normals (and tangents) as GENERIC attributes: the 3-component one is the normal.
+      out.normal = read(decoderModule.NORMAL, 3) ?? readGeneric(3) ?? [];
       out.uv = read(decoderModule.TEX_COORD, 2) ?? [];
       const faces = new decoderModule.DracoUInt32Array();
       for (let f = 0; f < mesh.num_faces(); f++) {

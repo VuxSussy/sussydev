@@ -188,3 +188,27 @@ it("ignores touch moves for hover and forgets a tapped point, and a scroll makes
   scene.setStory(1.4);
   expect(state.pointerFresh).toBe(false);
 });
+
+it("runs while scrolling (and in the opening shot) but idles when the page rests", async () => {
+  await scene.load();
+  const state = scene as unknown as { actions: Record<"run" | "idle", THREE.AnimationAction>; waveTime: number };
+  const settle = (frames: number) => { for (let i = 0; i < frames; i++) tick(); };
+  scene.setStory(0.2);
+  settle(90);
+  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.95); // opening shot keeps running
+  scene.setStory(1.5);
+  settle(10);
+  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.5); // still catching up with the scroll
+  settle(240);
+  expect(state.actions.run.getEffectiveWeight()).toBeLessThan(0.05);
+  expect(state.actions.idle.getEffectiveWeight()).toBeGreaterThan(0.95);
+  // The hello wave stops the opening run: Sussy stands to wave, then runs on.
+  scene.setStory(0.2);
+  settle(120);
+  scene.wave();
+  settle(50);
+  expect(state.waveTime).toBeGreaterThan(0);
+  expect(state.actions.run.getEffectiveWeight()).toBeLessThan(0.1);
+  settle(200);
+  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.9);
+});

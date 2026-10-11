@@ -5,8 +5,10 @@ import type { TechStack } from "@/data/portfolio";
 import { smoothstep } from "@/lib/story";
 
 const SPACING = 3.3;
-const LANE_Z = 2.0;
-const DIM = new THREE.Color("#2b2b30");
+/** The lane runs in front of Sussy (towards the camera), far enough that no logo ever touches the character. */
+const LANE_Z = 6.2;
+/** Logo height above the plinth: low, so from the raised camera the logos read as "under Sussy's feet". */
+const LOGO_Y = 0.86;
 
 type Item = {
   root: THREE.Group;
@@ -30,9 +32,15 @@ function logoGeometry(path: string) {
   return geometry;
 }
 
-/** Muted brand colour so logos sit calmly in the dark studio. */
-function soften(hex: string) {
-  return new THREE.Color(hex).lerp(new THREE.Color("#cfccc6"), 0.22);
+/**
+ * Brand colour as is (no grey wash), except near-black marks (Next.js, Three.js, GitHub...) which would vanish
+ * on the dark studio floor: those become warm off-white.
+ */
+function brandColor(hex: string) {
+  const color = new THREE.Color(hex);
+  const hsl = { h: 0, s: 0, l: 0 };
+  color.getHSL(hsl);
+  return hsl.l < 0.16 ? new THREE.Color("#ece8e0") : color;
 }
 
 export class TechCarousel {
@@ -51,10 +59,11 @@ export class TechCarousel {
       const plinth = new THREE.Mesh(this.plinthGeometry, this.plinthMaterial);
       plinth.position.y = 0.12;
       plinth.userData.index = index;
-      const color = soften(tech.color);
-      const logoMaterial = new THREE.MeshStandardMaterial({ color, roughness: 0.32, metalness: 0.35, emissive: color, emissiveIntensity: 0 });
+      const color = brandColor(tech.color);
+      // Plastic-like and non-metallic: metal reflects the grey studio and washes the colour out.
+      const logoMaterial = new THREE.MeshStandardMaterial({ color, roughness: 0.38, metalness: 0, emissive: color, emissiveIntensity: 0 });
       const logo = new THREE.Mesh(logoGeometry(tech.icon), logoMaterial);
-      logo.position.y = 1.35;
+      logo.position.y = LOGO_Y;
       logo.rotation.x = -0.12;
       logo.userData.index = index;
       const ringMaterial = new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0, toneMapped: false, depthWrite: false });
@@ -88,11 +97,12 @@ export class TechCarousel {
       item.root.position.z = -Math.pow(distance, 1.6) * 0.35;
       item.root.scale.setScalar(Math.max(edge, 0.001) * (0.86 + 0.14 * rise));
       item.root.visible = edge > 0.01;
-      item.logo.position.y = 1.35 + f * 0.4 + Math.sin(time * 1.4 + i) * 0.05;
-      item.logo.scale.setScalar(1 + f * 0.28);
+      item.logo.position.y = LOGO_Y + f * 0.22 + Math.sin(time * 1.4 + i) * 0.05;
+      item.logo.scale.setScalar(0.92 + f * 0.2);
       item.logo.rotation.y = Math.sin(time * 0.6 + i * 0.8) * 0.18 * (1 - f) + offset * -0.12;
-      item.logoMaterial.color.copy(DIM).lerp(item.color, 0.35 + 0.65 * f);
-      item.logoMaterial.emissiveIntensity = 0.04 + f * 0.32;
+      // Unfocused logos keep their hue and only dim; the focused one glows a little.
+      item.logoMaterial.color.copy(item.color).multiplyScalar(0.5 + 0.5 * f);
+      item.logoMaterial.emissiveIntensity = 0.06 + f * 0.3;
       item.ringMaterial.opacity = f * 0.85 * rise;
     }
   }
