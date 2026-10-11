@@ -73,7 +73,8 @@ export class Milestones {
     if (!this.group.visible) return;
     const count = this.posts.length;
     this.posts.forEach((post, index) => {
-      const [x, z] = positionAt(2.12 + 0.72 * (count > 1 ? index / (count - 1) : 0));
+      // Spread over the stretch of road after the studio door, one post per project card.
+      const [x, z] = positionAt(2.5 + 0.55 * (count > 1 ? index / (count - 1) : 0));
       post.position.set(x + 1.6, 0, z + SIDE_Z);
       post.rotation.y = -0.18;
       const near = 1 - smoothstep(24, 40, Math.abs(post.position.x - positionAt(story)[0]));

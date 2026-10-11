@@ -100,6 +100,7 @@ export class StoryScene {
   /** Warm fill from the camera side so Sussy's face is lit while the sun sits behind at the end. */
   private fillLight = new THREE.DirectionalLight("#ffb990", 0);
   private lastX = 0;
+  private debugClock = 0;
   private milestones!: Milestones;
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
@@ -305,6 +306,17 @@ export class StoryScene {
   /** Footstep audio (off by default; must be enabled from a user gesture). */
   setSound(enabled: boolean) {
     this.footsteps.setEnabled(enabled);
+  }
+
+  /**
+   * Debug only (`?debug` in development): jump to a story value and simulate `seconds` of frames
+   * synchronously, so screenshots can be taken without scrolling and waiting.
+   */
+  seek(story: number, seconds = 2) {
+    this.storyTarget = this.story = story;
+    let t = Math.max(this.debugClock, performance.now()) + 1000;
+    for (let i = 0; i < seconds * 60; i++) this.frame((t += 1000 / 60));
+    this.debugClock = t;
   }
 
   setReducedMotion(value: boolean) {
