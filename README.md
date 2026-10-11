@@ -98,7 +98,7 @@ npm run build:nature   # Blender headless + meshopt → public/models/nature/nat
 Lưu ý: meshopt lượng tử hoá vị trí đỉnh và đặt phép giải lượng tử lên node, nên `bakedGeometry()` trong
 `components/story/scene/environment.ts` đưa ma trận node vào geometry trước khi đặt lại vị trí cây hay instance cỏ.
 
-`public/brand/sussy-head.webp` (loading screen, nhúng vào `lib/brand.ts`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-{dev,roblox}.jpg` tạo bằng `python3 scripts/og/make-og.py`.
+`public/brand/sussy-egg.webp` (đầu trứng không mũ, không kính, lăn tròn trên màn hình loading; nhúng vào `lib/brand.ts`, render bằng `scripts/blender/render-egg-sprite.py`), `sussy-head.webp` (đầu có mũ và kính, dùng làm favicon `app/icon.png` / `app/apple-icon.png`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-{dev,roblox}.jpg` tạo bằng `python3 scripts/og/make-og.py`.
 
 ## Hiệu năng & trợ năng
 

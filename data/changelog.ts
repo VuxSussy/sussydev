@@ -8,6 +8,16 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "3.0",
+    date: "2026-10-11",
+    title: "Khăn gốc, trứng lăn",
+    notes: [
+      "Khăn choàng trở lại đúng món “Ryuma Black Neck Scarf” trong Roblox Studio (mesh, texture và normal gốc), xuất lại từ Studio để đối chiếu.",
+      "Màn hình loading là đầu trứng của Sussy, không mũ không kính, lăn tròn qua lại trên mặt đất.",
+      "Favicon là đầu Sussy đội mũ đeo kính (icon loading cũ).",
+    ],
+  },
+  {
     version: "2.9",
     date: "2026-10-11",
     title: "Màn hình neon bên đường",

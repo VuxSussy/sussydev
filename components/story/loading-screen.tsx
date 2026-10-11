@@ -1,12 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { SUSSY_HEAD_SRC } from "@/lib/brand";
+import { SUSSY_EGG_SRC } from "@/lib/brand";
 import { useEffect, useState } from "react";
 
 type LoadingScreenProps = { progress: number; done: boolean; reducedMotion: boolean; label: string };
 
-/** Full-screen loader: Sussy's head as a 2D sprite spinning like a coin while the 3D scene loads. */
+/** Full-screen loader: Sussy's bare egg head rolling along the ground while the 3D scene loads. */
 export function LoadingScreen({ progress, done, reducedMotion, label }: LoadingScreenProps) {
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
@@ -19,7 +19,7 @@ export function LoadingScreen({ progress, done, reducedMotion, label }: LoadingS
   return (
     <output className={`loader${done ? " is-done" : ""}`} aria-live="polite" aria-label={`Đang tải Sussy, ${percent}%`}>
       <div className="loader-stage" aria-hidden="true">
-        <Image className="loader-head" src={SUSSY_HEAD_SRC} alt="" width={256} height={256} priority unoptimized />
+        <Image className="loader-head" src={SUSSY_EGG_SRC} alt="" width={256} height={256} priority unoptimized />
         <span className="loader-shadow" />
       </div>
       <p className="loader-label">{label}<span aria-hidden="true">…</span></p>

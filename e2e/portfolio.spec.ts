@@ -112,5 +112,8 @@ test.describe("secondary pages", () => {
     const missing = await page.goto("/khong-ton-tai");
     expect(missing?.status()).toBe(404);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("lạc");
+    // Favicon: Sussy's head with the trilby and glasses (app/icon.png); the loader uses the bare egg head.
+    await expect(page.locator("link[rel='icon']")).toHaveAttribute("href", /\/icon\.png/);
+    expect((await page.request.get((await page.locator("link[rel='icon']").getAttribute("href"))!)).headers()["content-type"]).toBe("image/png");
   });
 });
