@@ -287,12 +287,46 @@ export function createStudioDoor() {
   glow.rotation.y = Math.PI / 2;
   glow.position.y = 3.5;
   group.add(glow);
+  // Warm light spilling through the opening onto the studio floor (studio side = local +X), widening and fading.
+  const rows = 8;
+  const columns = [-1, -0.55, 0, 0.55, 1];
+  const columnFade = [0, 0.75, 1, 0.75, 0];
+  const spillPositions: number[] = [];
+  const spillColors: number[] = [];
+  const spillIndex: number[] = [];
+  for (let r = 0; r <= rows; r++) {
+    const t = r / rows;
+    const x = 0.25 + t * 8;
+    const half = 2.3 + t * 2.4;
+    columns.forEach((c, k) => {
+      spillPositions.push(x, 0.03, c * half);
+      const a = Math.pow(1 - t, 1.6) * columnFade[k];
+      spillColors.push(1 * a, 0.68 * a, 0.42 * a);
+    });
+  }
+  for (let r = 0; r < rows; r++) {
+    for (let k = 0; k < columns.length - 1; k++) {
+      const a = r * columns.length + k;
+      const b = a + columns.length;
+      spillIndex.push(a, b, a + 1, a + 1, b, b + 1);
+    }
+  }
+  const spillGeometry = new THREE.BufferGeometry();
+  spillGeometry.setAttribute("position", new THREE.Float32BufferAttribute(spillPositions, 3));
+  spillGeometry.setAttribute("color", new THREE.Float32BufferAttribute(spillColors, 3));
+  spillGeometry.setIndex(spillIndex);
+  const spillMaterial = new THREE.MeshBasicMaterial({
+    vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false, side: THREE.DoubleSide,
+  });
+  group.add(new THREE.Mesh(spillGeometry, spillMaterial));
   return {
     group,
     update(visibility: number, time: number) {
       group.visible = visibility > 0.002;
       frameMaterial.opacity = visibility;
-      glowMaterial.opacity = (0.4 + 0.08 * Math.sin(time * 2.1)) * visibility;
+      const flicker = 0.4 + 0.08 * Math.sin(time * 2.1);
+      glowMaterial.opacity = flicker * visibility;
+      spillMaterial.opacity = flicker * 1.3 * visibility;
     },
   };
 }
