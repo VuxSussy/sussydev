@@ -75,11 +75,29 @@ export class Milestones {
     this.posts.forEach((post, index) => {
       // Spread over the stretch of road after the studio door, one post per project card.
       const [x, z] = positionAt(2.5 + 0.55 * (count > 1 ? index / (count - 1) : 0));
-      post.position.set(x + 1.6, 0, z + SIDE_Z);
+      // A little ahead of where Sussy stops (the run goes towards -X), so the board is in view, not behind.
+      post.position.set(x - 2.4, 0, z + SIDE_Z);
       post.rotation.y = -0.18;
       const near = 1 - smoothstep(24, 40, Math.abs(post.position.x - positionAt(story)[0]));
       post.scale.setScalar(Math.max(near, 0.001));
     });
+  }
+
+  /**
+   * Board of the post nearest to `x` (written to `out`, roughly the board's centre) and its horizontal distance;
+   * Infinity while the posts are hidden.
+   */
+  nearestBoard(x: number, out: THREE.Vector3) {
+    if (!this.group.visible) return Infinity;
+    let best = Infinity;
+    for (const post of this.posts) {
+      const distance = Math.abs(post.position.x - x);
+      if (distance < best && post.scale.x > 0.05) {
+        best = distance;
+        out.set(post.position.x, 5.4 * post.scale.y, post.position.z);
+      }
+    }
+    return best;
   }
 
   dispose() {

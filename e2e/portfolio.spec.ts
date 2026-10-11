@@ -47,6 +47,21 @@ test.describe("portfolio story", () => {
     await expect(page.locator(".hud-readout")).toContainText(/09\d%/, { timeout: 10_000 });
   });
 
+  test("switching to Roblox at the last stop keeps the page alive", async ({ page }) => {
+    // Regression: Dev has more techs than Roblox; the old focus index crashed the first Roblox render.
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    await page.goto("/");
+    await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
+    await page.locator(".hud-header a[href='#lien-he']").click();
+    await expect(page.locator(".chapter-rail [aria-current='step']")).toContainText("04", { timeout: 10_000 });
+    await page.getByRole("navigation", { name: /portfolio/i }).getByRole("link", { name: "Roblox" }).click();
+    await expect(page).toHaveURL(/\/roblox$/);
+    await expect(page.locator("#contact-title")).toBeVisible();
+    await expect(page.locator(".mode-curtain")).not.toHaveClass(/is-active/);
+    expect(errors).toEqual([]);
+  });
+
   test("copy fades out before it slides under the fixed header", async ({ page }) => {
     const supported = await page.evaluate(() => CSS.supports("animation-timeline", "view()"));
     test.skip(!supported, "scroll-driven animations");

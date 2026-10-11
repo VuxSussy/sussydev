@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.8",
+    date: "2026-10-11",
+    title: "Emote wave thật, đi rồi mới chạy",
+    notes: [
+      "Lời chào là emote wave R6 gốc của Roblox (rbxassetid://128777973), lấy thẳng từ Roblox Studio và phát như một animation Action có fade vào/ra; lúc ngồi chỉ cánh tay phải vẫy.",
+      "Có gia tốc: cuộn chậm thì Sussy đi bộ, cuộn nhanh thì tăng tốc thành chạy, dừng cuộn thì chậm dần về idle.",
+      "Ở băng chuyền tech hay trạm dừng, Sussy quay đầu (và xoay người khi đứng yên) nhìn vào tech đang chọn hoặc biển dự án phía trước.",
+      "Sửa lỗi đổi sang tab Roblox khi đang ở trạm cuối làm trang bị lỗi.",
+    ],
+  },
+  {
     version: "2.7",
     date: "2026-10-11",
     title: "Chào kiểu Roblox",

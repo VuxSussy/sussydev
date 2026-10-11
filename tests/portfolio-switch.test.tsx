@@ -8,7 +8,7 @@ import type { StorySceneOptions } from "../components/story/scene/story-scene";
 const navigation = vi.hoisted(() => ({ pathname: "/", push: vi.fn() }));
 const scene = vi.hoisted(() => ({
   constructor: vi.fn(), load: vi.fn(async () => {}), dispose: vi.fn(), setStory: vi.fn(),
-  setReducedMotion: vi.fn(), setProfile: vi.fn(), setDeparting: vi.fn(),
+  setReducedMotion: vi.fn(), setProfile: vi.fn(), setDeparting: vi.fn(), addScroll: vi.fn(),
 }));
 let options: StorySceneOptions;
 
@@ -23,6 +23,7 @@ vi.mock("../components/story/scene/story-scene", () => ({ StoryScene: class {
   setReducedMotion = scene.setReducedMotion;
   setProfile = scene.setProfile;
   setDeparting = scene.setDeparting;
+  addScroll = scene.addScroll;
 } }));
 
 import { PortfolioShell } from "../components/story/portfolio-shell";

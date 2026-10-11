@@ -119,6 +119,12 @@ export const caseStudies: Record<string, CaseStudy> = {
         ],
       },
       {
+        title: "Emote wave của chính Roblox",
+        paragraphs: [
+          "Lời chào dùng emote wave R6 gốc của Roblox: KeyframeSequence 128777973 được tải trong Studio, xuất ra .rbxm rồi đi qua cùng bộ trích ở trên, nên chuyển động giống hệt khi gõ /e wave trong game. Trên web nó được phát như một track ưu tiên Action, có fade vào/ra 0,15s.",
+        ],
+      },
+      {
         title: "Đồng bộ với âm thanh",
         paragraphs: [
           "Từ góc xoay của hai chân trong clip “run v4”, thời điểm chạm đất được xác định quanh 0,00s và 0,31s của chu kỳ 0,63s; tiếng bước chân Web Audio phát đúng hai mốc đó.",

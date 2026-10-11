@@ -47,6 +47,7 @@ export class TechCarousel {
   readonly group = new THREE.Group();
   readonly pickables: THREE.Object3D[] = [];
   private items: Item[] = [];
+  private position = 0;
   private plinthGeometry = new RoundedBoxGeometry(2.4, 0.24, 2.4, 3, 0.09);
   private ringGeometry = new THREE.RingGeometry(1.32, 1.4, 64);
   private plinthMaterial = new THREE.MeshStandardMaterial({ color: "#1c1c20", roughness: 0.55, metalness: 0.2 });
@@ -82,7 +83,16 @@ export class TechCarousel {
    * @param visibility 0..1 conveyor visibility
    * @param hovered index under the pointer, or -1
    */
+  /** World position of the logo nearest the conveyor's focus (where Sussy looks); false while hidden. */
+  focusPoint(out: THREE.Vector3) {
+    if (!this.group.visible || !this.items.length) return false;
+    const index = Math.min(this.items.length - 1, Math.max(0, Math.round(this.position)));
+    this.items[index].logo.getWorldPosition(out);
+    return true;
+  }
+
   update(position: number, visibility: number, hovered: number, time: number) {
+    this.position = position;
     this.group.visible = visibility > 0.002;
     if (!this.group.visible) return;
     const rise = 1 - Math.pow(1 - visibility, 3);
