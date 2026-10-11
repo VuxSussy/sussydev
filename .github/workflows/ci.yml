@@ -3,7 +3,7 @@ name: CI
 # Lint, typecheck, unit tests and a production build on every push / PR to the portfolio branches.
 on:
   push:
-    branches: ["feat/sussy-r6"]
+    branches: ["main", "feat/sussy-r6"]
   pull_request:
 
 concurrency:
