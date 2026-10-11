@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.5",
+    date: "2026-10-11",
+    title: "Ảnh chia sẻ",
+    notes: ["Thẻ 1200×630 riêng cho portfolio Dev và Roblox khi chia sẻ link lên Facebook, LinkedIn hay Discord."],
+  },
+  {
     version: "1.4",
     date: "2026-10-11",
     title: "Nhẹ hơn",
