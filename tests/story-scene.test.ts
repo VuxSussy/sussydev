@@ -44,6 +44,7 @@ vi.mock("../components/story/scene/environment", async (importOriginal) => {
 import { StoryScene } from "../components/story/scene/story-scene";
 
 let scene: StoryScene;
+let canvas: HTMLCanvasElement;
 let asset: THREE.Group;
 let geometry: THREE.BoxGeometry;
 let material: THREE.MeshStandardMaterial;
@@ -72,7 +73,8 @@ beforeEach(() => {
     asset.add(mesh);
   }
   assetPromise = Promise.resolve({ scene: asset });
-  scene = new StoryScene({ canvas: document.createElement("canvas"), techs: portfolio.profiles.dev.techStack, theme: "dev", reducedMotion: false });
+  canvas = document.createElement("canvas");
+  scene = new StoryScene({ canvas, techs: portfolio.profiles.dev.techStack, theme: "dev", reducedMotion: false });
 });
 
 afterEach(() => {
@@ -170,4 +172,19 @@ it("holds the goodbye wave until Sussy has sat down, then waves with the arm fac
   }
   expect(started).toBeGreaterThan(3.55); // seated (sitMix > 0.92)
   expect(state.waveSide).toBe(1);
+});
+
+it("ignores touch moves for hover and forgets a tapped point, and a scroll makes a resting mouse stale", async () => {
+  await scene.load();
+  const state = scene as unknown as { pointer: THREE.Vector2; pointerFresh: boolean };
+  const pointer = (type: string, init: PointerEventInit = {}) => new PointerEvent(type, { clientX: 10, clientY: 10, ...init });
+  canvas.dispatchEvent(pointer("pointermove", { pointerType: "touch" }));
+  expect(state.pointer.x).toBe(-10);
+  canvas.dispatchEvent(pointer("click", { pointerType: "touch" }));
+  expect(state.pointer.x).toBe(-10);
+  canvas.dispatchEvent(pointer("pointermove", { pointerType: "mouse" }));
+  expect(state.pointer.x).toBeGreaterThan(-2);
+  expect(state.pointerFresh).toBe(true);
+  scene.setStory(1.4);
+  expect(state.pointerFresh).toBe(false);
 });
