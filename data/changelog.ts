@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.1",
+    date: "2026-10-11",
+    title: "Kiểm thử trên trình duyệt",
+    notes: ["Bộ test Playwright chạy trên Chrome thật cho desktop và mobile: tải trang, đổi chế độ, đổi ngôn ngữ, phím tắt, tràn ngang và các trang phụ."],
+  },
+  {
     version: "2.0",
     date: "2026-10-11",
     title: "CV một trang",

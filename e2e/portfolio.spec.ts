@@ -1,0 +1,62 @@
+import { expect, test } from "@playwright/test";
+
+test.describe("portfolio story", () => {
+  test("loads the Dev portfolio with all four chapters and no console errors", async ({ page }) => {
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
+    await page.goto("/");
+    await expect(page.locator("h1#intro-title")).toBeVisible();
+    for (const id of ["mo-dau", "tech-stack", "du-an", "lien-he"]) await expect(page.locator(`#${id}`)).toHaveCount(1);
+    await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
+    expect(errors).toEqual([]);
+  });
+
+  test("switches to the Roblox portfolio from the header", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("navigation", { name: /portfolio/i }).getByRole("link", { name: "Roblox" }).click();
+    await expect(page).toHaveURL(/\/roblox$/);
+    await expect(page.locator(".site[data-mode='roblox']")).toBeVisible();
+  });
+
+  test("toggles the interface language and remembers it", async ({ page }) => {
+    await page.goto("/");
+    await page.getByRole("button", { name: /Ngôn ngữ/ }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.locator("h1#intro-title")).toContainText("Clean code.");
+    await page.reload();
+    await expect(page.locator("h1#intro-title")).toContainText("Clean code.");
+    await page.getByRole("button", { name: /Language/ }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "vi");
+  });
+
+  test("J moves to the next chapter", async ({ page, isMobile }) => {
+    test.skip(isMobile, "keyboard shortcut");
+    await page.goto("/");
+    await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
+    await page.keyboard.press("j");
+    await expect(page.locator(".chapter-rail [aria-current='step']")).toContainText("02", { timeout: 10_000 });
+  });
+
+  test("has no horizontal overflow", async ({ page }) => {
+    for (const path of ["/", "/roblox", "/nhat-ky", "/cv", "/du-an/sussy"]) {
+      await page.goto(path);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+      expect(overflow, path).toBeLessThanOrEqual(0);
+    }
+  });
+});
+
+test.describe("secondary pages", () => {
+  test("case study, changelog, CV and 404", async ({ page }) => {
+    await page.goto("/du-an/portfolio-3d");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Portfolio 3D này");
+    await page.goto("/nhat-ky");
+    await expect(page.locator(".release").first()).toBeVisible();
+    await page.goto("/cv");
+    await expect(page.getByRole("button", { name: /In \/ Lưu PDF/ })).toBeVisible();
+    const missing = await page.goto("/khong-ton-tai");
+    expect(missing?.status()).toBe(404);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("lạc");
+  });
+});

@@ -41,3 +41,7 @@ next-env.d.ts
 /assets-src/**/_rgba_*
 /assets-src/**/_baked_*
 *.blend1
+
+# playwright
+/test-results/
+/playwright-report/

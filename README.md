@@ -22,6 +22,9 @@ npx tsc --noEmit
 npm run build
 ```
 
+Test trình duyệt (Playwright, dùng Chrome cài sẵn): `npm run test:e2e` tự bật dev server ở cổng 3100,
+hoặc `E2E_BASE_URL=http://localhost:3000 npm run test:e2e` để dùng server đang chạy.
+
 Vitest kiểm tra toán học scroll, rig/clip R6 và parser/CLI bằng fixture `.rbxm`
 trong `tests/fixtures`, đối chiếu với `public/anims`. Dùng `npm run test:watch`
 khi chỉnh logic; test không cần Studio hay kết nối mạng.

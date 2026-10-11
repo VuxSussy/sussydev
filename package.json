@@ -15,7 +15,8 @@
     "format": "oxfmt",
     "extract:anims": "node scripts/extract-rbxm-anims.ts",
     "build:model": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-sussy.py && npm run optimize:model",
-    "optimize:model": "gltf-transform optimize public/models/sussy/sussy-r6.glb public/models/sussy/sussy-r6.glb --compress meshopt --texture-compress webp --texture-size 512 --simplify false --join false --instance false --flatten false"
+    "optimize:model": "gltf-transform optimize public/models/sussy/sussy-r6.glb public/models/sussy/sussy-r6.glb --compress meshopt --texture-compress webp --texture-size 512 --simplify false --join false --instance false --flatten false",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",
@@ -46,6 +47,7 @@
     "@cloudflare/workers-types": "4.20260515.1",
     "@gltf-transform/cli": "^4.5.1",
     "@openai/sites-vite-plugin": "0.2.0",
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
