@@ -13,11 +13,11 @@ export type CaseStudy = {
 export const caseStudies: Record<string, CaseStudy> = {
   "portfolio-3d": {
     intro:
-      "Một portfolio kể chuyện bằng chuyển động: nhân vật Roblox của tôi chạy theo nhịp cuộn trang, qua băng chuyền tech stack, rồi ngồi ngắm hoàng hôn ở phần liên hệ.",
+      "Một portfolio kể chuyện bằng chuyển động: nhân vật Roblox của tôi chạy theo nhịp cuộn trang, qua băng chuyền tech stack, ra khỏi studio theo con đường đất, rồi ngồi dưới gốc cây ngắm hoàng hôn ở phần liên hệ.",
     stack: ["Vinext / Next.js App Router", "React 19", "TypeScript", "Three.js", "Blender", "Vitest"],
     facts: [
       { label: "Model nhân vật", value: "≈255 KB" },
-      { label: "Test tự động", value: "51" },
+      { label: "Test tự động", value: "57" },
       { label: "Portfolio", value: "2 chế độ" },
     ],
     sections: [
@@ -33,6 +33,13 @@ export const caseStudies: Record<string, CaseStudy> = {
         paragraphs: [
           "Toàn trang chỉ có một WebGL renderer cố định phía sau nội dung HTML, được tải động sau khi chữ đã hiển thị. Khi đổi giữa portfolio Dev và Roblox, renderer và nhân vật được giữ nguyên; chỉ theme, tech stack và nội dung thay đổi.",
           "Ánh sáng dùng tone mapping AgX, môi trường PMREM và bóng tiếp xúc giả thay cho shadow map. Độ phân giải tự hạ khi FPS thấp và vòng render dừng hẳn khi tab bị ẩn.",
+        ],
+      },
+      {
+        title: "Từ studio ra hoàng hôn",
+        paragraphs: [
+          "Phần tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Để hai cảnh không bị cắt ngang, phần dự án trở thành một hành trình: băng chuyền tắt, một cánh cửa sáng mở ra, Sussy chạy ra con đường đất, ngang qua các cột mốc ghi số và năm của từng dự án, trời ngả dần sang hoàng hôn, rồi dừng lại ngồi dưới gốc cây, quay mặt về phía người xem.",
+          "Cây, bụi, cỏ và dương xỉ dựng bằng script Python trong Blender. Bóng tối bên trong tán lá và viền nắng ấm được tính sẵn vào màu đỉnh, nên trên web mỗi loại chỉ cần một vật liệu; cỏ được instance hàng nghìn lần và đung đưa bằng một shader gió nhỏ.",
         ],
       },
       {

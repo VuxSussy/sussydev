@@ -67,10 +67,22 @@ export function storyForTech(index: number, count: number) {
 }
 
 /** 0→1 visibility of the tech conveyor. */
-export const techVisibility = (story: number) => smoothstep(0.72, 1.05, story) * (1 - smoothstep(1.95, 2.25, story));
+export const techVisibility = (story: number) => smoothstep(0.72, 1.05, story) * (1 - smoothstep(1.92, 2.12, story));
 
 /** 0 = dark studio, 1 = sunset hill. */
-export const sunsetMix = (story: number) => smoothstep(2.82, 3.4, story);
+export const sunsetMix = (story: number) => smoothstep(2.3, 3.2, story);
+
+/**
+ * The journey (Work chapter onwards): Sussy runs out of the studio and along the road.
+ *   worldReveal  0→1 the meadow rises under the studio floor as Sussy nears the doorway
+ *   studioExit   0→1 studio floor, doorway, conveyor and Roblox props fade away
+ *   journeyMix   0→1 position along the road, from the studio to the tree
+ *   arriveMix    0→1 Sussy turns round at the tree to face the camera
+ */
+export const worldReveal = (story: number) => smoothstep(2.2, 2.48, story);
+export const studioExit = (story: number) => smoothstep(2.3, 2.6, story);
+export const journeyMix = (story: number) => smoothstep(2.12, 3.3, story);
+export const arriveMix = (story: number) => smoothstep(3.22, 3.42, story);
 
 /** 0 = running, 1 = seated under the tree. */
 export const sitMix = (story: number) => smoothstep(3.4, 3.62, story);

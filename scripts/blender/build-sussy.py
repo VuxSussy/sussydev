@@ -25,7 +25,9 @@ import bpy
 import numpy as np
 from mathutils import Matrix, Vector
 
-ROOT = os.environ.get("PORTFOLIO_ROOT", os.path.expanduser("~/Documents/portfolio/site"))
+# Repo root: two levels above this file when run with `blender -P`; PORTFOLIO_ROOT when sent to a running Blender.
+_HERE = globals().get("__file__")
+ROOT = os.environ.get("PORTFOLIO_ROOT") or (os.path.abspath(os.path.join(os.path.dirname(_HERE), "../..")) if _HERE else os.getcwd())
 SRC = os.path.join(ROOT, "assets-src/sussy")
 OUT = os.path.join(ROOT, "public/models/sussy/sussy-r6.glb")
 

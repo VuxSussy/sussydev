@@ -1,7 +1,8 @@
 // @vitest-environment happy-dom
 import { expect, it } from "vitest";
 import { changelog, currentVersion } from "../data/changelog";
-import { createRobloxProps } from "../components/story/scene/environment";
+import * as THREE from "three";
+import { bakedGeometry, createRobloxProps } from "../components/story/scene/environment";
 
 it("lists releases newest first and exposes the latest as the current version", () => {
   const versions = changelog.map((release) => Number(release.version));
@@ -59,15 +60,20 @@ it("has a chat line for every chapter in both languages and modes", async () => 
   }
 });
 
-it("lays milestones along Sussy's path only during the work chapter", async () => {
+it("plants one static milestone per project along the road once the outdoor world is revealed", async () => {
   const { Milestones } = await import("../components/story/scene/milestones");
   const { portfolio } = await import("../data/portfolio");
+  const path = (story: number) => [-(story - 2) * 50, 0] as const;
   const milestones = new Milestones(portfolio.profiles.dev.projects, "#f0b07a");
-  milestones.update(1.5, Math.PI / 2);
+  milestones.update(1.5, 0, path);
   expect(milestones.group.visible).toBe(false);
-  milestones.update(2.5, Math.PI / 2);
+  milestones.update(2.5, 1, path);
   expect(milestones.group.visible).toBe(true);
   expect(milestones.group.children).toHaveLength(portfolio.profiles.dev.projects.length);
+  const xs = milestones.group.children.map((post) => post.position.x);
+  milestones.update(2.8, 1, path);
+  expect(milestones.group.children.map((post) => post.position.x)).toEqual(xs);
+  expect(xs[0]).toBeGreaterThan(xs[xs.length - 1]);
   milestones.dispose();
 });
 
@@ -78,4 +84,18 @@ it("raises the wave quickly, holds it and lowers it back to zero", async () => {
   expect(waveWeight(1)).toBeCloseTo(1);
   expect(waveWeight(WAVE_DURATION)).toBeCloseTo(0);
   expect(waveWeight(WAVE_DURATION + 0.1)).toBe(0);
+});
+
+it("bakes a meshopt-quantised node transform into float geometry", () => {
+  // meshopt stores positions as normalised int16 and moves the dequantisation scale/offset onto the node.
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(new Int16Array([32767, 0, 0, 0, 32767, 0, 0, 0, -32767]), 3, true));
+  const mesh = new THREE.Mesh(geometry);
+  mesh.scale.setScalar(4);
+  mesh.position.set(0, 2, 0);
+  mesh.updateMatrixWorld();
+  const baked = bakedGeometry(mesh);
+  const position = baked.getAttribute("position");
+  expect(position.array).toBeInstanceOf(Float32Array);
+  expect([position.getX(0), position.getY(1), position.getZ(2)].map((v) => +v.toFixed(3))).toEqual([4, 6, -4]);
 });

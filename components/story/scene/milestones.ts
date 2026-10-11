@@ -1,8 +1,7 @@
 import * as THREE from "three";
 import type { Project } from "@/data/portfolio";
-import { clamp01, smoothstep } from "@/lib/story";
+import { smoothstep } from "@/lib/story";
 
-const SPACING = 9;
 const SIDE_Z = -3.2;
 
 /** Signboard texture: big project number and year, readable from the camera at a distance. */
@@ -33,8 +32,7 @@ function boardTexture(index: number, project: Project, accent: string) {
 }
 
 /**
- * Roadside milestones for the Work chapter: one signpost per project that Sussy runs past as the chapter
- * scrolls (posts come from the running direction and pass behind). Pure function of story progress.
+ * Roadside milestones for the Work chapter: one signpost per project along the road that Sussy runs past.
  */
 export class Milestones {
   readonly group = new THREE.Group();
@@ -44,8 +42,6 @@ export class Milestones {
   private postMaterial = new THREE.MeshStandardMaterial({ color: "#2a2a30", roughness: 0.6, metalness: 0.3 });
   private textures: THREE.Texture[] = [];
   private materials: THREE.Material[] = [];
-  private forward = new THREE.Vector3();
-  private side = new THREE.Vector3();
 
   constructor(projects: readonly Project[], accent: string) {
     projects.forEach((project, index) => {
@@ -66,25 +62,22 @@ export class Milestones {
   }
 
   /**
+   * Posts stand still beside the road: post i sits where Sussy passes while project card i is being read,
+   * on the far side of the road, boards facing the camera.
    * @param story continuous story value
-   * @param yaw Sussy's facing (posts are laid out along it)
+   * @param visibility 0..1 (the outdoor world rising)
+   * @param positionAt Sussy's ground position (x, z) for a story value
    */
-  update(story: number, yaw: number) {
-    const visibility = smoothstep(1.95, 2.25, story) * (1 - smoothstep(2.8, 3.05, story));
+  update(story: number, visibility: number, positionAt: (story: number) => readonly [number, number]) {
     this.group.visible = visibility > 0.002;
     if (!this.group.visible) return;
-    const progress = clamp01((story - 2.05) / 0.8) * Math.max(this.posts.length - 1, 1);
-    const forward = this.forward.set(-Math.sin(yaw), 0, -Math.cos(yaw));
-    const side = this.side.set(forward.z, 0, -forward.x);
-    const rise = 1 - Math.pow(1 - visibility, 3);
+    const count = this.posts.length;
     this.posts.forEach((post, index) => {
-      const along = (index - progress) * SPACING - 1.5;
-      post.position.copy(forward).multiplyScalar(along).addScaledVector(side, SIDE_Z);
-      post.position.y = -4 * (1 - rise);
-      // Boards face the camera side of the road.
-      post.rotation.y = yaw - Math.PI / 2;
-      const fade = 1 - smoothstep(18, 30, Math.abs(along));
-      post.scale.setScalar(Math.max(fade, 0.001));
+      const [x, z] = positionAt(2.12 + 0.72 * (count > 1 ? index / (count - 1) : 0));
+      post.position.set(x + 1.6, 0, z + SIDE_Z);
+      post.rotation.y = -0.18;
+      const near = 1 - smoothstep(24, 40, Math.abs(post.position.x - positionAt(story)[0]));
+      post.scale.setScalar(Math.max(near, 0.001));
     });
   }
 

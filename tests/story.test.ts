@@ -65,13 +65,13 @@ describe("tech conveyor and sunset", () => {
   });
 
   it("reveals the conveyor only in the stack chapter", () => {
-    expect([0, 0.72, 1.05, 1.9, 2.25, 4].map(techVisibility)).toEqual([0, 0, 1, 1, 0, 0]);
+    expect([0, 0.72, 1.05, 1.9, 2.12, 4].map(techVisibility)).toEqual([0, 0, 1, 1, 0, 0]);
   });
 
   it("finishes the sunset before seating the character", () => {
-    expect([0, 2.82, 3.4, 4].map(sunsetMix)).toEqual([0, 0, 1, 1]);
+    expect([0, 2.3, 3.2, 4].map(sunsetMix)).toEqual([0, 0, 1, 1]);
     expect([0, 3.4, 3.62, 4].map(sitMix)).toEqual([0, 0, 1, 1]);
-    expect(sunsetMix(3.11)).toBeCloseTo(0.5);
+    expect(sunsetMix(2.75)).toBeCloseTo(0.5);
     expect(sitMix(3.51)).toBeCloseTo(0.5);
   });
 
