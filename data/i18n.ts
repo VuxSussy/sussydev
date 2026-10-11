@@ -81,6 +81,18 @@ const contactLabelsEn: Record<ContactLink["kind"], string> = {
 
 export const contactLabel = (contact: ContactLink, locale: Locale) => (locale === "en" ? contactLabelsEn[contact.kind] : contact.label);
 
+/** Roblox-style chat lines Sussy says when a chapter starts (index = chapter). */
+export const chatLines: Record<Locale, Record<Mode, readonly [string, string, string, string]>> = {
+  vi: {
+    dev: ["Chào, mình là Sussy!", "Đồ nghề của mình đây.", "Mấy quãng đường đã chạy qua.", "Ngồi nghỉ chút nhé..."],
+    roblox: ["gg! Mình là Sussy.", "Studio là nhà thứ hai.", "Server nào cũng từng mở.", "afk ngắm hoàng hôn..."],
+  },
+  en: {
+    dev: ["Hi, I'm Sussy!", "Here's my toolkit.", "Roads I've run.", "Let's rest a bit..."],
+    roblox: ["gg! I'm Sussy.", "Studio is my second home.", "Servers I've opened.", "afk watching the sunset..."],
+  },
+};
+
 type ProjectText = { title?: string; category?: string; summary: string; impact?: string };
 type ProfileText = {
   role: string;
