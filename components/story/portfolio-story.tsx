@@ -10,7 +10,7 @@ import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
 import { portfolio, type ContactLink, type Mode } from "@/data/portfolio";
-import { CHAPTERS, chapterIndex, scrollTopForStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
+import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, speechBeat, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { ChatBubble } from "./chat-bubble";
@@ -114,7 +114,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     document.documentElement.lang = locale;
   }, [locale]);
 
-  // Sussy says a short line when a chapter starts (after the loader), then the bubble fades away.
+  // Sussy says a short line at each story beat (after the loader), then the bubble fades away.
+  const [beat, setBeat] = useState(0);
   const greeted = useRef(false);
   useEffect(() => {
     if (!ready || webglFailed) return;
@@ -122,16 +123,16 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const delay = greeted.current ? 350 : 1500;
     const show = window.setTimeout(() => {
       greeted.current = true;
-      setBubble({ text: chatLines[locale][mode][chapter], id: Date.now() });
-      // Hello on arrival, goodbye at the sunset.
-      if (chapter === 0 || chapter === CHAPTERS.length - 1) sceneRef.current?.wave();
+      setBubble({ text: chatLines[locale][mode][beat], id: Date.now() });
+      // Hello on arrival, goodbye once seated at the sunset.
+      if (beat === 0 || beat === CHAPTERS.length - 1) sceneRef.current?.wave();
     }, delay);
     const hide = window.setTimeout(() => setBubble(null), delay + 4250);
     return () => {
       window.clearTimeout(show);
       window.clearTimeout(hide);
     };
-  }, [chapter, ready, webglFailed, locale, mode]);
+  }, [beat, ready, webglFailed, locale, mode]);
 
   const toggleLocale = () => {
     try { window.localStorage.setItem(LOCALE_KEY, locale === "vi" ? "en" : "vi"); } catch { /* ignore */ }
@@ -167,8 +168,8 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     const target = event.target;
     if (target instanceof Element && target.closest("input, textarea, select, [contenteditable='true']")) return;
     const key = event.key.toLowerCase();
-    if (key === "j" && chapter < CHAPTERS.length - 1) scrollToStory(chapter + 1.18);
-    else if (key === "k" && chapter > 0) scrollToStory(chapter === 1 ? 0 : chapter - 1 + 0.18);
+    if (key === "j" && chapter < CHAPTERS.length - 1) scrollToStory(chapterTarget(chapter + 1));
+    else if (key === "k" && chapter > 0) scrollToStory(chapterTarget(chapter - 1));
     else if (key === "h") sceneRef.current?.hop();
   });
   useEffect(() => {
@@ -216,6 +217,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       storyRef.current = story;
       sceneRef.current?.setStory(story);
       setChapter(chapterIndex(story));
+      setBeat(speechBeat(story));
       setTechIndex(Math.round(techPosition(story, techs.length)));
       if (readoutRef.current) readoutRef.current.textContent = `${String(Math.round((story / CHAPTERS.length) * 100)).padStart(3, "0")}%`;
     };
@@ -355,7 +357,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
             {reducedMotion ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
             <span>{reducedMotion ? t.motionOn : t.motionOff}</span>
           </button>
-          <a className="outline-button" href="#lien-he">{t.contact} <ArrowUpRight aria-hidden="true" size={16} /></a>
+          <a className="outline-button" href="#lien-he" onClick={(event) => { event.preventDefault(); scrollToStory(chapterTarget(CHAPTERS.length - 1)); }}>{t.contact} <ArrowUpRight aria-hidden="true" size={16} /></a>
         </div>
       </header>
 
@@ -370,7 +372,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         <ol>
           {CHAPTERS.map((item, index) => (
             <li key={item.id}>
-              <button type="button" aria-current={chapter === index ? "step" : undefined} onClick={() => scrollToStory(index + (index === 0 ? 0 : 0.18))}>
+              <button type="button" aria-current={chapter === index ? "step" : undefined} onClick={() => scrollToStory(chapterTarget(index))}>
                 {chapter === index && <span className="rail-label">{t.chapterLabels[index]}</span>}
                 <span className="rail-index">{pad(index + 1)}</span>
                 <span className="rail-line" aria-hidden="true" />
@@ -510,7 +512,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
           <strong>{profile.footerMeta}</strong>
           <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link> · <Link prefetch={false} href="/cv">CV</Link></span>
         </div>
-        <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
+        <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapterTarget(chapter + 1)))}>
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}
         </button>
         <p className="hud-readout"><span>STORY</span><span ref={readoutRef}>000%</span></p>

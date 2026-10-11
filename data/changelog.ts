@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.6",
+    date: "2026-10-11",
+    title: "Vẫy tay và ngồi thư thả",
+    notes: [
+      "Vẫy tay chào được làm lại: tay nâng sang ngang rồi vẫy, không còn quét ngang mặt; Sussy dùng tay gần người xem và nghiêng đầu nhẹ.",
+      "Tư thế ngồi cuối tự nhiên hơn: ngả lưng, tay đặt trên đùi, chân hơi dạng, thân hướng về hoàng hôn còn đầu quay lại nhìn bạn, thỉnh thoảng liếc ra xa.",
+      "Chữ trượt lên khi xuất hiện và mờ dần trước khi chui dưới header/footer; bong bóng chat tự ẩn khi Sussy ở sau nội dung.",
+      "Câu chào tạm biệt chỉ đến khi Sussy đã ngồi xuống; nút Liên hệ và phím J đưa thẳng tới cảnh ngồi.",
+    ],
+  },
+  {
     version: "2.5",
     date: "2026-10-11",
     title: "Gió chiều",

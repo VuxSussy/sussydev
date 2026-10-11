@@ -89,6 +89,16 @@ export const sitMix = (story: number) => smoothstep(3.4, 3.62, story);
 
 export const chapterIndex = (story: number) => Math.min(CHAPTERS.length - 1, Math.max(0, Math.floor(story + 0.35)));
 
+/** Where chapter navigation (rail, J/K, header link) lands: just inside a chapter, or seated for the last one. */
+export const chapterTarget = (index: number) => (index <= 0 ? 0 : index >= CHAPTERS.length - 1 ? CHAPTERS.length - 0.25 : index + 0.18);
+
+/**
+ * Story values at which Sussy says the chapter's chat line: hello, the tech stack, at the studio door, and only once
+ * seated under the tree (the contact chapter starts while Sussy is still running down the road).
+ */
+const SPEECH_BEATS = [0, 0.65, 1.98, 3.55] as const;
+export const speechBeat = (story: number) => SPEECH_BEATS.reduce<number>((beat, start, index) => (story >= start ? index : beat), 0);
+
 /** Scrub a chapter hop from scroll progress so the same frame also plays backwards. */
 export function chapterJumpTime(story: number) {
   const chapter = chapterIndex(story);

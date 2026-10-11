@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import * as THREE from "three";
-import { buildR6Rig, cframeToMatrix, clipFromJson, createSitClip, jointNode, R6_JOINTS, type ClipJson, type Motor } from "../lib/rbx/rig";
+import { buildR6Rig, cframeToMatrix, clipFromJson, createSitClip, jointNode, R6_JOINTS, WAVE_DURATION, waveShoulder, waveWeight, type ClipJson, type Motor } from "../lib/rbx/rig";
 
 const index = JSON.parse(readFileSync(new URL("../public/anims/index.json", import.meta.url), "utf8")) as { motors: Record<string, Motor> };
 const files = ["run-v4", "idle-v2", "walk-v3", "jump", "normal-land", "fall"];
@@ -91,5 +91,34 @@ describe("animation clips", () => {
     for (const track of clip.tracks.filter((t) => t instanceof THREE.QuaternionKeyframeTrack)) {
       expect(Array.from(track.values.slice(0, 4))).toEqual(Array.from(track.values.slice(-4)));
     }
+  });
+
+  it("waves with the arm outside the body, never across the face", () => {
+    // In both shoulder joint frames +Z points away from the torso (right: +X, left: -X), so the hanging arm's
+    // Z component is its outward reach. Start from the seated pose (arms forward) and from arms hanging down.
+    const down = new THREE.Vector3(0, -1, 0);
+    const seated = createSitClip();
+    for (const [side, part] of [[1, "Right Arm"], [-1, "Left Arm"]] as const) {
+      const track = seated.tracks.find((t) => t.name === `${jointNode(part)}.quaternion`)!;
+      const starts = [new THREE.Quaternion().fromArray(Array.from(track.values.slice(0, 4))), new THREE.Quaternion()];
+      for (const start of starts) {
+        let highest = -1;
+        // Never further in front of the body than the pose it starts from (the seated hands rest slightly inwards).
+        const floor = Math.min(down.clone().applyQuaternion(start).z, 0) - 0.02;
+        for (let t = 0; t <= WAVE_DURATION; t += 0.02) {
+          const arm = down.clone().applyQuaternion(waveShoulder(t, start, side));
+          expect(arm.z).toBeGreaterThan(floor);
+          highest = Math.max(highest, arm.y);
+        }
+        expect(highest).toBeGreaterThan(0.5); // the hand goes well above the shoulder
+      }
+    }
+    // Starts and ends exactly on the clip pose.
+    const pose = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.3, -0.2, 0.9));
+    expect(waveShoulder(0, pose, 1).angleTo(pose)).toBeLessThan(1e-6);
+    expect(waveShoulder(WAVE_DURATION, pose, -1).angleTo(pose)).toBeLessThan(1e-6);
+    expect(waveWeight(-0.1)).toBe(0);
+    expect(waveWeight(WAVE_DURATION + 0.1)).toBe(0);
+    expect(waveWeight(WAVE_DURATION / 2)).toBe(1);
   });
 });

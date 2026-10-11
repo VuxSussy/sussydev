@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, chapterJumpTime, clamp01, damp, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, speechBeat, clamp01, damp, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -15,6 +15,13 @@ describe("scroll story", () => {
   it("clamps the chapter rail including the final chapter", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual(["mo-dau", "tech-stack", "du-an", "lien-he"]);
     expect([-1, 0, 0.64, 0.65, 1.65, 2.65, 4, 10].map(chapterIndex)).toEqual([0, 0, 0, 1, 2, 3, 3, 3]);
+    // Chat beats: the door line waits for the door, the goodbye waits until Sussy has sat down (sitMix ~ 1).
+    expect([0, 0.7, 1.9, 2.0, 2.9, 3.54, 3.55, 4].map(speechBeat)).toEqual([0, 1, 1, 2, 2, 2, 3, 3]);
+    expect(sitMix(3.55)).toBeGreaterThan(0.5);
+    // Navigation lands inside each chapter, and on the seated pose for the last one.
+    expect([0, 1, 2, 3].map(chapterTarget)).toEqual([0, 1.18, 2.18, 3.75]);
+    expect([0, 1, 2, 3].map((i) => chapterIndex(chapterTarget(i)))).toEqual([0, 1, 2, 3]);
+    expect(sitMix(chapterTarget(3))).toBe(1);
   });
 
   it("restores the same story when the destination chapters have different heights", () => {

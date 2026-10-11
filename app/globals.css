@@ -82,6 +82,8 @@ button, a[href] { cursor: pointer; }
 
 /* Roblox-style chat bubble above Sussy's head (positioned from the scene each frame). */
 .chat-bubble { position: fixed; left: 0; top: 0; z-index: 15; pointer-events: none; will-change: transform; visibility: hidden; }
+.chat-bubble { transition: opacity 200ms var(--ease-out); }
+.chat-bubble.is-covered { opacity: 0; }
 .chat-bubble p { position: relative; max-width: 15rem; padding: 0.55rem 0.95rem; border-radius: 12px; background: rgba(241, 239, 234, 0.95); color: #141416; font-size: 0.9rem; line-height: 1.35; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); animation: bubble-in 320ms var(--ease-out) both; }
 .chat-bubble p::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
 .site[data-mode="roblox"] .chat-bubble p { background: #ffffff; font-weight: 500; }
@@ -98,6 +100,26 @@ button, a[href] { cursor: pointer; }
 .mode-curtain.is-active { opacity: 1; pointer-events: auto; }
 .mode-curtain .loader-head { animation-play-state: paused; }
 .mode-curtain.is-active .loader-head { animation-play-state: running; }
+/* Text movement: copy blocks rise in as they enter the view and fade out before they slide under the fixed HUD
+   (header on top, footer at the bottom), so scrolling text never overlaps the logo or the controls.
+   Scroll-driven, so it follows the scrollbar exactly in both directions; browsers without support skip it. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .chapter-copy > *, .work-inner > .eyebrow, .work-inner > h2, .work-list > *, .work-inner > .glass-card, .contact-panel {
+      animation: copy-in linear both, copy-out linear forwards;
+      animation-timeline: view(block 7rem 6rem), view(block 7rem 6rem);
+      animation-range: entry 0% entry 70%, exit 0% exit 45%;
+    }
+  }
+  /* Phones: the header wraps onto two rows, so the fade line sits lower. */
+  @media (prefers-reduced-motion: no-preference) and (max-width: 560px) {
+    .chapter-copy > *, .work-inner > .eyebrow, .work-inner > h2, .work-list > *, .work-inner > .glass-card, .contact-panel {
+      animation-timeline: view(block 8.5rem 5.5rem), view(block 8.5rem 5.5rem);
+    }
+  }
+}
+@keyframes copy-in { from { opacity: 0; translate: 0 1.75rem; } }
+@keyframes copy-out { to { opacity: 0; translate: 0 -0.75rem; } }
 .site[data-reduced-motion="true"] *, .site[data-reduced-motion="true"] *::before, .site[data-reduced-motion="true"] *::after { transition: none !important; animation: none !important; }
 
 /* ---------- Stage ---------- */

@@ -611,9 +611,12 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
       if (bush) {
         group.add(scatter(bush.geometry, bush.material, 26, (rand) => {
           const x = SIT_SPOT.x - 20 + rand() * (ROAD_START.x - SIT_SPOT.x + 8);
-          const z = (rand() < 0.35 ? 1 : -1) * (5 + rand() * 14);
+          // Mostly on the far side; the few on the camera side stay small and close to the verge,
+          // so none of them ends up as a huge blob right in front of the lens.
+          const nearSide = rand() < 0.3;
+          const z = nearSide ? 4.5 + rand() * 3.5 : -(5 + rand() * 14);
           if (x > DOOR_X + 2 || near(x, z, 3) || sightline(x, z)) return null;
-          return { x, z, scale: 0.9 + rand() * 1.1 };
+          return { x, z, scale: nearSide ? 0.45 + rand() * 0.3 : 0.9 + rand() * 1.1 };
         }, 31));
       }
     },
