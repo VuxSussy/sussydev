@@ -47,6 +47,19 @@ It does not push or merge. `outputs` is already gitignored.
   The motion toggle also disables CSS animation; muted text tokens have more contrast without changing the dark palette.
 - The dev scene hook is available only at `/?debug` or `/roblox?debug`, and is removed on unmount.
 
+### Claude pass on `feat/sussy-r6` (2026-10-11) — every step pushed and logged in `/nhat-ky`
+
+- R6 Sussy (`R6_SussySuspector_1265476893`) replaces the R15 build; pixel glasses come from the avatar's Face accessory.
+- Click/tap Sussy (or press **H**) to hop; **J / K** change chapter.
+- `/nhat-ky` changelog (`data/changelog.ts`, newest first; `currentVersion` shown in the HUD footer).
+- Procedural footstep audio (Web Audio, off by default) synced to `run v4` foot strikes; surface changes at sunset.
+- Roblox mode: SpawnLocation, floating studded parts, leaderstats HUD (Stage = chapter, Studs = treadmill distance).
+- Case studies at `/du-an/[slug]` (`data/case-studies.ts`); the R6 movement pack is credited to its author (Arczi).
+- Styled 404, VI/EN toggle (`data/i18n.ts`, case studies/changelog stay Vietnamese), two-row mobile header.
+- Dusk + twinkling stars while lingering at the sunset; Roblox-style chat bubble per chapter (`chatLines`);
+  right-arm wave on arrival and at the sunset; roadside milestone signposts in the Work chapter.
+- 1200×630 social cards (`scripts/og/make-og.py`); inline WebP loader head (`lib/brand.ts`).
+
 ### Verification for the Codex pass
 
 - `npm test`: **49 passing**; `npm run lint`, `npx tsc --noEmit`, `npm run build`: clean exits.
@@ -78,17 +91,12 @@ The loader head is inlined (`lib/brand.ts`, regenerate from `public/brand/sussy-
 
 ## Roadmap (suggested order)
 
-1. **Visual/hardware validation** of the new transitions/performance pass: check 1440×900 and 375×812, keyboard navigation,
-   Dev ↔ Roblox at all four chapters, reduced motion, fallback and back/forward. Measure FPS on a mid laptop + phone;
-   Lighthouse target Perf ≥ 85, A11y ≥ 95. No scores are claimed yet.
-2. **Further loading/perf work** after measurement: consider KTX2 textures and scene-chunk scheduling after LCP. Keep image quality;
-   current texture sizes, grass counts and DPR limits were preserved. Mode transition and chapter preservation are implemented.
-3. **Case-study pages** per project (`/du-an/[slug]`, `/roblox/du-an/[slug]`) with the same visual language.
-4. **Roblox mode set dressing**: SpawnLocation, a few baseplate props that rise per chapter, leaderstats-style HUD readout.
-5. **Footstep audio** from the pack (muted by default, toggle in header), synced to run cycle.
-6. **Browser regression tests** once browser automation is available; the requested Vitest math/rig/extractor suite is complete.
-7. **i18n** EN toggle (copy in `data/portfolio.ts`).
-8. Optional automated performance budgets after a trustworthy Lighthouse baseline is recorded. The scene hook is already behind `?debug`.
+1. **Owner content**: real contacts, projects and experience in `data/portfolio.ts` (+ English copy in `data/i18n.ts`).
+2. **Deploy** (Cloudflare via wrangler is configured) and set `metadataBase` once the domain is known, so OG images are absolute.
+3. **More case studies** as projects get real write-ups; consider cover images per project.
+4. **Perf follow-ups** after a real-device check: KTX2 textures, scheduling the scene chunk after LCP, fewer grass blades on low tiers.
+5. **Browser regression tests** (Playwright) for chapter navigation, mode/language switches and the reduced-motion path.
+6. Optional: printable CV page generated from `data/portfolio.ts`.
 
 ## Gotchas
 
