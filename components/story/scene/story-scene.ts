@@ -301,13 +301,23 @@ export class StoryScene {
 
   private onPointerLeave = () => { this.pointer.set(-10, -10); this.overCharacter = false; this.needsRender = true; };
 
-  private onClick = () => {
-    if (this.hovered >= 0) this.options.onTechSelect?.(this.hovered);
-    else if (this.overCharacter && this.canHop()) {
-      this.clickHopTime = 0;
-      this.needsRender = true;
+  private onClick = (event: MouseEvent) => {
+    if (this.hovered >= 0) {
+      this.options.onTechSelect?.(this.hovered);
+      return;
     }
+    // Touch taps arrive without a preceding pointermove, so hit-test at the click position too.
+    this.onPointerMove(event as PointerEvent);
+    if (this.overCharacter) this.hop();
   };
+
+  /** Make Sussy hop (click/tap on the character or the Space shortcut). Returns false when not possible. */
+  hop() {
+    if (!this.canHop()) return false;
+    this.clickHopTime = 0;
+    this.needsRender = true;
+    return true;
+  }
 
   private updateHover(visibility: number) {
     let hovered = -1;
