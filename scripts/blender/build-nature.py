@@ -4,7 +4,9 @@
 #   TreeTrunk  stylised oak: tapered trunk with root flare and branches
 #   TreeCanopy soft foliage clumps; vertex colours bake occlusion and the warm sunset rim light
 #   Bush       a noisy foliage blob, instanced around the hill
-#   GrassClump a tuft of curved, tapered blades (vertex colour root -> tip), instanced thousands of times
+#   TreeLeaves small double-sided leaf cards over the canopy clumps (a ragged, leafy outline)
+#   GrassClump a tuft of curved, tapered blades (vertex colour root -> tip, mixed tip colours), instanced thousands of times
+#   GrassShort a wide, short carpet patch that fills the ground between the tufts
 #   Fern       a curved frond with leaflets, instanced along the road and around the tree
 #
 # Vertex colours carry the shading variation so the web only needs one cheap material per object.
@@ -15,7 +17,7 @@ import random
 
 import bmesh
 import bpy
-from mathutils import Color, Matrix, Vector, noise
+from mathutils import Color, Matrix, Quaternion, Vector, noise
 
 # Repo root: two levels above this file when run with `blender -P`; PORTFOLIO_ROOT when sent to a running Blender.
 _HERE = globals().get("__file__")
@@ -29,12 +31,17 @@ def to_blender(v):
     return Vector((v[0], -v[2], v[1]))
 
 
-def finish(name, bm, colors, material):
-    """colors: dict BMLoop -> (r,g,b) or callable(vert)->(r,g,b). Converts to Blender space and links."""
+def finish(name, bm, colors, material, per_vertex=None):
+    """colors: (r,g,b) or callable(co)->(r,g,b); per_vertex: optional {vert index: (r,g,b)} that takes precedence.
+    Converts to Blender space and links."""
     color_layer = bm.loops.layers.color.new("Col")
+    bm.verts.index_update()
     for face in bm.faces:
         for loop in face.loops:
-            c = colors(loop.vert.co) if callable(colors) else colors
+            if per_vertex is not None:
+                c = per_vertex[loop.vert.index]
+            else:
+                c = colors(loop.vert.co) if callable(colors) else colors
             loop[color_layer] = (*c, 1.0)
     for v in bm.verts:
         v.co = to_blender(v.co)
@@ -165,6 +172,24 @@ def build_tree():
         return lerp(base, leaf_warm, min(0.85, rim * 0.8 + sky * h + speckle))
 
     finish("TreeCanopy", bm, leaf, vertex_material("Leaves", 0.85))
+
+    # Leaf tufts: small double-sided leaf cards scattered over each clump's surface, poking out of it, so the crown's
+    # outline is ragged and leafy instead of a set of smooth balls.
+    bm = bmesh.new()
+    for center, size in centers:
+        for _ in range(int(70 * size)):
+            n = Vector((random.gauss(0, 1), random.gauss(0, 1) * 0.8 + 0.25, random.gauss(0, 1))).normalized()
+            if n.y < -0.45:
+                continue
+            base = center + Vector((n.x * 1.1, n.y * 0.82, n.z * 1.1)) * size * (0.94 + random.random() * 0.14)
+            tangent = n.cross(Vector((0, 1, 0)) if abs(n.y) < 0.9 else Vector((1, 0, 0))).normalized()
+            tangent.rotate(Quaternion(n, random.random() * math.pi))
+            length = 0.34 + random.random() * 0.22
+            tip = base + (n * 0.55 + tangent * 0.45).normalized() * length
+            mid = (base + tip) / 2
+            side = n.cross(tip - base).normalized() * length * 0.32
+            bm.faces.new([bm.verts.new(base), bm.verts.new(mid + side), bm.verts.new(tip), bm.verts.new(mid - side)])
+    finish("TreeLeaves", bm, lambda co: leaf(co), vertex_material("LeafCards", 0.8, double=True))
     bpy.ops.object.select_all(action="DESELECT")
 
 
@@ -191,9 +216,8 @@ def build_bush():
 
 # ---------------------------------------------------------------------------------------------- grass & fern
 
-def blade(bm, base, angle, height, width, lean):
+def blade(bm, base, angle, height, width, lean, segments=4):
     """A tapered, curved blade (one quad strip) leaning outwards."""
-    segments = 4
     out = Vector((math.cos(angle), 0, math.sin(angle)))
     side = Vector((-out.z, 0, out.x))
     prev = None
@@ -207,13 +231,37 @@ def blade(bm, base, angle, height, width, lean):
         prev = pair
 
 
-def build_grass():
+GRASS_TIPS = [(0.62, 0.62, 0.28), (0.42, 0.55, 0.16), (0.55, 0.6, 0.22), (0.7, 0.58, 0.26)]
+
+
+def grass_patch(name, blades, spread, heights, width, lean, segments):
+    """Blades of grass around the origin; each blade gets its own tip colour (dry, fresh, warm) for variety."""
     bm = bmesh.new()
-    for _ in range(11):
+    tips = {}
+    for _ in range(blades):
         a = random.random() * math.pi * 2
-        r = random.random() * 0.18
-        blade(bm, Vector((math.cos(a) * r, 0, math.sin(a) * r)), a, 0.55 + random.random() * 0.5, 0.035, 0.18 + random.random() * 0.2)
-    finish("GrassClump", bm, lambda co: lerp((0.13, 0.2, 0.07), (0.66, 0.66, 0.3), max(0.0, min(1.0, co.y / 1.0))), vertex_material("Grass", 0.8, double=True))
+        r = spread * math.sqrt(random.random())
+        start = len(bm.verts)
+        blade(bm, Vector((math.cos(a) * r, 0, math.sin(a) * r)), a + random.uniform(-0.6, 0.6),
+              random.uniform(*heights), width * random.uniform(0.8, 1.25), random.uniform(*lean), segments)
+        bm.verts.ensure_lookup_table()
+        bm.verts.index_update()
+        tip = random.choice(GRASS_TIPS)
+        for v in bm.verts[start:]:
+            tips[v.index] = tip
+    root = (0.08, 0.14, 0.05)
+    top = heights[1]
+    colors = {}
+    for v in bm.verts:
+        t = max(0.0, min(1.0, v.co.y / top)) ** 0.8
+        colors[v.index] = lerp(root, tips.get(v.index, GRASS_TIPS[0]), t)
+    finish(name, bm, None, vertex_material("Grass" if name == "GrassClump" else name, 0.8, double=True), per_vertex=colors)
+
+
+def build_grass():
+    # Tall tufts along the verges, and a short, dense carpet that covers the ground between them.
+    grass_patch("GrassClump", 24, 0.32, (0.45, 1.05), 0.036, (0.12, 0.42), 3)
+    grass_patch("GrassShort", 34, 0.62, (0.16, 0.42), 0.03, (0.05, 0.22), 2)
 
 
 def build_fern():

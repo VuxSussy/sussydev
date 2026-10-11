@@ -1,6 +1,6 @@
 import {
-  siAseprite, siBlender, siCplusplus, siDiscord, siFigma, siGit, siLua, siNextdotjs, siNodedotjs, siPython,
-  siReact, siRoblox, siRobloxstudio, siTailwindcss, siThreedotjs, siTypescript,
+  siAseprite, siBlender, siCplusplus, siFigma, siGit, siLua, siPython,
+  siReact, siRoblox, siRobloxstudio, siThreedotjs, siTypescript,
 } from "simple-icons";
 
 export type Project = {
@@ -47,14 +47,9 @@ const tech = (name: string, group: TechGroup, category: string, blurb: string, i
   name, group, category, blurb, icon: icon.path, color: color ?? `#${icon.hex}`,
 });
 
-export type Mode = "dev" | "roblox";
-
-/** One of the two portfolios sharing the site (switch in the header: Dev ↔ Roblox). */
+/** The portfolio's copy and content (one profile: Roblox developer). */
 export type Profile = {
-  mode: Mode;
-  /** Label on the mode switch. */
-  label: string;
-  /** "001" / "002" next to the character name. */
+  /** "001" next to the character name. */
   code: string;
   brandSub: string;
   role: string;
@@ -86,154 +81,87 @@ export const portfolio = {
     { kind: "github", label: "GitHub", value: "" },
     { kind: "roblox", label: "Roblox", value: "https://www.roblox.com/users/11732948357/profile" },
   ] satisfies ContactLink[],
-  profiles: {
-    dev: {
-      mode: "dev",
-      label: "Dev",
-      code: "001",
-      brandSub: "A PORTFOLIO RUN",
-      role: "Frontend Developer",
-      headline: ["Code gọn.", "Chạy không ngừng."],
-      intro:
-        "Tôi xây giao diện web rõ ràng, nhanh và có nhịp chuyển động riêng — nơi code gọn và trải nghiệm là trọng tâm.",
-      techTitle: ["Những công cụ", "tôi chạy cùng."],
-      techStack: [
-        tech("TypeScript", "language", "Web · Công cụ", "Kiểu dữ liệu chặt chẽ cho mọi giao diện và công cụ tôi viết.", siTypescript),
-        tech("Python", "language", "Tự động hoá", "Tự động hoá, xử lý dữ liệu và pipeline cho asset.", siPython),
-        tech("C++", "language", "Thuật toán", "Thuật toán, cấu trúc dữ liệu và tư duy hiệu năng.", siCplusplus),
-        tech("Luau", "language", "Roblox", "Gameplay, hệ thống di chuyển và UI cho trải nghiệm Roblox.", siLua, "#7d8bff"),
-        tech("React", "framework", "Giao diện", "Component rõ ràng, trạng thái dễ đoán, trải nghiệm mượt.", siReact),
-        tech("Next.js", "framework", "Full-stack", "App Router, server components và hiệu năng tải trang.", siNextdotjs, "#e8e6e1"),
-        tech("Three.js", "framework", "3D Web", "Cảnh 3D, shader và chuyển động ngay trong trình duyệt.", siThreedotjs, "#e8e6e1"),
-        tech("Tailwind CSS", "framework", "Styling", "Hệ token nhất quán, dựng layout nhanh mà vẫn gọn.", siTailwindcss),
-        tech("Node.js", "framework", "Runtime", "Script build, công cụ nội bộ và API nhẹ.", siNodedotjs),
-        tech("Roblox Studio", "tool", "Game engine", "Dựng map, animation R6/R15 và kiểm thử nhiều người chơi.", siRobloxstudio),
-        tech("Blender", "tool", "3D", "Mô hình, UV và xuất GLB tối ưu cho web lẫn Roblox.", siBlender),
-        tech("Git", "tool", "Cộng tác", "Nhánh gọn, commit nhỏ và lịch sử dễ đọc.", siGit),
-      ],
-      workTitle: ["Những quãng đường", "đã chạy qua."],
-      projects: [
-        {
-          slug: "nen-tang-van-hanh",
-          title: "Nền tảng vận hành",
-          year: "2026",
-          category: "Frontend · React",
-          summary: "Đơn giản hóa một quy trình nhiều bước thành không gian làm việc rõ ràng cho đội ngũ vận hành.",
-          impact: "Thông tin kết quả sẽ được cập nhật",
-        },
-        {
-          slug: "design-system-noi-bo",
-          title: "Design system nội bộ",
-          year: "2025",
-          category: "React · Tailwind",
-          summary: "Bộ component và token dùng chung cho nhiều nhóm sản phẩm, có tài liệu và kiểm thử trực quan.",
-          impact: "Case study đang được hoàn thiện",
-        },
-        {
-          slug: "portfolio-3d",
-          // Screen on the roadside stop (a frame captured from this site).
-          image: "/projects/portfolio-3d.webp",
-          title: "Portfolio 3D này",
-          year: "2026",
-          category: "Three.js · Blender",
-          summary: "Nhân vật Roblox R6 chạy theo nhịp cuộn trang, animation trích thẳng từ file .rbxm.",
-          impact: "Đọc case study",
-        },
-      ],
-      experience: [
-        {
-          period: "2024 — nay",
-          company: "Tên công ty hiện tại",
-          role: "Frontend Developer",
-          description: "Phụ trách giao diện đầu-cuối và phối hợp cùng thiết kế để đưa sản phẩm vào thực tế.",
-        },
-        {
-          period: "2022 — 2024",
-          company: "Dự án tự do",
-          role: "Web Developer",
-          description: "Landing page, dashboard và công cụ nội bộ cho các nhóm nhỏ.",
-        },
-      ],
-      about: [
-        "Tôi là một lập trình viên frontend thích biến những ý tưởng phức tạp thành trải nghiệm đơn giản, có cảm xúc và chạy nhanh.",
-        "Tôi làm việc sát với người dùng và đội ngũ: đặt đúng câu hỏi, thử nghiệm sớm, rồi hoàn thiện từng chi tiết cho đến khi sản phẩm vừa dễ dùng, vừa dễ duy trì.",
-      ],
-      footerMeta: "CODE / WEB / MOTION",
-      loadingLabel: "Đang gọi Sussy",
-    },
-    roblox: {
-      mode: "roblox",
-      label: "Roblox",
-      code: "002",
-      brandSub: "A ROBLOX RUN",
-      role: "Roblox Developer",
-      headline: ["Dựng map.", "Viết luật chơi."],
-      intro:
-        "Tôi làm trải nghiệm Roblox bằng Luau: hệ thống di chuyển, gameplay nhiều người chơi, UI và animation — chạy mượt cả trên điện thoại.",
-      techTitle: ["Bộ đồ nghề", "trong Studio."],
-      techStack: [
-        tech("Luau", "language", "Scripting", "Gameplay, server authority, DataStore và module tái sử dụng.", siLua, "#7d8bff"),
-        tech("Python", "language", "Tooling", "Script xử lý asset, trích animation và mesh tự động.", siPython),
-        tech("roblox-ts", "framework", "TypeScript → Luau", "Viết TypeScript và biên dịch sang Luau cho dự án lớn.", siTypescript),
-        tech("Roblox", "framework", "Engine API · Nền tảng", "Xuất bản, monetization và phân tích trải nghiệm.", siRoblox, "#e8e6e1"),
-        tech("Roblox Studio", "tool", "Engine · IDE", "Dựng map, rig R6/R15, animation và test nhiều người chơi.", siRobloxstudio),
-        tech("Blender", "tool", "3D", "Model, UV, rig và tối ưu tri cho mobile.", siBlender),
-        tech("Figma", "tool", "UI", "Thiết kế HUD, menu và luồng onboarding trước khi dựng.", siFigma),
-        tech("Aseprite", "tool", "Pixel art", "Icon, badge và texture pixel cho UI trong game.", siAseprite),
-        tech("Git", "tool", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
-        tech("Discord", "tool", "Cộng đồng", "Devlog, playtest và nhận phản hồi từ người chơi.", siDiscord),
-      ],
-      workTitle: ["Những server", "đã từng mở."],
-      projects: [
-        {
-          slug: "animation-r6-len-web",
-          // Screen on the roadside stop (a frame captured from this site).
-          image: "/projects/animation-r6-len-web.webp",
-          title: "Animation R6 lên web",
-          year: "2026",
-          category: "Luau · Animation · Tooling",
-          summary: "Trích 15 KeyframeSequence từ gói Ultimate R6 Movement System (của Arczi) và phát lại trên rig R6 bằng Three.js.",
-          impact: "Đọc case study",
-        },
-        {
-          slug: "obby-nhieu-nguoi-choi",
-          title: "Obby nhiều người chơi",
-          year: "2025",
-          category: "Gameplay · UI",
-          summary: "Checkpoint, bảng xếp hạng và hiệu ứng tối ưu cho thiết bị cấu hình thấp.",
-          impact: "Số liệu người chơi sẽ được cập nhật",
-        },
-        {
-          slug: "sussy",
-          // Screen on the roadside stop (a frame captured from this site).
-          image: "/projects/sussy.webp",
-          title: "Sussy",
-          year: "2026",
-          category: "Avatar · Blender",
-          summary: "Nhân vật đại diện, đưa từ Roblox Studio sang Blender rồi lên web với rig R6.",
-          impact: "Đọc case study",
-        },
-      ],
-      experience: [
-        {
-          period: "2023 — nay",
-          company: "Dự án Roblox cá nhân",
-          role: "Roblox Developer",
-          description: "Lập trình gameplay bằng Luau, dựng map và tối ưu trải nghiệm trên mobile.",
-        },
-        {
-          period: "2022 — 2023",
-          company: "Nhóm game nhỏ",
-          role: "Scripter",
-          description: "Hệ thống inventory, shop và UI cho các trải nghiệm theo mùa.",
-        },
-      ],
-      about: [
-        "Tôi bắt đầu với Roblox Studio từ những obby đơn giản, rồi say mê phần hệ thống: di chuyển, mạng, và cảm giác điều khiển.",
-        "Tôi quan tâm nhất đến việc người chơi cảm thấy gì trong 30 giây đầu — nên luôn thử trên điện thoại thật trước khi xuất bản.",
-      ],
-      footerMeta: "LUAU / STUDIO / R6",
-      loadingLabel: "Đang vào server",
-    },
-  } satisfies Record<Mode, Profile>,
+  profile: {
+    code: "001",
+    brandSub: "A ROBLOX RUN",
+    role: "Roblox Developer",
+    headline: ["Dựng map.", "Viết luật chơi."],
+    intro:
+      "Tôi làm game Roblox bằng Luau, chủ yếu là hệ thống di chuyển và gameplay nhiều người chơi. Game nào cũng được thử trên điện thoại trước khi xuất bản.",
+    techTitle: ["Bộ đồ nghề", "trong Studio."],
+    techStack: [
+      tech("Luau", "language", "Scripting", "Gameplay, server authority, DataStore và module dùng lại được.", siLua, "#7d8bff"),
+      tech("TypeScript", "language", "roblox-ts · Web", "Viết qua roblox-ts cho dự án lớn, và cho phần web như trang này.", siTypescript),
+      tech("Python", "language", "Tooling", "Script xử lý asset, trích animation và mesh từ file Roblox.", siPython),
+      tech("C++", "language", "Thuật toán", "Cấu trúc dữ liệu và thuật toán, nền cho việc tối ưu.", siCplusplus),
+      tech("Roblox", "framework", "Engine API", "API của engine: Humanoid, Animator, DataStore, RemoteEvent.", siRoblox, "#e8e6e1"),
+      tech("roblox-ts", "framework", "TypeScript → Luau", "Biên dịch TypeScript sang Luau, có kiểu cho cả API Roblox.", siTypescript),
+      tech("React", "framework", "Web UI", "Giao diện web cho portfolio và công cụ nội bộ.", siReact),
+      tech("Three.js", "framework", "3D Web", "Đưa rig R6 và animation Roblox lên trình duyệt.", siThreedotjs, "#e8e6e1"),
+      tech("Roblox Studio", "tool", "Engine · IDE", "Dựng map, rig R6/R15, animation và test nhiều người chơi.", siRobloxstudio),
+      tech("Blender", "tool", "3D", "Model, UV, rig và giữ số tam giác vừa sức điện thoại.", siBlender),
+      tech("Figma", "tool", "UI", "Vẽ HUD, menu và luồng onboarding trước khi dựng.", siFigma),
+      tech("Aseprite", "tool", "Pixel art", "Icon, badge và texture pixel cho UI trong game.", siAseprite),
+      tech("Git", "tool", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
+    ],
+    workTitle: ["Những server", "đã từng mở."],
+    projects: [
+      {
+        slug: "animation-r6-len-web",
+        // Screen on the roadside stop (a frame captured from this site).
+        image: "/projects/animation-r6-len-web.webp",
+        title: "Animation R6 lên web",
+        year: "2026",
+        category: "Luau · Animation · Tooling",
+        summary: "Trích 15 KeyframeSequence từ gói Ultimate R6 Movement System (của Arczi) và phát lại trên rig R6 bằng Three.js.",
+        impact: "Đọc case study",
+      },
+      {
+        slug: "sussy",
+        image: "/projects/sussy.webp",
+        title: "Sussy",
+        year: "2026",
+        category: "Avatar · Blender",
+        summary: "Nhân vật đại diện, đưa từ Roblox Studio sang Blender rồi lên web với rig R6.",
+        impact: "Đọc case study",
+      },
+      {
+        slug: "portfolio-3d",
+        image: "/projects/portfolio-3d.webp",
+        title: "Portfolio 3D này",
+        year: "2026",
+        category: "Three.js · Blender",
+        summary: "Nhân vật Roblox R6 chạy theo nhịp cuộn trang, animation lấy thẳng từ file .rbxm.",
+        impact: "Đọc case study",
+      },
+      {
+        slug: "obby-nhieu-nguoi-choi",
+        title: "Obby nhiều người chơi",
+        year: "2025",
+        category: "Gameplay · UI",
+        summary: "Checkpoint, bảng xếp hạng và hiệu ứng nhẹ cho máy cấu hình thấp.",
+        impact: "Số liệu người chơi sẽ được cập nhật",
+      },
+    ],
+    experience: [
+      {
+        period: "2023 – nay",
+        company: "Dự án Roblox cá nhân",
+        role: "Roblox Developer",
+        description: "Lập trình gameplay bằng Luau, dựng map và tối ưu cho điện thoại.",
+      },
+      {
+        period: "2022 – 2023",
+        company: "Nhóm game nhỏ",
+        role: "Scripter",
+        description: "Inventory, shop và UI cho các bản cập nhật theo mùa.",
+      },
+    ],
+    about: [
+      "Tôi bắt đầu với Roblox Studio bằng những obby đơn giản, rồi dần thích phần hệ thống bên dưới hơn, như di chuyển và đồng bộ mạng.",
+      "Tôi để ý nhất 30 giây đầu tiên của người chơi, nên luôn thử trên điện thoại thật trước khi xuất bản.",
+    ],
+    footerMeta: "LUAU / STUDIO / R6",
+    loadingLabel: "Đang vào server",
+  } satisfies Profile,
 } as const;

@@ -8,14 +8,27 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.0",
+    date: "2026-10-11",
+    title: "Một portfolio, một con đường",
+    notes: [
+      "Gộp hai portfolio Dev và Roblox làm một, với vai trò Roblox Developer. Link /roblox cũ tự chuyển về trang chủ.",
+      "Ra khỏi cửa, Sussy có một quãng đường trống rồi mới tới dự án đầu tiên, nên màn hình đầu không còn dính ánh sáng ở cửa.",
+      "Dự án chiếu trên những chiếc TV lớn bên đường, mỗi cái cách nhau 18 stud. Panel bên trái đổi nội dung khi Sussy tới TV kế tiếp.",
+      "Đoạn showcase dài 2700 px. Cuộn chậm thì Sussy đi bộ, cuộn nhanh thì chạy, và chạy hết cỡ mất khoảng 3 giây.",
+      "Màn hình loading nằm ở góc phải dưới: đầu Sussy tròn lăn trên một hàng stud, stud sáng lên theo tiến độ. Loading giữ ít nhất 3,5 giây.",
+      "Cỏ dày hơn nhiều: bụi cỏ 24 lá, thêm một lớp cỏ thấp phủ mặt đất, đất có vệt màu cỏ. Tán cây có thêm lá nhỏ, phía xa có thêm hai cây.",
+    ],
+  },
+  {
     version: "3.1",
     date: "2026-10-11",
     title: "Bước qua ánh sáng",
     notes: [
-      "Ra khỏi studio mượt hơn: cánh cửa sáng dần khi Sussy tới gần, ánh sáng tràn kín màn hình đúng lúc Sussy bước qua, rồi tan ra để lộ đồng cỏ. Không còn cảnh cỏ trồi lên từ dưới sàn.",
-      "Màn hình demo bên đường to hơn khoảng 1,5 lần, dựng trên hai cột.",
-      "Tech stack chia thành ba kệ: Ngôn ngữ, Framework và Công cụ, cả ở hàng chip lẫn trên băng chuyền 3D (mỗi kệ một màu, có khoảng cách và nhãn riêng).",
-      "Sửa khăn choàng và thắt lưng trông như hai lớp chồng lên nhau: mesh Roblox chứa nhiều mức LOD và trước đây tất cả được vẽ cùng lúc; giờ chỉ giữ mức chi tiết nhất.",
+      "Khi Sussy tới cửa studio, ánh sáng trong khung cửa tràn kín màn hình, studio đổi sang đồng cỏ ở phía sau lớp sáng, rồi sáng tan dần. Không còn cảnh cỏ trồi lên từ dưới sàn.",
+      "Màn hình demo bên đường to hơn khoảng 1,5 lần và đứng trên hai cột.",
+      "Tech stack chia ba nhóm Ngôn ngữ, Framework và Công cụ, cả ở hàng chip lẫn trên băng chuyền 3D.",
+      "Khăn choàng và thắt lưng trước đây trông như hai lớp chồng nhau, vì mesh Roblox có nhiều mức LOD và tất cả đều bị vẽ ra. Giờ chỉ giữ mức chi tiết nhất.",
     ],
   },
   {
@@ -23,9 +36,9 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Khăn gốc, trứng lăn",
     notes: [
-      "Khăn choàng trở lại đúng món “Ryuma Black Neck Scarf” trong Roblox Studio (mesh, texture và normal gốc), xuất lại từ Studio để đối chiếu.",
-      "Màn hình loading là đầu trứng của Sussy, không mũ không kính, lăn tròn qua lại trên mặt đất.",
-      "Favicon là đầu Sussy đội mũ đeo kính (icon loading cũ).",
+      "Khăn choàng dùng lại đúng món Ryuma Black Neck Scarf trong Roblox Studio, với mesh, texture và normal gốc.",
+      "Màn hình loading là đầu trứng của Sussy, không mũ không kính, lăn qua lại trên mặt đất.",
+      "Favicon là đầu Sussy đội mũ đeo kính, tức icon loading cũ.",
     ],
   },
   {
@@ -33,10 +46,9 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Màn hình neon bên đường",
     notes: [
-      "Mỗi trạm dừng là một màn hình kiểu cyberpunk: viền neon, scanline, nhiễu sóng và hiệu ứng bật CRT khi Sussy tới gần, chiếu khung hình demo của dự án (dự án chưa có demo hiện “DEMO // COMING SOON”).",
-      "Khăn choàng được dựng lại gọn và mềm (vòng quấn dày, vạt trước ngực, đuôi khăn rủ), hết các mảng lốm đốm.",
-      "Sửa lỗi đầu Sussy đôi khi xoay như chong chóng.",
-      "Băng chuyền tech nằm cao hơn trên màn hình; trạm cuối cách gốc cây xa hơn.",
+      "Mỗi trạm dừng có một màn hình kiểu cyberpunk chiếu khung hình demo của dự án. Màn hình tự bật khi Sussy tới gần. Dự án chưa có demo thì hiện DEMO // COMING SOON.",
+      "Sửa lỗi đầu Sussy thỉnh thoảng xoay tít như chong chóng.",
+      "Băng chuyền tech nằm cao hơn một chút, trạm cuối cách gốc cây xa hơn.",
     ],
   },
   {
@@ -44,10 +56,10 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Emote wave thật, đi rồi mới chạy",
     notes: [
-      "Lời chào là emote wave R6 gốc của Roblox (rbxassetid://128777973), lấy thẳng từ Roblox Studio và phát như một animation Action có fade vào/ra; lúc ngồi chỉ cánh tay phải vẫy.",
-      "Có gia tốc: cuộn chậm thì Sussy đi bộ, cuộn nhanh thì tăng tốc thành chạy, dừng cuộn thì chậm dần về idle.",
-      "Ở băng chuyền tech hay trạm dừng, Sussy quay đầu (và xoay người khi đứng yên) nhìn vào tech đang chọn hoặc biển dự án phía trước.",
-      "Sửa lỗi đổi sang tab Roblox khi đang ở trạm cuối làm trang bị lỗi.",
+      "Lời chào là emote wave R6 của chính Roblox (rbxassetid://128777973), lấy từ Roblox Studio. Lúc ngồi thì chỉ tay phải vẫy.",
+      "Cuộn chậm thì Sussy đi bộ, cuộn nhanh thì chạy, dừng cuộn thì chậm dần rồi đứng yên.",
+      "Sussy quay đầu nhìn tech đang chọn trên băng chuyền, hoặc biển dự án phía trước.",
+      "Sửa lỗi trang bị hỏng khi đổi sang tab Roblox lúc đang ở trạm cuối.",
     ],
   },
   {
@@ -55,10 +67,10 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Chào kiểu Roblox",
     notes: [
-      "Lời chào ở màn đầu giống emote Roblox: Sussy dừng chạy, quay về phía bạn, giơ tay chếch lên ngoài vành mũ và vẫy, rồi chạy tiếp.",
-      "Không cuộn thì Sussy đứng thở (idle); chỉ chạy khi trang đang cuộn, trừ màn xuất hiện.",
-      "Băng chuyền tech lùi ra trước và hạ thấp nên không còn chạm vào Sussy; logo dùng đúng màu thương hiệu, không còn nhợt.",
-      "Khăn choàng và thắt lưng dùng normal gốc của Roblox (đọc từ thuộc tính GENERIC của mesh Draco) nên mượt như trong Studio.",
+      "Ở màn đầu, Sussy dừng lại, quay về phía bạn và vẫy tay rồi mới chạy tiếp.",
+      "Không cuộn trang thì Sussy đứng yên thở nhẹ. Riêng màn mở đầu thì Sussy vẫn chạy.",
+      "Băng chuyền tech lùi ra trước và thấp xuống nên không chạm vào Sussy. Logo dùng đúng màu thương hiệu.",
+      "Khăn và thắt lưng dùng normal gốc của Roblox (nằm trong thuộc tính GENERIC của mesh Draco), nên mặt vải mượt như trong Studio.",
     ],
   },
   {
@@ -66,10 +78,10 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Vẫy tay và ngồi thư thả",
     notes: [
-      "Vẫy tay chào được làm lại: tay nâng sang ngang rồi vẫy, không còn quét ngang mặt; Sussy dùng tay gần người xem và nghiêng đầu nhẹ.",
-      "Tư thế ngồi cuối tự nhiên hơn: ngả lưng, tay đặt trên đùi, chân hơi dạng, thân hướng về hoàng hôn còn đầu quay lại nhìn bạn, thỉnh thoảng liếc ra xa.",
-      "Chữ trượt lên khi xuất hiện và mờ dần trước khi chui dưới header/footer; bong bóng chat tự ẩn khi Sussy ở sau nội dung.",
-      "Câu chào tạm biệt chỉ đến khi Sussy đã ngồi xuống; nút Liên hệ và phím J đưa thẳng tới cảnh ngồi.",
+      "Làm lại cú vẫy tay để tay không còn quét ngang mặt.",
+      "Tư thế ngồi cuối: lưng hơi ngả, tay để trên đùi, đầu quay lại nhìn bạn và thỉnh thoảng nhìn ra xa.",
+      "Chữ mờ dần trước khi trượt xuống dưới header hoặc footer. Bong bóng chat tự ẩn khi bị nội dung che.",
+      "Lời tạm biệt chỉ xuất hiện khi Sussy đã ngồi xuống. Nút Liên hệ và phím J đưa thẳng tới cảnh ngồi.",
     ],
   },
   {
@@ -77,8 +89,8 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Gió chiều",
     notes: [
-      "Lá cây rơi lả tả từ tán cây và một đàn chim bay ngang bầu trời hoàng hôn; cả hai được vẽ bằng shader, mỗi loại một draw call.",
-      "Bờ cỏ phía camera thấp và phẳng hơn để luôn thấy Sussy trên đường; câu chat ở cửa studio: “Ra ngoài chạy tiếp thôi!”.",
+      "Lá rơi từ tán cây và một đàn chim bay ngang trời lúc hoàng hôn. Mỗi thứ chỉ tốn một draw call.",
+      "Bờ cỏ phía camera thấp hơn để luôn thấy Sussy trên đường.",
     ],
   },
   {
@@ -86,111 +98,133 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Hành trình ra hoàng hôn",
     notes: [
-      "Có câu chuyện nối tech stack với đoạn cuối: hết băng chuyền, Sussy chạy qua một cánh cửa sáng ra khỏi studio, theo con đường đất qua đồi cỏ, ngang các cột mốc dự án, rồi tới gốc cây lúc trời ngả hoàng hôn.",
-      "Cây, bụi, cỏ và dương xỉ được dựng lại trong Blender: tán lá mềm và tròn, màu đỉnh có sẵn bóng tối bên trong cùng viền nắng ấm; cỏ và dương xỉ đung đưa theo gió.",
-      "Ở đoạn cuối Sussy ngồi quay mặt ra màn hình, cây ở một bên, mặt trời lặn ở bên kia.",
+      "Hết băng chuyền tech, Sussy chạy qua một cánh cửa sáng, theo con đường đất ngang các cột mốc dự án, tới gốc cây lúc hoàng hôn.",
+      "Cây, bụi, cỏ và dương xỉ được dựng lại trong Blender. Cỏ và dương xỉ đung đưa theo gió.",
+      "Ở cuối, Sussy ngồi quay mặt ra màn hình, cây ở một bên, mặt trời lặn ở bên kia.",
     ],
   },
   {
     version: "2.3",
     date: "2026-10-11",
     title: "Đúng mặt Sussy",
-    notes: ["Đầu Sussy giờ giống hệt trong Roblox Studio: quả trứng trắng, viền đen và hai mắt oval (accessory hai lớp vỏ), thay cho khuôn mặt vẽ tay."],
+    notes: [
+      "Đầu Sussy giống trong Roblox Studio: quả trứng trắng viền đen, hai mắt oval, thay cho khuôn mặt vẽ tay trước đây.",
+    ],
   },
   {
     version: "2.2",
     date: "2026-10-11",
     title: "CI",
-    notes: ["Mỗi lần đẩy code lên GitHub, CI tự chạy lint, kiểm tra kiểu, test và build."],
+    notes: [
+      "Mỗi lần đẩy code lên GitHub, CI chạy lint, kiểm tra kiểu, test và build.",
+    ],
   },
   {
     version: "2.1",
     date: "2026-10-11",
     title: "Kiểm thử trên trình duyệt",
-    notes: ["Bộ test Playwright chạy trên Chrome thật cho desktop và mobile: tải trang, đổi chế độ, đổi ngôn ngữ, phím tắt, tràn ngang và các trang phụ."],
+    notes: [
+      "Thêm bộ test Playwright chạy trên Chrome cho cả desktop và mobile.",
+    ],
   },
   {
     version: "2.0",
     date: "2026-10-11",
     title: "CV một trang",
-    notes: ["Trang /cv tạo tự động từ nội dung hai portfolio, có nút In / Lưu PDF và bản in A4 trắng đen gọn gàng."],
+    notes: [
+      "Trang /cv lấy nội dung từ portfolio, có nút In / Lưu PDF và bản in A4 đen trắng.",
+    ],
   },
   {
     version: "1.9",
     date: "2026-10-11",
     title: "Vẫy tay",
-    notes: ["Sussy vẫy tay chào khi bạn mới đến và khi ngồi ngắm hoàng hôn, kèm câu chat."],
+    notes: [
+      "Sussy vẫy tay khi bạn mới vào trang và khi ngồi ngắm hoàng hôn.",
+    ],
   },
   {
     version: "1.8",
     date: "2026-10-11",
     title: "Cột mốc bên đường",
-    notes: ["Ở chương Dự án, mỗi dự án là một biển báo bên đường: Sussy chạy ngang qua đúng biển của dự án bạn đang đọc."],
+    notes: [
+      "Ở chương Dự án, mỗi dự án có một biển báo bên đường, và Sussy đi ngang đúng biển của dự án bạn đang đọc.",
+    ],
   },
   {
     version: "1.7",
     date: "2026-10-11",
-    title: "Phím tắt & chạm",
+    title: "Phím tắt và chạm",
     notes: [
       "J / K để chuyển chương, H để Sussy nhảy.",
-      "Chạm vào Sussy trên điện thoại cũng làm Sussy nhảy.",
+      "Trên điện thoại, chạm vào Sussy cũng làm Sussy nhảy.",
     ],
   },
   {
     version: "1.6",
     date: "2026-10-11",
     title: "Sussy biết nói",
-    notes: ["Bong bóng chat kiểu Roblox trên đầu Sussy mỗi khi sang chương mới, khác nhau giữa Dev/Roblox và VI/EN."],
+    notes: [
+      "Mỗi khi sang chương mới, trên đầu Sussy hiện một bong bóng chat kiểu Roblox.",
+    ],
   },
   {
     version: "1.5",
     date: "2026-10-11",
     title: "Ảnh chia sẻ",
-    notes: ["Thẻ 1200×630 riêng cho portfolio Dev và Roblox khi chia sẻ link lên Facebook, LinkedIn hay Discord."],
+    notes: [
+      "Thêm ảnh 1200×630 hiện ra khi chia sẻ link lên Facebook, LinkedIn hay Discord.",
+    ],
   },
   {
     version: "1.4",
     date: "2026-10-11",
     title: "Nhẹ hơn",
     notes: [
-      "Ảnh đầu Sussy của màn hình chờ đổi sang WebP 5 KB và nhúng thẳng vào HTML; poster dự phòng còn 14 KB.",
-      "CSS gọn hơn, model 3D được tải với ưu tiên thấp, sửa lỗi console khi prefetch link.",
-      "Lighthouse (bản production): desktop 99, mobile 86–89; Accessibility, Best Practices và SEO đều 100.",
+      "Ảnh trên màn hình chờ đổi sang WebP 5 KB và nằm luôn trong HTML. Ảnh poster dự phòng còn 14 KB.",
+      "Model 3D tải với độ ưu tiên thấp. Sửa lỗi console khi prefetch link.",
+      "Lighthouse bản production: desktop 99, mobile 86 đến 89. Accessibility, Best Practices và SEO đều 100.",
     ],
   },
   {
     version: "1.3",
     date: "2026-10-11",
     title: "Chạng vạng",
-    notes: ["Ngồi lại đủ lâu ở phần liên hệ, trời sẽ tối dần và sao bắt đầu lấp lánh; cuộn đi là trời sáng lại."],
+    notes: [
+      "Ngồi lại đủ lâu ở phần liên hệ thì trời tối dần và sao bắt đầu hiện. Cuộn đi chỗ khác thì trời sáng lại.",
+    ],
   },
   {
     version: "1.2",
     date: "2026-10-11",
     title: "Hello, world",
-    notes: ["Nút VI / EN trong header: toàn bộ portfolio Dev và Roblox có bản tiếng Anh (case study và nhật ký vẫn tiếng Việt)."],
+    notes: [
+      "Nút VI / EN trong header chuyển giao diện sang tiếng Anh. Case study và nhật ký vẫn bằng tiếng Việt.",
+    ],
   },
   {
     version: "1.1",
     date: "2026-10-11",
     title: "Trang lạc đường",
-    notes: ["Trang 404 riêng: đầu Sussy xoay và lối quay về hai portfolio hoặc nhật ký."],
+    notes: [
+      "Có trang 404 riêng, kèm đường quay về portfolio và nhật ký.",
+    ],
   },
   {
     version: "1.0",
     date: "2026-10-11",
     title: "Case study",
     notes: [
-      "Trang /du-an/[slug] cho từng dự án; ba case study đầu tiên: Portfolio 3D này, Sussy và Animation R6 lên web.",
-      "Sửa ghi công: gói Ultimate R6 Movement System là của tác giả Arczi — dự án ở đây là việc đưa animation của gói lên web.",
+      "Trang /du-an/[slug] cho từng dự án, mở đầu bằng ba case study: Portfolio 3D này, Sussy và Animation R6 lên web.",
+      "Sửa phần ghi công: gói Ultimate R6 Movement System là của Arczi. Phần việc ở đây là đưa animation của gói lên web.",
     ],
   },
   {
     version: "0.9",
     date: "2026-10-11",
-    title: "Baseplate có hồn",
+    title: "Baseplate",
     notes: [
-      "Chế độ Roblox có SpawnLocation sau lưng Sussy và vài khối part cổ điển có stud lơ lửng ở xa.",
+      "Studio có một SpawnLocation sau lưng Sussy và vài khối part có stud lơ lửng ở xa.",
       "Bảng leaderstats: Stage theo chương, Studs đếm quãng đường Sussy đã chạy.",
     ],
   },
@@ -199,28 +233,27 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Tiếng bước chân",
     notes: [
-      "Nút âm thanh trong header (tắt mặc định): tiếng bước chân tổng hợp bằng Web Audio, khớp nhịp clip run v4.",
-      "Sàn studio nghe cứng, đồi cỏ lúc hoàng hôn nghe mềm; tiếp đất sau cú nhảy có tiếng chạm.",
+      "Nút âm thanh trong header, mặc định tắt. Tiếng bước chân được tạo bằng Web Audio và khớp nhịp clip chạy.",
+      "Trên sàn studio tiếng chân nghe cứng, trên cỏ thì nghe mềm.",
     ],
   },
   {
     version: "0.7",
     date: "2026-10-11",
-    title: "Mượt hơn khi đổi chế độ",
+    title: "Đổi chế độ không tải lại",
     notes: [
-      "Chuyển Dev ↔ Roblox giữ nguyên chương đang xem, không tải lại nhân vật hay renderer.",
-      "Tối ưu từng frame và giải phóng tài nguyên WebGL gọn hơn.",
-      "49 test tự động cho toán học cuộn trang, rig R6 và bộ trích animation .rbxm.",
+      "Đổi giữa hai portfolio vẫn giữ chương đang xem, không tải lại nhân vật hay renderer.",
+      "Thêm 49 test tự động cho phần tính toán cuộn trang, rig R6 và bộ trích animation .rbxm.",
     ],
   },
   {
     version: "0.6",
     date: "2026-10-11",
-    title: "Sussy R6 & nhật ký",
+    title: "Sussy R6 và nhật ký",
     notes: [
-      "Nhân vật chuyển sang model R6 Sussy trong Roblox Studio: khối R6 cổ điển, mũ Trilby, kính pixel, khăn và đai gốc.",
-      "Bấm vào Sussy để nhảy, ở cả hai chế độ.",
-      "Trang nhật ký này: mỗi lần nâng cấp đều được ghi lại.",
+      "Nhân vật chuyển sang model R6 Sussy từ Roblox Studio, đủ mũ Trilby, kính pixel, khăn và thắt lưng.",
+      "Bấm vào Sussy để nhảy.",
+      "Có trang nhật ký này để ghi lại mỗi lần cập nhật.",
     ],
   },
   {
@@ -228,8 +261,8 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Hai portfolio",
     notes: [
-      "Chia thành portfolio Dev (/) và Roblox Dev (/roblox), chuyển bằng công tắc giữa header.",
-      "Chế độ Roblox: baseplate ban đêm có stud, vòng focus xanh, Sussy nhảy khi qua chương.",
+      "Tách thành portfolio Dev (/) và Roblox (/roblox), đổi qua lại bằng công tắc giữa header.",
+      "Bản Roblox có baseplate ban đêm, vòng focus màu xanh, và Sussy nhảy khi sang chương mới.",
     ],
   },
   {
@@ -237,23 +270,26 @@ export const changelog: Release[] = [
     date: "2026-10-11",
     title: "Chạy theo nhịp cuộn",
     notes: [
-      "Animation trích thẳng từ gói Ultimate R6 Movement System (.rbxm).",
-      "Băng chuyền tech stack 3D dưới chân, có Python và C++.",
-      "Cảnh hoàng hôn: Sussy ngồi dưới gốc cây, bảng liên hệ.",
-      "Loading screen: đầu Sussy 2D xoay như đồng xu.",
+      "Animation lấy thẳng từ gói Ultimate R6 Movement System (.rbxm).",
+      "Băng chuyền tech stack 3D dưới chân Sussy.",
+      "Cảnh hoàng hôn: Sussy ngồi dưới gốc cây cạnh bảng liên hệ.",
     ],
   },
   {
     version: "0.2",
     date: "2026-09-06",
     title: "Sân khấu 3D",
-    notes: ["Thêm không gian 3D cấu hình được trong hero và tinh chỉnh giao diện."],
+    notes: [
+      "Thêm một khung cảnh 3D ở phần mở đầu.",
+    ],
   },
   {
     version: "0.1",
     date: "2026-09-06",
     title: "Khởi đầu",
-    notes: ["Nền móng portfolio one-page: giới thiệu, dự án, kinh nghiệm, liên hệ."],
+    notes: [
+      "Bản đầu tiên: một trang có giới thiệu, dự án, kinh nghiệm và liên hệ.",
+    ],
   },
 ];
 

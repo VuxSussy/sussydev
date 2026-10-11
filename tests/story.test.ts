@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, doorFlood, speechBeat, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, DOOR_STORY, doorFlood, journeyX, resetShowcase, ROAD, setShowcase, SHOWCASE, showcaseIndex, speechBeat, stopStory, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -14,7 +14,8 @@ describe("scroll story", () => {
 
   it("clamps the chapter rail including the final chapter", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual(["mo-dau", "tech-stack", "du-an", "lien-he"]);
-    expect([-1, 0, 0.64, 0.65, 1.65, 2.65, 4, 10].map(chapterIndex)).toEqual([0, 0, 0, 1, 2, 3, 3, 3]);
+    // The long Work chapter (road + showcase) is read to its end before the rail moves on to Contact.
+    expect([-1, 0, 0.64, 0.65, 1.65, 2.65, 2.93, 2.94, 4, 10].map(chapterIndex)).toEqual([0, 0, 0, 1, 2, 2, 2, 3, 3, 3]);
     // Chat beats: the door line waits for the door, the goodbye waits until Sussy has sat down (sitMix ~ 1).
     expect([0, 0.7, 1.9, 2.0, 2.9, 3.54, 3.55, 4].map(speechBeat)).toEqual([0, 1, 1, 2, 2, 2, 3, 3]);
     expect(sitMix(3.55)).toBeGreaterThan(0.5);
@@ -83,21 +84,58 @@ describe("tech conveyor and sunset", () => {
   });
 
   it("swaps the studio for the meadow only while the doorway light covers the screen", () => {
-    expect(doorFlood(2.2)).toEqual({ spread: 0, strength: 0 });
-    expect(doorFlood(2.62).strength).toBe(0);
-    // Studio and meadow change hands entirely under full light (Sussy is in the doorway at ~2.40).
-    for (let s = 2.355; s <= 2.405; s += 0.005) expect(doorFlood(s).strength).toBeGreaterThan(0.99);
-    expect([2.35, 2.355].map(worldReveal)).toEqual([0, worldReveal(2.355)]);
-    expect(worldReveal(2.355)).toBeLessThan(0.05);
-    expect([2.4, 2.405].map(worldReveal)).toEqual([1, 1]);
-    expect([2.355, 2.4].map(studioExit)).toEqual([0, 1]);
+    expect(doorFlood(2.1)).toEqual({ spread: 0, strength: 0 });
+    expect(doorFlood(2.47).strength).toBe(0);
+    // Studio and meadow change hands entirely under full light (Sussy is in the doorway at DOOR_STORY).
+    for (let s = 2.255; s <= 2.305; s += 0.005) expect(doorFlood(s).strength).toBeGreaterThan(0.99);
+    expect(worldReveal(2.25)).toBe(0);
+    expect(worldReveal(2.255)).toBeLessThan(0.05);
+    expect([2.3, 2.305].map(worldReveal)).toEqual([1, 1]);
+    expect([2.255, DOOR_STORY].map(studioExit)).toEqual([0, 1]);
+    expect(journeyX(DOOR_STORY, 4)).toBeCloseTo(ROAD.door);
     // The light widens to cover the screen before the swap and stays wide while it fades.
-    expect(doorFlood(2.355).spread).toBeGreaterThan(0.97);
-    expect(doorFlood(2.5).spread).toBe(1);
+    expect(doorFlood(2.255).spread).toBeGreaterThan(0.97);
+    expect(doorFlood(2.4).spread).toBe(1);
+  });
+
+  it("runs clear of the door's light before the first project screen, then on to the tree", () => {
+    resetShowcase();
+    const n = 4;
+    // The first stop comes after the light has gone, with a long stretch of road from the door.
+    expect(doorFlood(stopStory(0, n)).strength).toBe(0);
+    expect(ROAD.door - ROAD.firstStop).toBeGreaterThan(25);
+    for (let i = 0; i < n; i++) expect(journeyX(stopStory(i, n), n)).toBeCloseTo(ROAD.firstStop + ((ROAD.lastStop - ROAD.firstStop) * i) / (n - 1));
+    expect(journeyX(4, n)).toBe(ROAD.sit);
+    // Always moving forward (towards -X) and continuous: no jumps between the stretches.
+    let previous = journeyX(2, n);
+    for (let s = 2; s <= 3.5; s += 0.001) {
+      const x = journeyX(s, n);
+      expect(x).toBeLessThanOrEqual(previous + 1e-9);
+      expect(previous - x).toBeLessThan(0.35);
+      previous = x;
+    }
+    // Pace eases off at each screen but never stops, so a steady scroll keeps a steady gait.
+    const pace = (s: number) => (journeyX(s - 0.001, n) - journeyX(s + 0.001, n)) / 0.002;
+    const between = pace((stopStory(0, n) + stopStory(1, n)) / 2);
+    expect(pace(stopStory(1, n))).toBeGreaterThan(between * 0.4);
+    expect(pace(stopStory(1, n))).toBeLessThan(between);
+  });
+
+  it("lines the showcase up with the page and switches the panel at the nearest stop", () => {
+    setShowcase(2.4, 3.2);
+    // Clamped: after the door's light, and before the contact chapter.
+    expect(SHOWCASE).toEqual({ start: 2.5, end: 2.95 });
+    setShowcase(2.55, 2.91);
+    expect([2.4, 2.55, 2.6, 2.67, 2.91, 3.2].map((s) => showcaseIndex(s, 4))).toEqual([0, 0, 0, 1, 3, 3]);
+    expect(stopStory(3, 4)).toBeCloseTo(2.91);
+    resetShowcase();
   });
 
   it("scrubs chapter hops from story rather than elapsed frames", () => {
-    for (const boundary of [0.65, 1.65, 2.65]) {
+    // Hops only in the studio: none on the road while Sussy walks past the screens.
+    expect(chapterJumpTime(2.66)).toBe(-1);
+    expect(chapterJumpTime(2.95)).toBe(-1);
+    for (const boundary of [0.65, 1.65]) {
       expect(chapterJumpTime(boundary - 0.01)).toBe(-1);
       expect(chapterJumpTime(boundary)).toBeCloseTo(0);
       expect(chapterJumpTime(boundary + 0.09)).toBeCloseTo(0.475);

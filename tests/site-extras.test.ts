@@ -28,7 +28,7 @@ it("hides Roblox props outside Roblox mode and sinks them while fading", () => {
 it("gives every project a unique slug and only writes case studies for real projects", async () => {
   const { portfolio } = await import("../data/portfolio");
   const { caseStudies } = await import("../data/case-studies");
-  const slugs = [...portfolio.profiles.dev.projects, ...portfolio.profiles.roblox.projects].map((project) => project.slug);
+  const slugs = portfolio.profile.projects.map((project) => project.slug);
   expect(new Set(slugs).size).toBe(slugs.length);
   for (const slug of Object.keys(caseStudies)) expect(slugs).toContain(slug);
   for (const study of Object.values(caseStudies)) expect(study.sections.length).toBeGreaterThan(0);
@@ -37,43 +37,42 @@ it("gives every project a unique slug and only writes case studies for real proj
 it("localises every profile string while keeping icons, colours and slugs from the source", async () => {
   const { portfolio } = await import("../data/portfolio");
   const { localizedProfile } = await import("../data/i18n");
-  for (const mode of ["dev", "roblox"] as const) {
-    const vi = portfolio.profiles[mode];
-    const en = localizedProfile(mode, "en");
-    expect(localizedProfile(mode, "vi")).toBe(vi);
-    expect(en.techStack.map((tech) => [tech.name, tech.icon, tech.color])).toEqual(vi.techStack.map((tech) => [tech.name, tech.icon, tech.color]));
-    en.techStack.forEach((tech, index) => expect(tech.blurb).not.toBe(vi.techStack[index].blurb));
-    expect(en.projects.map((project) => project.slug)).toEqual(vi.projects.map((project) => project.slug));
-    en.projects.forEach((project, index) => expect(project.summary).not.toBe(vi.projects[index].summary));
-    expect(en.intro).not.toBe(vi.intro);
-  }
+  const vi = portfolio.profile;
+  const en = localizedProfile("en");
+  expect(localizedProfile("vi")).toBe(vi);
+  expect(en.techStack.map((tech) => [tech.name, tech.group, tech.icon, tech.color])).toEqual(vi.techStack.map((tech) => [tech.name, tech.group, tech.icon, tech.color]));
+  en.techStack.forEach((tech, index) => expect(tech.blurb).not.toBe(vi.techStack[index].blurb));
+  expect(en.projects.map((project) => project.slug)).toEqual(vi.projects.map((project) => project.slug));
+  en.projects.forEach((project, index) => expect(project.summary).not.toBe(vi.projects[index].summary));
+  expect(en.intro).not.toBe(vi.intro);
 });
 
-it("has a chat line for every chapter in both languages and modes", async () => {
+it("has a chat line for every chapter in both languages", async () => {
   const { chatLines } = await import("../data/i18n");
   const { CHAPTERS } = await import("../lib/story");
   for (const locale of ["vi", "en"] as const) {
-    for (const mode of ["dev", "roblox"] as const) {
-      expect(chatLines[locale][mode]).toHaveLength(CHAPTERS.length);
-      for (const line of chatLines[locale][mode]) expect(line.length).toBeLessThan(40);
-    }
+    expect(chatLines[locale]).toHaveLength(CHAPTERS.length);
+    for (const line of chatLines[locale]) expect(line.length).toBeLessThan(40);
   }
 });
 
-it("plants one static milestone per project along the road once the outdoor world is revealed", async () => {
+it("plants one static TV per project along the road, with open road between them", async () => {
   const { Milestones } = await import("../components/story/scene/milestones");
   const { portfolio } = await import("../data/portfolio");
-  const path = (story: number) => [-(story - 2) * 50, 0] as const;
-  const milestones = new Milestones(portfolio.profiles.dev.projects, "#f0b07a");
+  const { journeyX } = await import("../lib/story");
+  const projects = portfolio.profile.projects;
+  const path = (story: number) => [journeyX(story, projects.length), 0] as const;
+  const milestones = new Milestones(projects);
   milestones.update(1.5, 0, path);
   expect(milestones.group.visible).toBe(false);
-  milestones.update(2.5, 1, path);
+  milestones.update(2.6, 1, path);
   expect(milestones.group.visible).toBe(true);
-  expect(milestones.group.children).toHaveLength(portfolio.profiles.dev.projects.length);
+  expect(milestones.group.children).toHaveLength(projects.length);
   const xs = milestones.group.children.map((post) => post.position.x);
   milestones.update(2.8, 1, path);
   expect(milestones.group.children.map((post) => post.position.x)).toEqual(xs);
-  expect(xs[0]).toBeGreaterThan(xs[xs.length - 1]);
+  // Evenly spaced, each TV (10.4 studs wide) clear of the next by several studs.
+  xs.slice(1).forEach((x, i) => expect(xs[i] - x).toBeGreaterThan(10.4 + 5));
   milestones.dispose();
 });
 
@@ -90,14 +89,18 @@ it("fades a one-shot emote in and out like a Roblox animation track", async () =
 it("finds the roadside board nearest to Sussy", async () => {
   const { Milestones } = await import("../components/story/scene/milestones");
   const { portfolio } = await import("../data/portfolio");
-  const milestones = new Milestones(portfolio.profiles.dev.projects, "#fff");
+  const milestones = new Milestones(portfolio.profile.projects);
   const out = new THREE.Vector3();
-  const path = (story: number) => [-(story - 2) * 40, 0] as const;
+  const { journeyX, stopStory } = await import("../lib/story");
+  const count = portfolio.profile.projects.length;
+  const path = (story: number) => [journeyX(story, count), 0] as const;
   milestones.update(1, 0, path);
   expect(milestones.nearestBoard(0, out)).toBe(Infinity); // hidden before the outdoor world rises
   milestones.update(2.6, 1, path);
-  const near = milestones.nearestBoard(path(2.5)[0], out);
-  expect(near).toBeLessThan(3);
+  // At a stop the TV stands just ahead of Sussy (beside, not behind her).
+  const near = milestones.nearestBoard(path(stopStory(1, count))[0], out);
+  expect(near).toBeLessThan(8);
+  expect(out.x).toBeLessThan(path(stopStory(1, count))[0]);
   expect(out.y).toBeGreaterThan(3);
   milestones.dispose();
 });
@@ -119,7 +122,7 @@ it("bakes a meshopt-quantised node transform into float geometry", () => {
 it("sorts each tech stack into Language, Framework and Tool shelves with a gap between them", async () => {
   const { portfolio, TECH_GROUPS } = await import("../data/portfolio");
   const { laneSlots } = await import("../components/story/scene/tech-carousel");
-  for (const profile of Object.values(portfolio.profiles)) {
+  for (const profile of [portfolio.profile]) {
     const order = profile.techStack.map((tech) => TECH_GROUPS.indexOf(tech.group));
     // Grouped in shelf order, so chip order (rendered per group) matches the conveyor's indices.
     expect([...order].sort((a, b) => a - b)).toEqual(order);

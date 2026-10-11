@@ -27,11 +27,14 @@ If the dev server reports "Network connection lost" after adding a route, restar
 
 - Vinext 1.0 beta (Next.js App Router compatible), React 19, TypeScript, Tailwind 4 (tokens in `app/globals.css`),
   three.js r185 (vanilla, no R3F), simple-icons for tech logos, lucide-react for UI icons.
-- Routes: `/` = Dev portfolio, `/roblox` = Roblox Dev portfolio. The shared root layout's `PortfolioShell` renders
-  `components/story/portfolio-story.tsx` with `mode`, preserving its canvas across routes. Content lives only in
-  `data/portfolio.ts` (`portfolio.profiles.dev|roblox` + shared contacts).
+- One portfolio (Roblox Developer) at `/`; `/roblox` permanently redirects there (the Dev and Roblox portfolios were
+  merged in v4.0). The root layout's `PortfolioShell` renders `components/story/portfolio-story.tsx` on `/`. Content
+  lives only in `data/portfolio.ts` (`portfolio.profile` + contacts), English copy in `data/i18n.ts`.
+- The road (`lib/story.ts`): `ROAD` x positions, `journeyX` (Hermite run to the door, eased pass along the TVs, run to
+  the tree), `doorFlood` (light covers the studio/meadow swap). The showcase range is measured from the page's
+  `.showcase-stops` markers via `setShowcase`; walk vs run always follows scroll speed.
 - `components/story/scene/*` is the WebGL layer, code-split via dynamic import. One renderer, fixed canvas.
-- `lib/story.ts` holds the scroll math shared by DOM and scene (story value 0..4, tech slideshow, sunset/sit mixes).
+- `lib/story.ts` holds the scroll math shared by DOM and scene (story value 0..4, tech slideshow, road, sunset/sit mixes).
 - `lib/rbx/rig.ts` builds the R6 rig: `Part1 = Part0 * C0 * Transform * C1⁻¹`. Animated nodes are `<Part>Joint`.
 - Coordinates are Roblox studs, Y-up, character faces −Z at yaw 0. HumanoidRootPart stands at y = 3.
 
@@ -76,3 +79,9 @@ Check desktop 1440×900 and mobile 375×812 for every visual change.
 - After `build-sussy.py`, always run `npm run optimize:model` (meshopt). The rig keeps node transforms on meshes
   because they carry meshopt dequantization. Code that re-places glTF nodes (vegetation) must bake them first
   with `bakedGeometry()` (environment.ts), otherwise the geometry collapses to the -1..1 quantised range.
+
+## Copy style
+
+UI copy, changelog and case studies are written plainly: short sentences with concrete facts and numbers. Avoid em
+dashes as connectors, "not only... but also", three-item lists used for rhythm, and hype adjectives. Never invent
+personal data; empty contacts stay "Đang cập nhật".
