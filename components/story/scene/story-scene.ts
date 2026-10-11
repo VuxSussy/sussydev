@@ -2,10 +2,10 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
-import { portfolio, type TechStack } from "@/data/portfolio";
+import { portfolio, type Project, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, emoteWeight, jointNode, poseSampler, type ClipJson, type Motor } from "@/lib/rbx/rig";
-import { arriveMix, chapterJumpTime, damp, doorFlood, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
-import { createBlobShadow, createDoorFlood, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
+import { arriveMix, chapterJumpTime, damp, DOOR_STORY, doorFlood, journeyX, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
+import { createBlobShadow, createDoorFlood, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START } from "./environment";
 import { Footsteps } from "./footsteps";
 import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
@@ -14,7 +14,6 @@ import { disposeObjects } from "./dispose";
 export type StorySceneOptions = {
   canvas: HTMLCanvasElement;
   techs: readonly TechStack[];
-  theme: SceneTheme;
   reducedMotion: boolean;
   onProgress?: (fraction: number) => void;
   onTechHover?: (index: number) => void;
@@ -32,8 +31,10 @@ const KEYS: Key[] = [
   { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42 },
   { s: 1.12, cam: [-3.4, 9.4, 22.5], target: [-3.4, 1.15, 2.8], yaw: Math.PI / 2 },
   { s: 1.9, cam: [-3.0, 9.1, 22], target: [-3.0, 1.15, 2.8], yaw: Math.PI / 2 },
-  { s: 2.2, cam: [-6.4, 4.8, 25], target: [-6.4, 3.7, 0], yaw: Math.PI / 2 + 0.3 },
-  { s: 3.2, cam: [-6.0, 4.6, 23.5], target: [-6.0, 3.4, 0], yaw: Math.PI / 2 + 0.3 },
+  // On the road the camera looks well ahead of Sussy: the roadside TV sits in the right half of the frame, clear of
+  // the project panel on the left, with Sussy beside it.
+  { s: 2.2, cam: [-12.0, 7.6, 37], target: [-12.0, 6.6, 0], yaw: Math.PI / 2 + 0.3 },
+  { s: 3.2, cam: [-11.0, 7.0, 34], target: [-11.0, 6.0, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
   { s: 3.42, cam: [-3.6, 5.0, 21.5], target: [-3.6, 4.4, -3], yaw: Math.PI + 0.26 },
   { s: 4, cam: [-3.3, 4.6, 19], target: [-3.3, 4.3, -3], yaw: Math.PI + 0.26 },
@@ -41,8 +42,7 @@ const KEYS: Key[] = [
 
 /** Sussy's position on the ground: in the studio until the Work chapter, then along the road to the tree. */
 export function characterPosition(story: number) {
-  const t = journeyMix(story);
-  return [ROAD_START.x + (SIT_SPOT.x - ROAD_START.x) * t, ROAD_START.y + (SIT_SPOT.y - ROAD_START.y) * t] as const;
+  return [ROAD_START.x + journeyX(story, portfolio.profile.projects.length), ROAD_START.y] as const;
 }
 
 /** Scroll speed (CSS px/s) at which Sussy reaches a full run; slower scrolling walks. */
@@ -60,6 +60,8 @@ const INTRO_RUN_END = 0.55;
 const ROOT_STANDING = 3;
 const ROOT_SEATED = 1.5;
 const RUN_SPEED = 13;
+/** Roblox blue: focus rings on the conveyor. */
+const ACCENT = "#6cb4ff";
 const COLORS = {
   fog: new THREE.Color("#b07a74"), key: new THREE.Color("#fff4e8"), sunsetKey: new THREE.Color("#ffb27a"),
   rim: new THREE.Color("#8f7cff"), sky: new THREE.Color("#d9dbe6"), sunsetSky: new THREE.Color("#ffc9a8"),
@@ -85,8 +87,13 @@ function sampleKeys(s: number, portrait: boolean) {
     // At sunset the camera stays up and looks below Sussy, so the scene sits above the panel.
     const end = smoothstep(2.9, 3.4, s);
     const lift = (3.8 + 1.6 * techVisibility(s)) * (1 - end);
-    cam[1] += lift + 1.2 * end;
-    target[1] += lift - 6.5 * end;
+    // On the road the project panel is a sheet along the bottom: look lower so the TVs and Sussy sit above it,
+    // and lean towards the TV (it stands ahead of Sussy, towards -X) so both share the narrow frame.
+    const road = smoothstep(2.3, 2.5, s) * (1 - end);
+    cam[1] += lift + 1.2 * end + 1.5 * road;
+    target[1] += lift - 6.5 * end - 7.5 * road;
+    cam[0] -= 6.5 * road;
+    target[0] -= 6.5 * road;
   }
   const pos = characterPosition(s);
   cam[0] += pos[0];
@@ -110,9 +117,8 @@ export class StoryScene {
   private offsets: THREE.Object3D[] = [];
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
-  /** Roblox-mode set dressing, faded in/out with the active theme. */
+  /** Roblox set dressing in the studio (fades with it). */
   private robloxProps = createRobloxProps();
-  private robloxMix = 0;
   private door = createStudioDoor();
   private flood = createDoorFlood();
   private floodCenter = new THREE.Vector3();
@@ -169,8 +175,6 @@ export class StoryScene {
   private lookAt = new THREE.Vector3();
   private story = 0;
   private storyTarget = 0;
-  private departure = 0;
-  private departureTarget = 0;
   private hovered = -1;
   private treadmill = new THREE.Vector2();
   private reducedMotion: boolean;
@@ -189,10 +193,10 @@ export class StoryScene {
   constructor(private options: StorySceneOptions) {
     const { canvas } = options;
     this.reducedMotion = options.reducedMotion;
-    this.sky = createSky(options.theme);
-    this.floor = createStudioFloor(options.theme);
-    this.studioRim.set(options.theme === "roblox" ? "#6aa8ff" : "#9fb0ff");
-    this.studioFog.set(options.theme === "roblox" ? "#0a1120" : "#0e0e11");
+    this.sky = createSky();
+    this.floor = createStudioFloor();
+    this.studioRim.set("#6aa8ff");
+    this.studioFog.set("#0a1120");
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false, powerPreference: "high-performance" });
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.AgXToneMapping;
@@ -213,11 +217,10 @@ export class StoryScene {
     this.keyLight.position.set(4, 7, 6);
     this.rimLight.position.set(-5, 5, -6);
     this.sky.material.depthTest = false;
-    this.sunset = createSunsetWorld({ grassCount: coarse ? 1400 : 3200 });
-    this.carousel = new TechCarousel(options.techs, options.theme === "roblox" ? "#6cb4ff" : "#f3b47c");
-    this.robloxMix = options.theme === "roblox" ? 1 : 0;
+    this.sunset = createSunsetWorld({ grassCount: coarse ? 2200 : 5000, carpetCount: coarse ? 3200 : 8000 });
+    this.carousel = new TechCarousel(options.techs, ACCENT);
     this.scene.add(this.robloxProps.group, this.door.group, this.flood.mesh, this.fillLight, this.fillLight.target);
-    this.milestones = this.createMilestones(options.theme);
+    this.milestones = new Milestones(portfolio.profile.projects);
     this.scene.add(this.milestones.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
     this.keyLight.target.position.set(0, 2, 0);
@@ -296,6 +299,11 @@ export class StoryScene {
     this.renderer.setAnimationLoop(this.frame);
   }
 
+  /** Redraw on the next frame (e.g. after the showcase stops were re-measured). */
+  refresh() {
+    this.needsRender = true;
+  }
+
   setStory(story: number) {
     if (story !== this.storyTarget) {
       this.needsRender = true;
@@ -303,34 +311,6 @@ export class StoryScene {
       this.pointerFresh = false;
     }
     this.storyTarget = story;
-  }
-
-  setDeparting(value: boolean) {
-    this.departureTarget = value ? 1 : 0;
-    this.needsRender = true;
-  }
-
-  setProfile(theme: SceneTheme, techs: readonly TechStack[], story: number) {
-    if (this.options.theme !== theme) {
-      this.options.theme = theme;
-      this.options.techs = techs;
-      this.sky.setTheme(theme);
-      this.floor.setTheme(theme);
-      this.studioRim.set(theme === "roblox" ? "#6aa8ff" : "#9fb0ff");
-      this.studioFog.set(theme === "roblox" ? "#0a1120" : "#0e0e11");
-      this.scene.remove(this.carousel.group);
-      this.carousel.dispose();
-      this.carousel = new TechCarousel(techs, theme === "roblox" ? "#6cb4ff" : "#f3b47c");
-      this.scene.add(this.carousel.group);
-      this.scene.remove(this.milestones.group);
-      this.milestones.dispose();
-      this.milestones = this.createMilestones(theme);
-      this.scene.add(this.milestones.group);
-      this.hovered = -1;
-      this.treadmill.set(0, 0);
-    }
-    this.story = this.storyTarget = story;
-    this.needsRender = true;
   }
 
   /**
@@ -348,8 +328,10 @@ export class StoryScene {
     return { x: ((x + 1) / 2) * canvas.clientWidth, y: ((1 - y) / 2) * canvas.clientHeight };
   }
 
-  private createMilestones(theme: SceneTheme) {
-    return new Milestones(portfolio.profiles[theme].projects, theme === "roblox" ? "#6cb4ff" : "#f0b07a");
+  /** Localised project text for the roadside screens. */
+  setProjects(projects: readonly Project[]) {
+    this.milestones.setProjects(projects);
+    this.needsRender = true;
   }
 
   /** Footstep audio (off by default; must be enabled from a user gesture). */
@@ -517,8 +499,6 @@ export class StoryScene {
     this.parallax.set(reduced ? 0 : damp(this.parallax.x, px, 3, dt), reduced ? 0 : damp(this.parallax.y, py, 3, dt));
     this.camera.position.set(key.cam[0] + this.parallax.x * 0.45, key.cam[1] + this.parallax.y * 0.25, key.cam[2]);
     this.lookAt.set(...key.target);
-    this.departure = reduced ? 0 : damp(this.departure, this.departureTarget, 10, dt);
-    this.camera.position.sub(this.lookAt).multiplyScalar(1 + this.departure * 0.08).add(this.lookAt);
     if (this.debugView) {
       this.camera.position.set(...this.debugView.position);
       this.lookAt.set(...this.debugView.target);
@@ -530,7 +510,7 @@ export class StoryScene {
     const sit = sitMix(s);
     this.character.position.set(key.pos[0], 0, key.pos[1]);
     this.character.rotation.y = key.yaw;
-    const chapterHop = this.options.theme === "roblox" && !reduced ? chapterJumpTime(s) : -1;
+    const chapterHop = !reduced ? chapterJumpTime(s) : -1;
     if (this.clickHopTime >= 0) {
       this.clickHopTime += dt;
       if (this.clickHopTime > 0.95) this.clickHopTime = -1;
@@ -576,8 +556,12 @@ export class StoryScene {
     this.actions.idle.setEffectiveWeight(reduced ? upright : upright - moving - walking);
     this.actions.sit.setEffectiveWeight(sit);
     // Cadence rises with speed so the feet keep up with the ground.
-    this.actions.walk.timeScale = 0.75 + 0.9 * Math.min(1, this.speed / 0.42);
-    this.actions.run.timeScale = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
+    // On the road Sussy really moves, so the steps follow the ground speed and the feet do not slide.
+    const road = reveal * (1 - sit);
+    const cadence = 0.75 + 0.9 * Math.min(1, this.speed / 0.42);
+    this.actions.walk.timeScale = cadence + (THREE.MathUtils.clamp(ground / WALK_SPEED, 0.7, 2.2) - cadence) * road;
+    const stride = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
+    this.actions.run.timeScale = stride + (THREE.MathUtils.clamp(ground / RUN_SPEED, 0.75, 1.6) - stride) * road * (1 - smoothstep(3.15, 3.42, s));
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
@@ -609,7 +593,7 @@ export class StoryScene {
     this.floor.mesh.visible = exit < 0.999;
     const flood = doorFlood(s);
     // The door stays until the flood hides it, so the studio never visibly comes apart.
-    this.door.update(smoothstep(1.98, 2.14, s) * (1 - smoothstep(2.355, 2.395, s)), time, smoothstep(2.12, 2.3, s));
+    this.door.update(smoothstep(1.94, 2.06, s) * (1 - smoothstep(DOOR_STORY - 0.045, DOOR_STORY - 0.005, s)), time, smoothstep(2.02, 2.2, s));
     this.shadow.mesh.position.set(key.pos[0], 0.02, key.pos[1]);
     this.shadow.mesh.rotation.z = key.yaw;
     this.shadow.material.opacity = (1 - 0.25 * sit) * (1 - 0.18 * hop);
@@ -635,8 +619,7 @@ export class StoryScene {
     const rise = 1 - Math.pow(1 - reveal, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
     this.sunset.update(time, reveal, this.renderer.getPixelRatio(), sunset);
-    this.robloxMix = reduced ? (this.options.theme === "roblox" ? 1 : 0) : damp(this.robloxMix, this.options.theme === "roblox" ? 1 : 0, 3, dt);
-    this.robloxProps.update(time, this.robloxMix * (1 - exit));
+    this.robloxProps.update(time, 1 - exit);
     this.fog.color.copy(this.studioFog).lerp(COLORS.fog, sunset);
     this.fog.near = 30 - 10 * sunset;
     this.fog.far = 160 + 80 * sunset;

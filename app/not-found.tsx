@@ -15,8 +15,7 @@ export default function NotFound() {
         <h1>Sussy chạy lạc<br />khỏi bản đồ rồi.</h1>
         <p className="lede">Trang bạn tìm không tồn tại hoặc đã được dời đi.</p>
         <nav className="lost-links" aria-label="Quay lại">
-          <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Portfolio Dev</Link>
-          <Link prefetch={false} className="outline-button" href="/roblox">Portfolio Roblox</Link>
+          <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
           <Link prefetch={false} className="outline-button" href="/nhat-ky">Nhật ký</Link>
         </nav>
       </main>

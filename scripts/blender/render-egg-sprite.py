@@ -1,4 +1,4 @@
-# Render the loader sprite: Sussy's bare egg head (no trilby, no glasses), front view, transparent PNG.
+# Render the loader sprite: Sussy's bare egg head (no trilby, no glasses) rounded into a ball, front view, PNG.
 # Run: OUT=<dir> blender -b assets-src/sussy/sussy-r6.blend -P scripts/blender/render-egg-sprite.py
 # then: sharp/cwebp to public/brand/sussy-egg.webp (256 px) and regenerate lib/brand.ts (inline data URI).
 import bpy, bmesh, math, mathutils, os
@@ -25,7 +25,15 @@ bpy.context.view_layer.update()
 pts = [head.matrix_world @ v.co for v in head.data.vertices]
 lo = mathutils.Vector([min(p[i] for p in pts) for i in range(3)]); hi = mathutils.Vector([max(p[i] for p in pts) for i in range(3)])
 center = (lo + hi) / 2
-size = max(hi.x - lo.x, hi.z - lo.z)
+# Rounder for the loader: scale the egg about its centre so its bounding box is a cube. The shell and the black
+# inverted hull scale together (their offset is kept), so it reads as a ball that can roll.
+target = max(hi - lo)
+for v in head.data.vertices:
+    p = head.matrix_world @ v.co
+    q = mathutils.Vector([center[i] + (p[i] - center[i]) * target / (hi[i] - lo[i]) for i in range(3)])
+    v.co = head.matrix_world.inverted() @ q
+head.data.update()
+size = target
 print("EGG bbox", [round(v, 3) for v in lo], [round(v, 3) for v in hi])
 sc = bpy.context.scene
 def light(name, rot, energy, color):
