@@ -55,7 +55,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     stack: ["Roblox Studio", "Luau", "Blender 5", "Python", "Node.js", "Three.js"],
     facts: [
       { label: "Rig", value: "R6" },
-      { label: "Mesh gốc", value: "Trilby, khăn, đai, đầu" },
+      { label: "Mesh gốc", value: "Đầu trứng, Trilby, khăn, đai" },
       { label: "GLB sau nén", value: "≈255 KB" },
     ],
     sections: [
@@ -76,7 +76,8 @@ export const caseStudies: Record<string, CaseStudy> = {
         title: "Blender: chỉ nâng chất lượng",
         paragraphs: [
           "Thân và tay chân là khối R6 bo cạnh nhẹ; phụ kiện gắn vào đúng part R6 mà chúng đeo. Pass Blender hàn đỉnh trùng, dựng lại normal theo góc (mesh Draco không có normal), subdivide phần đầu và gán vật liệu PBR — hình dạng gốc không đổi.",
-          "Một chi tiết thú vị: cặp kính pixel trên vành mũ không có instance trong model R6 mà đến từ accessory Face trong HumanoidDescription, nên transform của nó được lấy từ bản R15 của cùng avatar.",
+          "Cái đầu trứng mắt “sus” không phải là đầu: đó là một accessory gồm hai lớp vỏ — quả trứng trắng có khoét lỗ mắt, bọc ngoài là lớp vỏ đen đảo pháp tuyến (inverted hull). Nhờ backface culling, lớp đen chỉ lộ ra ở viền và qua lỗ mắt. Texture 1-bit nửa đen nửa trắng nên hai lớp được tách theo toạ độ UV.",
+          "Cặp kính pixel trên vành mũ không có instance trong model R6 mà đến từ accessory Face trong HumanoidDescription, nên transform của nó được lấy từ bản R15 của cùng avatar.",
         ],
       },
       {

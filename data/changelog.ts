@@ -8,6 +8,12 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.3",
+    date: "2026-10-11",
+    title: "Đúng mặt Sussy",
+    notes: ["Đầu Sussy giờ giống hệt trong Roblox Studio: quả trứng trắng, viền đen và hai mắt oval (accessory hai lớp vỏ), thay cho khuôn mặt vẽ tay."],
+  },
+  {
     version: "2.2",
     date: "2026-10-11",
     title: "CI",
