@@ -40,17 +40,24 @@ export type R6Rig = {
   /** HumanoidRootPart frame. Place it 3 studs above the ground for a standing character. */
   root: THREE.Group;
   joints: Record<R6Part, THREE.Object3D>;
+  /**
+   * Procedural layer after each joint (look-at, emotes). Only code writes these, always as absolute values;
+   * the mixer only writes `joints`. Never edit `joints` directly: the mixer skips writing a joint when its
+   * result did not change, so in-place edits would compound frame after frame (the "spinning head" bug).
+   */
+  offsets: Record<R6Part, THREE.Object3D>;
   parts: Record<R6Part, THREE.Object3D>;
 };
 
 /**
  * Build Part1 = Part0 * C0 * Transform * C1^-1 as a node chain:
- * parentPart -> C0 node -> Transform node (animated) -> C1^-1 node (part frame, holds the mesh).
+ * parentPart -> C0 node -> Transform node (animated) -> offset (procedural) -> C1^-1 node (part frame, holds the mesh).
  */
 export function buildR6Rig(source: THREE.Object3D, motors: Record<string, Motor>): R6Rig {
   const root = new THREE.Group();
   root.name = "HumanoidRootPart";
   const joints = {} as Record<R6Part, THREE.Object3D>;
+  const offsets = {} as Record<R6Part, THREE.Object3D>;
   const parts = {} as Record<R6Part, THREE.Object3D>;
   for (const joint of R6_JOINTS) {
     const motor = motors[joint.motor];
@@ -62,16 +69,20 @@ export function buildR6Rig(source: THREE.Object3D, motors: Record<string, Motor>
     const partFrame = new THREE.Object3D();
     partFrame.name = `${meshName(joint.part)}Frame`;
     applyMatrix(partFrame, cframeToMatrix(motor.c1).invert());
+    const offset = new THREE.Object3D();
+    offset.name = `${meshName(joint.part)}Offset`;
     parentFrame.add(c0);
     c0.add(transform);
-    transform.add(partFrame);
+    transform.add(offset);
+    offset.add(partFrame);
     // Meshes are authored in part space; any node transform left on them is meshopt dequantization.
     const mesh = source.getObjectByName(meshName(joint.part));
     if (mesh) partFrame.add(mesh);
     joints[joint.part] = transform;
+    offsets[joint.part] = offset;
     parts[joint.part] = partFrame;
   }
-  return { root, joints, parts };
+  return { root, joints, offsets, parts };
 }
 
 /** Convert an extracted KeyframeSequence into an AnimationClip on the rig's joint nodes. */
