@@ -389,8 +389,118 @@ function createFireflies(count: number) {
   return { points: new THREE.Points(geometry, material), material };
 }
 
+/** Projected size: world-space size * FOCAL / depth (tuned for the ~40° story camera at ~900 CSS px tall). */
+const FOCAL = 1250;
+
+/** A few leaves drifting down from the canopy, tumbling as they fall (point sprites shaped in the fragment shader). */
+function createFallingLeaves(count: number) {
+  const positions = new Float32Array(count * 3);
+  const seeds = new Float32Array(count * 4);
+  for (let i = 0; i < count; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = Math.sqrt(Math.random()) * 4.2;
+    positions.set([TREE_BASE.x + 0.5 + Math.cos(a) * r, 0, TREE_BASE.z + Math.sin(a) * r], i * 3);
+    seeds.set([0.55 + Math.random() * 0.5, Math.random(), (Math.random() - 0.5) * 5, 0.4 + Math.random() * 0.22], i * 4);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("seed", new THREE.BufferAttribute(seeds, 4));
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uPixelRatio: { value: 1 } },
+    vertexShader: /* glsl */ `
+      attribute vec4 seed; uniform float uTime; uniform float uPixelRatio;
+      varying float vAngle; varying float vFade; varying vec3 vColor;
+      const float TOP = 7.6;
+      void main() {
+        float t = fract(uTime * seed.x / TOP + seed.y);
+        vec3 p = position;
+        p.y = TOP * (1.0 - t);
+        p.x += sin(uTime * 1.3 + seed.y * 20.0) * 0.6 * t + t * 1.8;
+        p.z += cos(uTime * 0.9 + seed.y * 13.0) * 0.5 * t;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        vAngle = uTime * seed.z + seed.y * 6.2832;
+        vFade = smoothstep(0.0, 0.1, t) * (1.0 - smoothstep(0.88, 1.0, t));
+        vColor = mix(vec3(0.42, 0.26, 0.05), vec3(0.62, 0.22, 0.05), fract(seed.y * 7.0));
+        gl_PointSize = seed.w * ${FOCAL.toFixed(1)} * uPixelRatio / -mv.z;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform float uOpacity; varying float vAngle; varying float vFade; varying vec3 vColor;
+      void main() {
+        vec2 c = gl_PointCoord - 0.5;
+        float s = sin(vAngle), k = cos(vAngle);
+        c = mat2(k, -s, s, k) * c;
+        c.x *= 1.0 + 1.2 * abs(sin(vAngle * 0.7)); // tumbling: the leaf turns edge-on and back
+        float d = length(vec2(c.x * 2.1, c.y));
+        float a = (1.0 - smoothstep(0.36, 0.46, d)) * vFade * uOpacity;
+        if (a < 0.01) discard;
+        gl_FragColor = vec4(vColor, a);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+      }`,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false; // the shader moves them far from their attribute positions
+  return { points, material };
+}
+
+/** A small flock crossing the sunset sky: V-shaped silhouettes with flapping wings, drawn as point sprites. */
+function createBirds(count: number) {
+  const positions = new Float32Array(count * 3);
+  const seeds = new Float32Array(count * 4);
+  for (let i = 0; i < count; i++) {
+    // Loose V formation behind a leader.
+    const rank = Math.ceil(i / 2);
+    const side = i % 2 ? 1 : -1;
+    positions.set([SIT_SPOT.x - rank * 2.6, 23 + rank * 0.9 * side * 0.4 + Math.random() * 0.6, -78 + side * rank * 2.2], i * 3);
+    seeds.set([3.2, 0.35, 7 + Math.random() * 2.5, 2.6 + Math.random() * 0.5], i * 4);
+  }
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+  geometry.setAttribute("seed", new THREE.BufferAttribute(seeds, 4));
+  const material = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uPixelRatio: { value: 1 } },
+    vertexShader: /* glsl */ `
+      attribute vec4 seed; uniform float uTime; uniform float uPixelRatio; varying float vFlap;
+      const float SPAN = 150.0;
+      void main() {
+        vec3 p = position;
+        p.x += mod(uTime * seed.x + seed.y * SPAN, SPAN) - SPAN * 0.5;
+        p.y += sin(uTime * 0.6 + p.x * 0.05) * 0.8;
+        vFlap = sin(uTime * seed.z + position.x);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_PointSize = seed.w * ${FOCAL.toFixed(1)} * uPixelRatio / -mv.z;
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */ `
+      uniform float uOpacity; varying float vFlap;
+      float segment(vec2 p, vec2 a, vec2 b) {
+        vec2 pa = p - a, ba = b - a;
+        return length(pa - ba * clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0));
+      }
+      void main() {
+        vec2 p = gl_PointCoord - 0.5;
+        p.y = -p.y;
+        float tip = 0.08 + 0.2 * vFlap;
+        vec2 body = vec2(0.0, -0.06);
+        float d = min(segment(p, body, vec2(-0.44, tip)), segment(p, body, vec2(0.44, tip)));
+        float a = (1.0 - smoothstep(0.022, 0.055, d)) * uOpacity;
+        if (a < 0.01) discard;
+        gl_FragColor = vec4(vec3(0.045, 0.03, 0.04), a);
+        #include <colorspace_fragment>
+      }`,
+  });
+  const points = new THREE.Points(geometry, material);
+  points.frustumCulled = false;
+  return { points, material };
+}
+
 /**
- * Outdoor world (meadow, road, ridges, fireflies). Vegetation modelled in Blender (public/models/nature/nature.glb)
+ * Outdoor world (meadow, road, ridges, fireflies, falling leaves, a flock of birds). Vegetation modelled in Blender (public/models/nature/nature.glb)
  * is added once it loads via `addVegetation`.
  */
 export function createSunsetWorld({ grassCount }: { grassCount: number }) {
@@ -399,9 +509,11 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
   const road = createRoad();
   const ridges = createRidges();
   const fireflies = createFireflies(60);
+  const leaves = createFallingLeaves(28);
+  const birds = createBirds(7);
   const wind = { uTime: { value: 0 } };
   let canopy: THREE.Object3D | null = null;
-  group.add(ground, road, ridges, fireflies.points);
+  group.add(ground, road, ridges, fireflies.points, leaves.points, birds.points);
   return {
     group,
     /** Instance the Blender-made tree, bushes, grass tufts and ferns. */
@@ -480,6 +592,12 @@ export function createSunsetWorld({ grassCount }: { grassCount: number }) {
       fireflies.material.uniforms.uTime.value = time;
       fireflies.material.uniforms.uOpacity.value = smoothstep(0.6, 1, glow);
       fireflies.material.uniforms.uPixelRatio.value = pixelRatio;
+      for (const { material } of [leaves, birds]) {
+        material.uniforms.uTime.value = time;
+        material.uniforms.uPixelRatio.value = pixelRatio;
+      }
+      leaves.material.uniforms.uOpacity.value = smoothstep(0.4, 0.9, glow) * (canopy ? 1 : 0);
+      birds.material.uniforms.uOpacity.value = smoothstep(0.3, 0.8, glow);
     },
   };
 }

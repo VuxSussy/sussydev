@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.5",
+    date: "2026-10-11",
+    title: "Gió chiều",
+    notes: [
+      "Lá cây rơi lả tả từ tán cây và một đàn chim bay ngang bầu trời hoàng hôn; cả hai được vẽ bằng shader, mỗi loại một draw call.",
+      "Bờ cỏ phía camera thấp và phẳng hơn để luôn thấy Sussy trên đường; câu chat ở cửa studio: “Ra ngoài chạy tiếp thôi!”.",
+    ],
+  },
+  {
     version: "2.4",
     date: "2026-10-11",
     title: "Hành trình ra hoàng hôn",
