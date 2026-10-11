@@ -3,12 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
-import { portfolio, type Mode } from "@/data/portfolio";
+import { portfolio } from "@/data/portfolio";
 
 type Params = { params: Promise<{ slug: string }> };
 
-const MODES: Mode[] = ["dev", "roblox"];
-const entries = MODES.flatMap((mode) => portfolio.profiles[mode].projects.map((project) => ({ mode, project })));
+const entries = portfolio.profile.projects.map((project) => ({ project }));
 const find = (slug: string) => entries.find((entry) => entry.project.slug === slug);
 
 export function generateStaticParams() {
@@ -25,19 +24,18 @@ export default async function CaseStudyPage({ params }: Params) {
   const { slug } = await params;
   const entry = find(slug);
   if (!entry) notFound();
-  const { mode, project } = entry;
+  const { project } = entry;
   const study = caseStudies[slug];
-  const back = mode === "dev" ? "/#du-an" : "/roblox#du-an";
   const others = entries.filter((other) => other.project.slug !== slug && caseStudies[other.project.slug]);
 
   return (
-    <div className="site case-page" data-mode={mode}>
+    <div className="site case-page">
       <header className="changelog-header">
-        <Link prefetch={false} className="brand" href={mode === "dev" ? "/" : "/roblox"}>
+        <Link prefetch={false} className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / CASE</strong>
         </Link>
-        <Link prefetch={false} className="outline-button" href={back}><ArrowLeft aria-hidden="true" size={16} /> Về dự án</Link>
+        <Link prefetch={false} className="outline-button" href="/#du-an"><ArrowLeft aria-hidden="true" size={16} /> Về dự án</Link>
       </header>
       <main className="changelog-main case-main">
         <p className="eyebrow">{project.year} <span className="eyebrow-line" aria-hidden="true" /> {project.category.toUpperCase()}</p>
@@ -57,7 +55,7 @@ export default async function CaseStudyPage({ params }: Params) {
             ))}
           </>
         ) : (
-          <p className="case-pending">Case study cho dự án này đang được viết. Quay lại sau nhé — mọi cập nhật sẽ có trong <Link prefetch={false} href="/nhat-ky">Nhật ký</Link>.</p>
+          <p className="case-pending">Case study cho dự án này đang được viết. Khi xong sẽ có ghi trong <Link prefetch={false} href="/nhat-ky">Nhật ký</Link>.</p>
         )}
         {others.length > 0 && (
           <nav className="case-others" aria-label="Case study khác">

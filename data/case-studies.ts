@@ -13,33 +13,34 @@ export type CaseStudy = {
 export const caseStudies: Record<string, CaseStudy> = {
   "portfolio-3d": {
     intro:
-      "Một portfolio kể chuyện bằng chuyển động: nhân vật Roblox của tôi chạy theo nhịp cuộn trang, qua băng chuyền tech stack, ra khỏi studio theo con đường đất, rồi ngồi dưới gốc cây ngắm hoàng hôn ở phần liên hệ.",
+      "Nhân vật Roblox của tôi chạy theo nhịp cuộn trang. Sussy đi qua băng chuyền tech stack, ra khỏi studio, ngang qua các dự án bên đường, rồi ngồi dưới gốc cây lúc hoàng hôn ở phần liên hệ.",
     stack: ["Vinext / Next.js App Router", "React 19", "TypeScript", "Three.js", "Blender", "Vitest"],
     facts: [
-      { label: "Model nhân vật", value: "≈255 KB" },
-      { label: "Test tự động", value: "60 + e2e" },
-      { label: "Portfolio", value: "2 chế độ" },
+      { label: "Model nhân vật", value: "≈162 KB" },
+      { label: "Test tự động", value: "71 + e2e" },
+      { label: "Đoạn showcase", value: "3300 px" },
     ],
     sections: [
       {
         title: "Bài toán",
         paragraphs: [
-          "Tôi muốn portfolio có cá tính riêng nhưng vẫn đọc được như một trang bình thường: chữ phải hiện ngay, 3D chỉ là lớp kể chuyện phía sau.",
-          "Nội dung được chia thành bốn chương. Mỗi chương đóng góp 0→1 vào một giá trị “story” liên tục, nên camera, nhân vật và môi trường đều là hàm thuần của vị trí cuộn — cuộn ngược lại trông y hệt.",
+          "Tôi muốn trang có nét riêng mà vẫn đọc được như một trang bình thường. Chữ phải hiện ngay, còn 3D nằm phía sau.",
+          "Trang có bốn chương, mỗi chương cộng từ 0 đến 1 vào một giá trị “story”. Camera, nhân vật và cảnh vật đều tính từ giá trị này, nên cuộn ngược lại thì mọi thứ chạy ngược y hệt.",
         ],
       },
       {
         title: "Một sân khấu duy nhất",
         paragraphs: [
-          "Toàn trang chỉ có một WebGL renderer cố định phía sau nội dung HTML, được tải động sau khi chữ đã hiển thị. Khi đổi giữa portfolio Dev và Roblox, renderer và nhân vật được giữ nguyên; chỉ theme, tech stack và nội dung thay đổi.",
+          "Cả trang dùng một WebGL renderer nằm cố định phía sau HTML. Renderer chỉ được tải sau khi chữ đã hiện. Trước đây trang có hai portfolio Dev và Roblox dùng chung renderer này; giờ hai bản đã gộp thành một portfolio Roblox Developer.",
           "Ánh sáng dùng tone mapping AgX, môi trường PMREM và bóng tiếp xúc giả thay cho shadow map. Độ phân giải tự hạ khi FPS thấp và vòng render dừng hẳn khi tab bị ẩn.",
         ],
       },
       {
         title: "Từ studio ra hoàng hôn",
         paragraphs: [
-          "Phần tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Để hai cảnh không bị cắt ngang, phần dự án trở thành một hành trình: băng chuyền tắt, một cánh cửa sáng mở ra, ánh sáng từ khung cửa tràn kín màn hình đúng lúc Sussy bước qua (studio và đồng cỏ đổi chỗ sau lớp sáng đó), Sussy chạy ra con đường đất, ngang qua các màn hình neon chiếu demo của từng dự án, trời ngả dần sang hoàng hôn, rồi dừng lại ngồi dưới gốc cây, quay mặt về phía người xem.",
-          "Cây, bụi, cỏ và dương xỉ dựng bằng script Python trong Blender. Bóng tối bên trong tán lá và viền nắng ấm được tính sẵn vào màu đỉnh, nên trên web mỗi loại chỉ cần một vật liệu; cỏ được instance hàng nghìn lần và đung đưa bằng một shader gió nhỏ.",
+          "Tech stack diễn ra trong một studio tối, còn phần liên hệ là đồi cỏ lúc hoàng hôn. Phần dự án nối hai cảnh lại. Băng chuyền tắt, một cánh cửa sáng hiện ra, và khi Sussy bước qua thì ánh sáng trong khung cửa phủ kín màn hình. Studio đổi sang đồng cỏ ngay sau lớp sáng đó.",
+          "Ra khỏi cửa là một quãng đường trống, sau đó tới bốn màn hình lớn bên đường, mỗi cái chiếu demo của một dự án và cách nhau 26 stud. Panel bên trái trượt vào khi Sussy tới màn hình đầu tiên và đổi nội dung ở mỗi màn hình kế tiếp. Vị trí từng màn hình được đo từ trang HTML, nên màn hình nào cũng hiện đúng lúc panel nói về nó. Cuộn chậm thì Sussy đi bộ, cuộn nhanh thì chạy.",
+          "Cây, bụi, cỏ và dương xỉ được dựng bằng script Python trong Blender. Bóng trong tán lá và viền nắng được tính sẵn vào màu đỉnh, nên trên web mỗi loại chỉ cần một vật liệu. Cỏ có hai loại, bụi cao và thảm thấp, tổng cộng khoảng mười nghìn instance trên desktop, đung đưa nhờ một shader gió nhỏ.",
         ],
       },
       {
@@ -51,7 +52,7 @@ export const caseStudies: Record<string, CaseStudy> = {
       {
         title: "Giữ cho nó luôn phát triển",
         paragraphs: [
-          "Website được làm theo từng phiên bản nhỏ, mỗi bản đều ghi vào trang Nhật ký. Logic quan trọng — toán học cuộn trang, rig R6, bộ trích animation — có test tự động để có thể thay đổi mạnh tay mà không sợ vỡ.",
+          "Trang được làm theo từng phiên bản nhỏ và mỗi bản đều có ghi trong Nhật ký. Phần tính toán cuộn trang, rig R6 và bộ trích animation đều có test tự động, nên sửa lớn cũng ít sợ hỏng.",
         ],
       },
     ],
@@ -82,8 +83,8 @@ export const caseStudies: Record<string, CaseStudy> = {
       {
         title: "Blender: chỉ nâng chất lượng",
         paragraphs: [
-          "Thân và tay chân là khối R6 bo cạnh nhẹ; phụ kiện gắn vào đúng part R6 mà chúng đeo và gán vật liệu PBR — hình dạng gốc không đổi. Mesh bản 7 nén Draco không có thuộc tính NORMAL chuẩn: Roblox cất normal (và tangent) trong các thuộc tính GENERIC. Đọc đúng normal gốc đó thay vì tự dựng lại theo góc giúp khăn choàng và thắt lưng mượt như trong Studio; khăn và thắt lưng cũng chỉ render một mặt giống Roblox.",
-          "Cái đầu trứng mắt “sus” không phải là đầu: đó là một accessory gồm hai lớp vỏ — quả trứng trắng có khoét lỗ mắt, bọc ngoài là lớp vỏ đen đảo pháp tuyến (inverted hull). Nhờ backface culling, lớp đen chỉ lộ ra ở viền và qua lỗ mắt. Texture 1-bit nửa đen nửa trắng nên hai lớp được tách theo toạ độ UV.",
+          "Thân và tay chân là khối R6 bo cạnh nhẹ. Phụ kiện được gắn vào đúng part R6 mà chúng đeo, gán vật liệu PBR và giữ nguyên hình dạng gốc. Mesh bản 7 nén Draco không có thuộc tính NORMAL chuẩn: Roblox cất normal (và tangent) trong các thuộc tính GENERIC. Đọc đúng normal gốc đó thay vì tự dựng lại theo góc giúp khăn choàng và thắt lưng mượt như trong Studio; khăn và thắt lưng cũng chỉ render một mặt giống Roblox.",
+          "Cái đầu trứng mắt “sus” thật ra không phải là đầu mà là một accessory hai lớp vỏ. Bên trong là quả trứng trắng có khoét lỗ mắt, bên ngoài là lớp vỏ đen đảo pháp tuyến (inverted hull). Nhờ backface culling, lớp đen chỉ lộ ra ở viền và qua lỗ mắt. Texture 1-bit nửa đen nửa trắng nên hai lớp được tách theo toạ độ UV.",
           "Cặp kính pixel trên vành mũ không có instance trong model R6 mà đến từ accessory Face trong HumanoidDescription, nên transform của nó được lấy từ bản R15 của cùng avatar.",
         ],
       },

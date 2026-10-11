@@ -1,8 +1,9 @@
 # Sussy / 001 — Portfolio
 
-Portfolio one-page bằng Vinext (tương thích Next.js App Router), React 19, TypeScript và Three.js.
-Nhân vật Roblox **Sussy** (model R6 `R6_SussySuspector_1265476893` trong Roblox Studio) chạy theo nhịp cuộn trang:
-mở đầu → băng chuyền tech stack dưới chân → dự án → ngồi dưới gốc cây ngắm hoàng hôn ở phần liên hệ.
+Portfolio Roblox Developer một trang, làm bằng Vinext (tương thích Next.js App Router), React 19, TypeScript và
+Three.js. Nhân vật Roblox **Sussy** (model R6 `R6_SussySuspector_1265476893` trong Roblox Studio) chạy theo nhịp cuộn
+trang: mở đầu, băng chuyền tech stack, ra khỏi studio qua một quãng đường tới các TV chiếu dự án, rồi ngồi dưới gốc cây
+lúc hoàng hôn ở phần liên hệ. Link `/roblox` cũ (khi còn hai portfolio Dev và Roblox) chuyển hướng về `/`.
 
 ## Chạy local
 
@@ -31,19 +32,24 @@ khi chỉnh logic; test không cần Studio hay kết nối mạng.
 
 ## Chỉnh nội dung
 
-Mọi nội dung nằm trong `data/portfolio.ts`:
+Mọi nội dung nằm trong `data/portfolio.ts` (`portfolio.profile`), bản tiếng Anh trong `data/i18n.ts`:
 
 - `contacts`: điện thoại, Gmail, LinkedIn, Facebook, GitHub, Roblox. Để trống `value` thì UI hiện "Đang cập nhật".
 - `techStack`: mỗi mục là một model 3D trên băng chuyền (logo SVG 24×24 từ `simple-icons`, extrude bằng Three.js).
   Thêm tech mới = thêm một dòng `tech(tên, nhóm, ...)` với nhóm là `"language"`, `"framework"` hoặc `"tool"`, đặt
   vào đúng kệ của nó (danh sách phải xếp theo thứ tự Language → Framework → Tool); chiều dài chương tự giãn theo số lượng.
-- `projects`, `experience`, `about`.
+- `projects`: mỗi dự án là một TV bên đường (ảnh `image` nếu có) và một trang trong panel bên trái. Vị trí các TV
+  được đo từ các mốc `.showcase-stops` trong trang (`setShowcase` trong `lib/story.ts`), mỗi mốc cao 1100 px:
+  thêm dự án thì đoạn showcase tự dài thêm.
+- `experience`, `about`.
 
 ## Kiến trúc
 
 ```
 components/story/portfolio-story.tsx    overlay HTML theo 4 chương, scroll → story (0..4)
-components/story/portfolio-shell.tsx    shell trong layout chung, giữ canvas khi đổi Dev ↔ Roblox
+components/story/portfolio-shell.tsx    shell trong layout chung, hiện story ở trang chủ
+components/story/loading-screen.tsx     loading ở góc phải dưới: đầu Sussy lăn trên hàng stud, tối thiểu 3,5 s
+components/story/scene/milestones.ts    TV bên đường chiếu demo dự án (màn hình CRT/neon bằng shader)
 components/story/scene/story-scene.ts   renderer WebGL duy nhất, camera theo keyframe, adaptive DPR
 components/story/scene/tech-carousel.ts băng chuyền logo + hiệu ứng focus/hover
 components/story/scene/environment.ts   sky shader, sàn studio, đồi hoàng hôn, cây, cỏ, đom đóm
@@ -93,23 +99,22 @@ trong Blender. Toàn bộ sắc độ (bóng tối trong tán, viền nắng ấ
 cho mỗi loại. Cỏ, dương xỉ và bụi được instance hàng nghìn lần dọc con đường; gió là một shader nhỏ chèn qua `onBeforeCompile`.
 
 ```bash
-npm run build:nature   # Blender headless + meshopt → public/models/nature/nature.glb (≈145 KB)
+npm run build:nature   # Blender headless + meshopt → public/models/nature/nature.glb (≈220 KB)
 ```
 
 Lưu ý: meshopt lượng tử hoá vị trí đỉnh và đặt phép giải lượng tử lên node, nên `bakedGeometry()` trong
 `components/story/scene/environment.ts` đưa ma trận node vào geometry trước khi đặt lại vị trí cây hay instance cỏ.
 
-`public/brand/sussy-egg.webp` (đầu trứng không mũ, không kính, lăn tròn trên màn hình loading; nhúng vào `lib/brand.ts`, render bằng `scripts/blender/render-egg-sprite.py`), `sussy-head.webp` (đầu có mũ và kính, dùng làm favicon `app/icon.png` / `app/apple-icon.png`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-{dev,roblox}.jpg` tạo bằng `python3 scripts/og/make-og.py`.
+`public/brand/sussy-egg.webp` (đầu trứng không mũ, không kính, lăn tròn trên màn hình loading; nhúng vào `lib/brand.ts`, render bằng `scripts/blender/render-egg-sprite.py`), `sussy-head.webp` (đầu có mũ và kính, dùng làm favicon `app/icon.png` / `app/apple-icon.png`) và `sussy-poster.webp` (fallback khi không có WebGL) được render từ cùng file Blender. Thẻ chia sẻ `public/brand/og-roblox.jpg` tạo bằng `python3 scripts/og/make-og.py`.
 
 ## Hiệu năng & trợ năng
 
 - Một canvas cố định, dừng render khi tab ẩn, DPR tự hạ khi FPS < 45; chỉ tăng lại sau hai mẫu ổn định.
   Làm nóng shader trước khi hiện scene, bóng tiếp xúc giả thay cho shadow map.
-- Dev ↔ Roblox dùng chung avatar/renderer; màn che đầu Sussy và camera lùi nhẹ, giữ tiến độ chương dù stack dài khác nhau.
 - Three.js được tách chunk và tải động sau khi chữ đã hiển thị.
 - Nút "Giảm chuyển động" (nhớ theo trình duyệt) và tôn trọng `prefers-reduced-motion`: tắt nội suy/animation CSS,
   giữ tư thế idle; chỉ vẽ lại scene khi thay đổi vị trí cuộn, con trỏ hoặc kích thước.
 - Danh sách tech có bản HTML (chip) dùng được bằng bàn phím: Tab / ← →.
-- Hook `window.__sussyScene` chỉ bật trong dev với `/?debug` hoặc `/roblox?debug`.
+- Hook `window.__sussyScene` chỉ bật trong dev với `/?debug`.
 
 Chưa có kết quả FPS trên thiết bị thật hoặc Lighthouse cho pass Codex này; xem giới hạn kiểm tra trong `HANDOFF.md`.

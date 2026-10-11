@@ -74,7 +74,7 @@ beforeEach(() => {
   }
   assetPromise = Promise.resolve({ scene: asset });
   canvas = document.createElement("canvas");
-  scene = new StoryScene({ canvas, techs: portfolio.profiles.dev.techStack, theme: "dev", reducedMotion: false });
+  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack, reducedMotion: false });
 });
 
 afterEach(() => {
@@ -109,20 +109,20 @@ it("prewarms shaders, skips unchanged reduced-motion frames and invalidates on s
   expect(gpu.render).toHaveBeenCalledTimes(5);
 });
 
-it("keeps chapter hop height reversible and reuses the renderer while changing profile", async () => {
+it("keeps chapter hop height reversible when jumping back and forth", async () => {
   await scene.load();
   const rootY = () => {
     const call = gpu.render.mock.lastCall;
     if (!call) throw new Error("No rendered frame");
     return (call[0] as THREE.Scene).getObjectByName("HumanoidRootPart")!.position.y;
   };
-  scene.setProfile("roblox", portfolio.profiles.roblox.techStack, 1.71);
+  scene.seek(1.71, 0);
   tick();
   const initial = rootY();
   expect(initial).toBeGreaterThan(3);
-  scene.setProfile("roblox", portfolio.profiles.roblox.techStack, 2.72);
+  scene.seek(2.72, 0);
   tick();
-  scene.setProfile("roblox", portfolio.profiles.roblox.techStack, 1.71);
+  scene.seek(1.71, 0);
   tick();
   expect(rootY()).toBeCloseTo(initial, 10);
   expect(gpu.dispose).not.toHaveBeenCalled();
