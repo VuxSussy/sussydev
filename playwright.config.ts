@@ -10,6 +10,8 @@ export default defineConfig({
   testDir: "e2e",
   timeout: 60_000,
   fullyParallel: false,
+  // One worker: two headless Chromes rendering the WebGL scene side by side occasionally hang on shutdown.
+  workers: 1,
   reporter: [["list"]],
   use: { baseURL: external ?? "http://localhost:3100", channel: "chrome", headless: true, viewport: { width: 1440, height: 900 } },
   webServer: external ? undefined : { command: "npm run dev -- --port 3100", url: "http://localhost:3100", reuseExistingServer: true, timeout: 120_000 },
