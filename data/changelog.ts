@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "2.9",
+    date: "2026-10-11",
+    title: "Màn hình neon bên đường",
+    notes: [
+      "Mỗi trạm dừng là một màn hình kiểu cyberpunk: viền neon, scanline, nhiễu sóng và hiệu ứng bật CRT khi Sussy tới gần, chiếu khung hình demo của dự án (dự án chưa có demo hiện “DEMO // COMING SOON”).",
+      "Khăn choàng được dựng lại gọn và mềm (vòng quấn dày, vạt trước ngực, đuôi khăn rủ), hết các mảng lốm đốm.",
+      "Sửa lỗi đầu Sussy đôi khi xoay như chong chóng.",
+      "Băng chuyền tech nằm cao hơn trên màn hình; trạm cuối cách gốc cây xa hơn.",
+    ],
+  },
+  {
     version: "2.8",
     date: "2026-10-11",
     title: "Emote wave thật, đi rồi mới chạy",

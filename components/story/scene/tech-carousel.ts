@@ -8,7 +8,7 @@ const SPACING = 3.3;
 /** The lane runs in front of Sussy (towards the camera), far enough that no logo ever touches the character. */
 const LANE_Z = 6.2;
 /** Logo height above the plinth: low, so from the raised camera the logos read as "under Sussy's feet". */
-const LOGO_Y = 0.86;
+const LOGO_Y = 0.92;
 
 type Item = {
   root: THREE.Group;

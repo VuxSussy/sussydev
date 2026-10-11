@@ -126,6 +126,8 @@ export const portfolio = {
         },
         {
           slug: "portfolio-3d",
+          // Screen on the roadside stop (a frame captured from this site).
+          image: "/projects/portfolio-3d.webp",
           title: "Portfolio 3D này",
           year: "2026",
           category: "Three.js · Blender",
@@ -180,6 +182,8 @@ export const portfolio = {
       projects: [
         {
           slug: "animation-r6-len-web",
+          // Screen on the roadside stop (a frame captured from this site).
+          image: "/projects/animation-r6-len-web.webp",
           title: "Animation R6 lên web",
           year: "2026",
           category: "Luau · Animation · Tooling",
@@ -196,6 +200,8 @@ export const portfolio = {
         },
         {
           slug: "sussy",
+          // Screen on the roadside stop (a frame captured from this site).
+          image: "/projects/sussy.webp",
           title: "Sussy",
           year: "2026",
           category: "Avatar · Blender",
