@@ -115,14 +115,18 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   }, [locale]);
 
   // Sussy says a short line when a chapter starts (after the loader), then the bubble fades away.
+  const greeted = useRef(false);
   useEffect(() => {
     if (!ready || webglFailed) return;
+    // The first line waits for the loading screen to finish fading out (~0.9 s + fade).
+    const delay = greeted.current ? 350 : 1500;
     const show = window.setTimeout(() => {
+      greeted.current = true;
       setBubble({ text: chatLines[locale][mode][chapter], id: Date.now() });
       // Hello on arrival, goodbye at the sunset.
       if (chapter === 0 || chapter === CHAPTERS.length - 1) sceneRef.current?.wave();
-    }, 350);
-    const hide = window.setTimeout(() => setBubble(null), 4600);
+    }, delay);
+    const hide = window.setTimeout(() => setBubble(null), delay + 4250);
     return () => {
       window.clearTimeout(show);
       window.clearTimeout(hide);
