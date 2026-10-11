@@ -30,8 +30,8 @@ type Key = { s: number; cam: [number, number, number]; target: [number, number, 
 const KEYS: Key[] = [
   { s: 0, cam: [-2.5, 3.7, 17.5], target: [-2.5, 2.6, 0], yaw: Math.PI - 0.5 },
   { s: 0.8, cam: [-2.3, 3.5, 16.6], target: [-2.3, 2.6, 0], yaw: Math.PI - 0.42 },
-  { s: 1.12, cam: [-3.4, 8.6, 22.5], target: [-3.4, 1.7, 2.8], yaw: Math.PI / 2 },
-  { s: 1.9, cam: [-3.0, 8.3, 22], target: [-3.0, 1.7, 2.8], yaw: Math.PI / 2 },
+  { s: 1.12, cam: [-3.4, 9.4, 22.5], target: [-3.4, 1.15, 2.8], yaw: Math.PI / 2 },
+  { s: 1.9, cam: [-3.0, 9.1, 22], target: [-3.0, 1.15, 2.8], yaw: Math.PI / 2 },
   { s: 2.2, cam: [-6.4, 4.1, 23], target: [-6.4, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   { s: 3.2, cam: [-6.0, 4.2, 22], target: [-6.0, 2.8, 0], yaw: Math.PI / 2 + 0.3 },
   // Arrival: Sussy turns round under the tree and sits facing the camera, sunset behind.
@@ -617,7 +617,7 @@ export class StoryScene {
     const lane = this.carousel.group.position.z;
     this.carousel.group.position.x = (this.camera.position.x * lane) / Math.max(this.camera.position.z, 1);
     this.carousel.update(techPosition(s, this.options.techs.length), visibility, this.hovered, time);
-    this.milestones.update(s, reveal, characterPosition);
+    this.milestones.update(s, reveal, characterPosition, time);
     this.updateHover(visibility);
 
     // Studio → sunset.

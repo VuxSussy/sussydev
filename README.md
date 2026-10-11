@@ -78,6 +78,13 @@ Web đang dùng `run-v4` và `idle-v2`; tư thế ngồi được tạo trong `c
 npm run build:model
 ```
 
+### Màn hình demo ở các trạm
+
+Mỗi dự án có thể khai báo `image` (trong `data/portfolio.ts`): một khung hình 640×360 WebP trong `public/projects/`,
+được chiếu trên màn hình neon của trạm dừng (`components/story/scene/milestones.ts`). Các khung hiện có được chụp từ chính
+trang này bằng Playwright (`/?debug` + `window.__go(story)`, ẩn lớp chữ) rồi nén bằng `cwebp -q 76 -resize 640 360`.
+Dự án chưa có demo thì màn hình hiện “DEMO // COMING SOON”.
+
 ### Cây, cỏ và con đường hoàng hôn
 
 `scripts/blender/build-nature.py` dựng cây (thân thuôn, rễ, cành, tán lá là các khối cầu mềm), bụi, cụm cỏ và dương xỉ

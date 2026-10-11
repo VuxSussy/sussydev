@@ -55,7 +55,10 @@ EXTRA_PARTS = [{
 SMOOTH_ANGLE = {"Egg": 80, "Scarf": 75, "Trilby": 60, "TacBelts": 40, "Glasses": 20, "Head": 80}
 # Meshes whose original Roblox normals are used as custom split normals (the egg keeps its rebuilt normals:
 # its black shell is an inverted hull).
-ORIGINAL_NORMALS = {"Scarf", "TacBelts", "Trilby", "Glasses"}
+ORIGINAL_NORMALS = {"TacBelts", "Trilby", "Glasses"}
+# The Roblox scarf mesh is a crumpled double-layer sheet: on the web its tiny wrinkles read as blotches, and
+# smoothing collapses the two layers into each other. It is rebuilt instead (build_scarf): same silhouette as in
+# Studio — a thick wrap round the neck, a drape over the chest and a tail hanging on the character's left.
 # bmesh -> per-vertex normals (Roblox space), filled by load_mesh(..., normals=True).
 VERTEX_NORMALS = {}
 
@@ -162,6 +165,101 @@ def tube(points, radius, ring=8):
     return bm
 
 
+def sweep(path, section, steps, ring, closed=False, cap=True):
+    """Sweep a cross-section along a path. path(t) -> (point, side, up) for t in [0, 1]; section(t, a) -> (u, v)
+    offsets along side/up for ring angle a. Returns a bmesh with smooth quads (and end caps when open)."""
+    bm = bmesh.new()
+    rings = []
+    count = steps if closed else steps + 1
+    for i in range(count):
+        t = i / steps
+        point, side, up = path(t)
+        ring_verts = []
+        for k in range(ring):
+            a = 2 * math.pi * k / ring
+            u, v = section(t, a)
+            ring_verts.append(bm.verts.new(point + side * u + up * v))
+        rings.append(ring_verts)
+    pairs = list(zip(rings, rings[1:])) + ([(rings[-1], rings[0])] if closed else [])
+    for a, b in pairs:
+        for k in range(ring):
+            bm.faces.new([a[k], a[(k + 1) % ring], b[(k + 1) % ring], b[k]])
+    if cap and not closed:
+        bm.faces.new(rings[0][::-1])
+        bm.faces.new(rings[-1])
+    bm.loops.layers.uv.new("UVMap")
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return bm
+
+
+def build_scarf():
+    """Stylised rebuild of Sussy's neck scarf in Torso space (Roblox axes: y up, front is -z, character's left is -x;
+    the torso is 2 x 2 x 1, its top at y = 1)."""
+    up_axis = Vector((0, 1, 0))
+    parts = []
+
+    # 1) Thick wrap round the neck: an elliptical ring, lower at the front, with soft fabric bulges.
+    def wrap_path(t):
+        a = 2 * math.pi * t
+        point = Vector((0.8 * math.cos(a), 1.04 + 0.07 * math.sin(a), 0.62 * math.sin(a)))
+        tangent = Vector((-0.8 * math.sin(a), 0.07 * math.cos(a), 0.62 * math.cos(a))).normalized()
+        outward = tangent.cross(up_axis).normalized()
+        if outward.dot(Vector((point.x, 0, point.z))) < 0:
+            outward = -outward
+        return point, outward, outward.cross(tangent).normalized() * (1 if outward.cross(tangent).y > 0 else -1)
+
+    def wrap_section(t, a):
+        bulge = 1 + 0.13 * math.sin(6 * 2 * math.pi * t + 0.8) + 0.06 * math.sin(11 * 2 * math.pi * t)
+        return 0.36 * bulge * math.cos(a), 0.42 * bulge * math.sin(a)
+
+    parts.append(sweep(wrap_path, wrap_section, 96, 16, closed=True))
+
+    # 2) Drape over the chest: a fuller, flatter roll below the wrap, front half only, tapering at the sides.
+    def drape_path(t):
+        a = math.pi * (1.12 + 0.76 * t)  # front arc (sin a < 0)
+        point = Vector((0.9 * math.cos(a), 0.74 + 0.04 * math.cos(3 * a), 0.7 * math.sin(a) - 0.02))
+        tangent = Vector((-0.9 * math.sin(a), 0, 0.7 * math.cos(a))).normalized()
+        outward = tangent.cross(up_axis).normalized()
+        if outward.dot(Vector((point.x, 0, point.z))) < 0:
+            outward = -outward
+        return point, outward, up_axis
+
+    def drape_section(t, a):
+        taper = math.sin(math.pi * t) ** 0.6
+        fold = 1 + 0.12 * math.sin(5 * math.pi * t)
+        return 0.14 * taper * fold * math.cos(a) + 0.04, 0.26 * taper * fold * math.sin(a)
+
+    parts.append(sweep(drape_path, drape_section, 48, 14))
+
+    # 3) Tail hanging down the character's left front, a soft ribbon that sways and narrows to its hem.
+    def tail_path(t):
+        point = Vector((-0.5 - 0.16 * t + 0.05 * math.sin(3 * math.pi * t), 0.92 - 1.7 * t,
+                        -0.6 - 0.12 * math.sin(math.pi * t) - 0.04 * t))
+        ahead = Vector((-0.16 + 0.05 * 3 * math.pi * math.cos(3 * math.pi * t), -1.7,
+                        -0.12 * math.pi * math.cos(math.pi * t) - 0.04)).normalized()
+        across = Vector((1, 0, 0.15)).normalized()
+        across = (across - ahead * across.dot(ahead)).normalized()
+        return point, across, across.cross(ahead).normalized()
+
+    def tail_section(t, a):
+        width = 0.34 - 0.08 * t + 0.03 * math.sin(4 * math.pi * t)
+        thickness = 0.07 + 0.05 * (1 - t)
+        ripple = 0.035 * math.sin(3 * a) * math.sin(math.pi * t)
+        return width * math.cos(a), thickness * math.sin(a) + ripple
+
+    parts.append(sweep(tail_path, tail_section, 40, 20))
+
+    bm = bmesh.new()
+    for piece in parts:
+        mesh = bpy.data.meshes.new("scarf_piece")
+        piece.to_mesh(mesh)
+        piece.free()
+        bm.from_mesh(mesh)
+        bpy.data.meshes.remove(mesh)
+    bm.normal_update()
+    return bm
+
+
 def rounded_box(size, bevel):
     bm = bmesh.new()
     bmesh.ops.create_cube(bm, size=1.0)
@@ -263,10 +361,15 @@ def main():
                 "Trilby": mat("Trilby", rough=0.58, image="trilby.png"),
                 "Glasses": mat("Glasses", rough=0.3, image="glasses.png", coat=0.3),
                 # Single-sided like Roblox: the cloth's inner layer must not show through with flipped shading.
-                "Scarf": mat("Scarf", rough=0.66, image="scarf.png", cull=True),
+                # Soft black fabric with a gentle gloss so the folds catch light against the black shirt
+                # (a white sheen read as dust on the black cloth).
+                "Scarf": mat("Scarf", "2a2a31", rough=0.52, cull=True),
                 "TacBelts": mat("TacBelts", rough=0.45, image="tacbelts.png", cull=True),
             }[key]
-            group.add(load_mesh(key, scale, normals=key in ORIGINAL_NORMALS), look, matrix, SMOOTH_ANGLE[key])
+            if key == "Scarf":
+                group.add(build_scarf(), look, Matrix(), 180)
+            else:
+                group.add(load_mesh(key, scale, normals=key in ORIGINAL_NORMALS), look, matrix, SMOOTH_ANGLE[key])
         else:
             # Plain R6 block, softened with a small bevel so it catches light like Studio's plastic.
             group.add(rounded_box(p["size"], 0.045), body[p["color"]], matrix, 30)
