@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { SUSSY_HEAD_SRC } from "@/lib/brand";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -263,14 +264,14 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     <div className="site" data-mode={mode} data-reduced-motion={reducedMotion} aria-busy={switchingMode !== null}>
       <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
       <div className={`mode-curtain${switchingMode ? " is-active" : ""}`} aria-hidden={switchingMode === null}>
-        <Image className="loader-head" src="/brand/sussy-head.png" alt="" width={384} height={384} unoptimized />
+        <Image className="loader-head" src={SUSSY_HEAD_SRC} alt="" width={256} height={256} unoptimized />
         <output className="loader-label" aria-live="polite">{localizedProfile(switchingMode ?? mode, locale).loadingLabel}</output>
       </div>
       <a className="skip-link" href="#main">{t.skip}</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
         <canvas ref={canvasRef} />
-        {webglFailed && <Image className="stage-poster" src="/brand/sussy-poster.png" alt="" width={720} height={960} unoptimized />}
+        {webglFailed && <Image className="stage-poster" src="/brand/sussy-poster.webp" alt="" width={720} height={960} unoptimized />}
       </div>
 
       <header className="hud-header">
@@ -282,7 +283,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
         </a>
         <nav className="mode-switch" aria-label={t.chooseMode}>
           {MODES.map((item) => (
-            <Link key={item} href={modeHref(item)} scroll={false} aria-current={item === mode ? "page" : undefined} onClick={(event) => {
+            <Link prefetch={false} key={item} href={modeHref(item)} scroll={false} aria-current={item === mode ? "page" : undefined} onClick={(event) => {
               if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               event.preventDefault();
               switchMode(item);
@@ -387,7 +388,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
                   <h3>{project.title}</h3>
                   <p>{project.summary}</p>
                   {caseStudies[project.slug] ? (
-                    <p className="card-foot"><Link href={`/du-an/${project.slug}`}>{t.readCase}</Link></p>
+                    <p className="card-foot"><Link prefetch={false} href={`/du-an/${project.slug}`}>{t.readCase}</Link></p>
                   ) : (
                     project.impact && <p className="card-foot">{project.impact}</p>
                   )}
@@ -457,7 +458,7 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
       <footer className="hud-footer">
         <div className="hud-meta">
           <strong>{profile.footerMeta}</strong>
-          <span>R6 · {portfolio.character} · <Link href="/nhat-ky">v{currentVersion} · {t.changelog}</Link></span>
+          <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link></span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapter + 1.18))}>
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}

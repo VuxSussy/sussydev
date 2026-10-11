@@ -23,8 +23,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="vi" suppressHydrationWarning>
       <head>
-        <link rel="preload" href="/brand/sussy-head.png" as="image" />
-        <link rel="preload" href="/models/sussy/sussy-r6.glb" as="fetch" crossOrigin="anonymous" />
+        <link rel="preload" href="/models/sussy/sussy-r6.glb" as="fetch" crossOrigin="anonymous" fetchPriority="low" />
       </head>
       <body className={`${display.variable} ${body.variable} antialiased`}><PortfolioShell>{children}</PortfolioShell></body>
     </html>

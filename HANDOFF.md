@@ -56,6 +56,18 @@ It does not push or merge. `outputs` is already gitignored.
   Desktop **1440×900**, mobile **375×812**, real FPS and Lighthouse scores have **not** been verified in this session.
   Scene tests use a mocked GPU renderer and cannot certify visual quality or hardware performance.
 
+### Lighthouse baseline (Claude, 2026-10-11, production build via `wrangler dev`, Lighthouse 12)
+
+| Route | Perf | A11y | BP | SEO | LCP (sim / observed) | TBT |
+|---|---|---|---|---|---|---|
+| `/` desktop | 99 | 100 | 100 | 100 | 0.7 s / 90 ms | 10 ms |
+| `/` mobile | 89 | 100 | 100 | 100 | 3.0 s / 61 ms | 110 ms |
+| `/roblox` desktop | 99 | 100 | 100 | 100 | 0.7 s / 64 ms | 10 ms |
+| `/roblox` mobile | 86 | 100 | 100 | 100 | 3.5 s / 63 ms | 100 ms |
+
+axe-core reports no violations on `/`, `/roblox`, `/nhat-ky`, `/du-an/*` and the 404 page.
+The loader head is inlined (`lib/brand.ts`, regenerate from `public/brand/sussy-head.webp` if the sprite changes).
+
 ## Needs the owner (do not invent)
 
 - Real name, phone, Gmail, LinkedIn, Facebook, GitHub in `data/portfolio.ts` (Roblox profile already set).

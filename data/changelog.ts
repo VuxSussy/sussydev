@@ -8,6 +8,16 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "1.4",
+    date: "2026-10-11",
+    title: "Nhẹ hơn",
+    notes: [
+      "Ảnh đầu Sussy của màn hình chờ đổi sang WebP 5 KB và nhúng thẳng vào HTML; poster dự phòng còn 14 KB.",
+      "CSS gọn hơn, model 3D được tải với ưu tiên thấp, sửa lỗi console khi prefetch link.",
+      "Lighthouse (bản production): desktop 99, mobile 86–89; Accessibility, Best Practices và SEO đều 100.",
+    ],
+  },
+  {
     version: "1.3",
     date: "2026-10-11",
     title: "Chạng vạng",
