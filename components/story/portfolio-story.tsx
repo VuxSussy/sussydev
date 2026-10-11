@@ -211,8 +211,14 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
   // Scroll → story value → scene + overlay state.
   useEffect(() => {
     let frame = 0;
+    let lastY = window.scrollY;
     const update = () => {
       frame = 0;
+      // Scroll distance drives Sussy's pace (walk on a gentle scroll, run on a fast one); instant jumps
+      // (portfolio switch, restored position) are not scrolling.
+      const delta = window.scrollY - lastY;
+      if (Math.abs(delta) < window.innerHeight * 1.5) sceneRef.current?.addScroll(delta);
+      lastY = window.scrollY;
       const story = storyFromSections(sectionRefs.current, window.innerHeight);
       storyRef.current = story;
       sceneRef.current?.setStory(story);
@@ -296,7 +302,9 @@ export function PortfolioStory({ mode }: { mode: Mode }) {
     }
   }
 
-  const focusIndex = hoveredTech >= 0 ? hoveredTech : techIndex;
+  // Clamped: right after a portfolio switch the indices still belong to the previous (possibly longer) stack
+  // until the layout effect resets them (e.g. Dev's 12th tech at the last stop -> Roblox has 10).
+  const focusIndex = Math.min(Math.max(hoveredTech >= 0 ? hoveredTech : techIndex, 0), profile.techStack.length - 1);
   const focusTech = profile.techStack[focusIndex];
 
   // Keep the active chip centred when the chip row scrolls horizontally (mobile).

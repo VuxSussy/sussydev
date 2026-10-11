@@ -152,33 +152,35 @@ export function createSitClip(): THREE.AnimationClip {
   ]);
 }
 
-/** Duration of the wave gesture in seconds. */
-export const WAVE_DURATION = 2.4;
-/** 0..1 weight of the wave over its duration: eased raise, hold while waving, eased lower. */
-export function waveWeight(t: number) {
-  if (t < 0 || t > WAVE_DURATION) return 0;
-  const ease = (x: number) => x * x * (3 - 2 * x);
-  return ease(Math.min(t / 0.45, 1)) * (1 - ease(Math.min(Math.max((t - (WAVE_DURATION - 0.5)) / 0.5, 0), 1)));
+/**
+ * Per-joint pose sampler for a clip, used to layer an emote over whatever the mixer produced (like a Roblox
+ * AnimationTrack at Action priority): `sample(t)` evaluates every joint track of the clip at time `t`.
+ */
+export function poseSampler(clip: THREE.AnimationClip) {
+  const joints = new Map<string, { q?: THREE.Interpolant; p?: THREE.Interpolant }>();
+  for (const track of clip.tracks) {
+    const [node, property] = track.name.split(".");
+    const entry = joints.get(node) ?? {};
+    if (property === "quaternion") entry.q = new THREE.QuaternionLinearInterpolant(track.times, track.values, 4, new Float32Array(4));
+    else if (property === "position") entry.p = new THREE.LinearInterpolant(track.times, track.values, 3, new Float32Array(3));
+    joints.set(node, entry);
+  }
+  return {
+    duration: clip.duration,
+    joints,
+    /** Writes the pose of `node` at time `t` into `q` / `p`; returns false when the clip has no track for it. */
+    sample(node: string, t: number, q: THREE.Quaternion, p: THREE.Vector3) {
+      const entry = joints.get(node);
+      if (!entry) return false;
+      if (entry.q) q.fromArray(entry.q.evaluate(t) as unknown as number[]);
+      if (entry.p) p.fromArray(entry.p.evaluate(t) as unknown as number[]);
+      return true;
+    },
+  };
 }
 
-/**
- * The waving shoulder for time `t`, blended from the shoulder's current (clip) rotation.
- * Instead of slerping (which sweeps an arm held forward across the face), the clip's forward swing is faded out
- * while the arm rises sideways, so the hand always travels outside the body. Three side-to-side waves at the top.
- * @param side 1 = right arm, -1 = left arm (forward swing is +Z on the right shoulder, -Z on the left)
- * @param lift how far the arm rises (radians from hanging): ~2.35 is the Roblox wave emote (arm up, ~45° out, clear of a wide hat brim)
- * @param reach how far the raised arm comes forward of the body plane (negative = behind the face)
- */
-export function waveShoulder(t: number, current: THREE.Quaternion, side: 1 | -1, out = new THREE.Quaternion(), lift = 2.35, reach = 0.22) {
-  const w = waveWeight(t);
-  // Split the current pose into its forward swing (about the joint's Z axis) and whatever is left (residual),
-  // so that at w = 0 the result is exactly the clip pose (no pop when the wave starts or ends).
-  const forward = 2 * Math.atan2(current.z, current.w);
-  const residual = tmpB.setFromAxisAngle(AXIS_Z, -forward).multiply(current);
-  const waving = Math.min(Math.max((t - 0.35) / (WAVE_DURATION - 0.85), 0), 1);
-  const swing = Math.sin(waving * Math.PI * 6) * 0.26 * Math.sin(Math.PI * waving);
-  // Raised outside the body; `reach` tips it in front of (or behind) the body plane.
-  limb(forward * (1 - w) + side * reach * w, (lift + swing) * w, out);
-  return out.multiply(IDENTITY.clone().slerp(residual, 1 - w));
+/** Fade weight of a one-shot emote: Roblox-style 0.15 s fade in and out around its duration. */
+export function emoteWeight(t: number, duration: number, fade = 0.15) {
+  if (t < 0 || t > duration) return 0;
+  return Math.min(1, t / fade, (duration - t) / fade);
 }
-const IDENTITY = new THREE.Quaternion();

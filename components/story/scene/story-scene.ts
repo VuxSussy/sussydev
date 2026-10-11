@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type TechStack } from "@/data/portfolio";
-import { buildR6Rig, clipFromJson, createSitClip, WAVE_DURATION, waveShoulder, waveWeight, type ClipJson, type Motor } from "@/lib/rbx/rig";
+import { buildR6Rig, clipFromJson, createSitClip, emoteWeight, jointNode, poseSampler, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { arriveMix, chapterJumpTime, damp, journeyMix, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
 import { createBlobShadow, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START, SIT_SPOT, type SceneTheme } from "./environment";
 import { Footsteps } from "./footsteps";
@@ -45,8 +45,16 @@ export function characterPosition(story: number) {
   return [ROAD_START.x + (SIT_SPOT.x - ROAD_START.x) * t, ROAD_START.y + (SIT_SPOT.y - ROAD_START.y) * t] as const;
 }
 
-/** Neck joint Y axis: positive rolls the head towards the character's left. */
-const NECK_ROLL = new THREE.Vector3(0, 1, 0);
+/** Scroll speed (CSS px/s) at which Sussy reaches a full run; slower scrolling walks. */
+const RUN_SCROLL_SPEED = 900;
+/** Ground speeds (studs/s) the walk and run cycles are authored for. */
+const WALK_SPEED = 6;
+/** Neck look-at limits (radians) and how much of a larger turn the body takes when standing still. */
+const LOOK_YAW = 1.05;
+const LOOK_PITCH = 0.45;
+const BODY_TURN = 0.45;
+const AXIS_X = new THREE.Vector3(1, 0, 0);
+const AXIS_Z = new THREE.Vector3(0, 0, 1);
 /** Story value until which Sussy keeps running even without scrolling (the opening shot). */
 const INTRO_RUN_END = 0.55;
 const ROOT_STANDING = 3;
@@ -94,7 +102,10 @@ export class StoryScene {
   private camera = new THREE.PerspectiveCamera(32, 1, 0.1, 600);
   private timer = new THREE.Timer();
   private mixer?: THREE.AnimationMixer;
-  private actions: Record<"run" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
+  private actions: Record<"run" | "walk" | "idle" | "sit" | "jump" | "land", THREE.AnimationAction> | null = null;
+  /** The Roblox R6 wave emote (rbxassetid://128777973), sampled and layered over the mixer like an Action track. */
+  private waveEmote: ReturnType<typeof poseSampler> | null = null;
+  private jointsByNode = new Map<string, THREE.Object3D>();
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
   /** Roblox-mode set dressing, faded in/out with the active theme. */
@@ -109,21 +120,27 @@ export class StoryScene {
   /** 0..1 dusk that slowly falls while Sussy sits at the sunset, and lifts quickly when scrolling away. */
   private dusk = 0;
   private headFrame: THREE.Object3D | null = null;
-  private shoulders: { right: THREE.Object3D; left: THREE.Object3D } | null = null;
   private neckJoint: THREE.Object3D | null = null;
-  /** Which arm waves: the one nearer the camera (left while running in the hero, right when seated). */
-  private waveSide: 1 | -1 = -1;
-  /** Seconds into the wave gesture (-1 = not waving). */
+  /** Seated waves only move the right arm, so the sitting pose stays (standing waves play the whole emote). */
+  private waveSeated = false;
+  /** Seconds into the wave emote (-1 = not waving). */
   private waveTime = -1;
-  private waveQuat = new THREE.Quaternion();
-  private waveTilt = new THREE.Quaternion();
+  private poseQ = new THREE.Quaternion();
+  private poseP = new THREE.Vector3();
   /** Seconds left for a queued wave to start (0 = none queued); dropped if the user has scrolled elsewhere. */
   private waveQueue = 0;
   /** False after a scroll until the mouse moves again (hover only counts when the user points). */
   private pointerFresh = false;
-  /** Seconds since the last scroll still counted as "scrolling", and the damped run (1) / idle (0) blend. */
-  private scrollPulse = 0;
-  private activity = 1;
+  /** Scroll distance (px) since the last frame and its smoothed rate, which drive the walk -> run speed. */
+  private scrollAccum = 0;
+  private scrollSpeed = 0;
+  /** 0 = idle, ~0.3 = walking, 1 = full run (eased: Sussy accelerates and slows down). */
+  private speed = 1;
+  /** Head look-at (radians, damped) towards the focused tech or the nearest roadside stop. */
+  private look = new THREE.Vector2();
+  private lookTarget = new THREE.Vector3();
+  private lookDir = new THREE.Vector3();
+  private lookQ = new THREE.Quaternion();
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
@@ -212,14 +229,14 @@ export class StoryScene {
   /** Load the character + animation clips, then start rendering. */
   async load() {
     let done = 0;
-    const total = 6;
+    const total = 8;
     const tick = () => { if (!this.disposed) this.options.onProgress?.(++done / total); };
     const fetchJson = <T,>(url: string) => fetch(url, { signal: this.loadAbort.signal }).then((r) => { if (!r.ok) throw new Error(url); return r.json() as Promise<T>; }).then((j) => { tick(); return j; });
     // Vegetation (Blender-made tree, bushes, grass, ferns) streams in alongside; the scene works without it.
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/nature/nature.glb")
       .then((nature) => { if (!this.disposed) this.sunset.addVegetation(nature.scene); })
       .catch(() => {});
-    const [gltf, index, run, idle, jump, land] = await Promise.all([
+    const [gltf, index, run, idle, jump, land, walk, wave] = await Promise.all([
       new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/sussy/sussy-r6.glb").then((g) => {
         if (this.disposed) disposeObjects(g.scene);
         else { this.pendingModel = g.scene; tick(); }
@@ -230,6 +247,8 @@ export class StoryScene {
       fetchJson<ClipJson>("/anims/idle-v2.json"),
       fetchJson<ClipJson>("/anims/jump.json"),
       fetchJson<ClipJson>("/anims/normal-land.json"),
+      fetchJson<ClipJson>("/anims/walk-v3.json"),
+      fetchJson<ClipJson>("/anims/wave.json"),
     ]);
     if (this.disposed) return;
     gltf.scene.traverse((o) => {
@@ -256,10 +275,11 @@ export class StoryScene {
       return a;
     };
     this.actions = {
-      run: action(clipFromJson(run)), idle: action(clipFromJson(idle)), sit: action(createSitClip()),
+      run: action(clipFromJson(run)), walk: action(clipFromJson(walk)), idle: action(clipFromJson(idle)), sit: action(createSitClip()),
       jump: oneShot(clipFromJson(jump)), land: oneShot(clipFromJson(land)),
     };
-    this.shoulders = { right: rig.joints["Right Arm"], left: rig.joints["Left Arm"] };
+    this.waveEmote = poseSampler(clipFromJson(wave));
+    for (const [part, joint] of Object.entries(rig.joints)) this.jointsByNode.set(jointNode(part), joint);
     this.neckJoint = rig.joints.Head;
     this.story = this.storyTarget;
     await this.renderer.compileAsync(this.scene, this.camera);
@@ -270,7 +290,6 @@ export class StoryScene {
   setStory(story: number) {
     if (story !== this.storyTarget) {
       this.needsRender = true;
-      this.scrollPulse = 0.28;
       // Scrolling moves the conveyor under a resting mouse: that is not the user pointing at a tech.
       this.pointerFresh = false;
     }
@@ -401,7 +420,7 @@ export class StoryScene {
 
   /** Sussy waves with the arm nearer the camera (layered over running or sitting). */
   wave() {
-    if (this.reducedMotion || !this.shoulders) return;
+    if (this.reducedMotion || !this.waveEmote) return;
     // Queued: it starts once the scene has caught up with the scroll (after a long jump the camera is still
     // travelling), and the goodbye only once Sussy has actually sat down.
     this.waveQueue = 3;
@@ -415,8 +434,7 @@ export class StoryScene {
     const ready = seated ? sitMix(this.story) > 0.92 : Math.abs(this.story - this.storyTarget) < 0.12;
     if (!ready) return;
     this.waveQueue = 0;
-    // Seated at sunset the body is turned towards the sun, so the right arm faces the viewer; otherwise the left.
-    this.waveSide = seated ? 1 : -1;
+    this.waveSeated = seated;
     this.waveTime = 0;
   }
 
@@ -524,45 +542,48 @@ export class StoryScene {
     const reveal = worldReveal(s);
     const exit = studioExit(s);
     this.character.children[0].position.y = rootY;
-    // Sussy runs while the page is being scrolled and settles into idle when it stops — except in the opening
-    // shot, where the run is the introduction.
-    this.scrollPulse = Math.max(0, this.scrollPulse - dt);
-    const scrolling = this.scrollPulse > 0 || Math.abs(this.storyTarget - this.story) > 0.004;
-    // The hello wave is a stop: Sussy stands, turns to the viewer and waves (Roblox emote style), then runs on.
-    const greeting = this.waveTime >= 0 && this.waveSide === -1 ? waveWeight(this.waveTime) : 0;
-    const running = reduced || greeting > 0 ? 0 : s < INTRO_RUN_END || scrolling ? 1 : 0;
-    this.activity = damp(this.activity, running, running ? 6 : greeting > 0 ? 7 : 2.5, dt);
+    // Locomotion speed follows how fast the page is scrolled (and how fast Sussy actually travels on the road):
+    // a gentle scroll walks, a quick one runs, and the change is eased like acceleration. When the page rests
+    // Sussy slows to idle — except in the opening shot, where the run is the introduction.
+    this.scrollSpeed = damp(this.scrollSpeed, this.scrollAccum / Math.max(dt, 1 / 240), 5, dt);
+    this.scrollAccum = 0;
+    const ground = Math.abs(key.pos[0] - this.lastX) / Math.max(dt, 1 / 240);
+    // The hello wave is a stop: Sussy stands, turns to the viewer and waves, then runs on.
+    const greeting = this.waveTime >= 0 && !this.waveSeated && this.waveEmote ? emoteWeight(this.waveTime, this.waveEmote.duration, 0.3) : 0;
+    let targetSpeed = Math.min(1, Math.max(this.scrollSpeed / RUN_SCROLL_SPEED, ground / (RUN_SPEED * 1.1)));
+    if (s < INTRO_RUN_END) targetSpeed = 1;
+    if (reduced || greeting > 0) targetSpeed = 0;
+    this.speed = damp(this.speed, targetSpeed, targetSpeed > this.speed ? 2.4 : greeting > 0 ? 6 : 3.2, dt);
+    const runMix = smoothstep(0.42, 0.82, this.speed);
+    const walkMix = smoothstep(0.02, 0.2, this.speed) * (1 - runMix);
     this.character.rotation.y = key.yaw + (Math.PI - key.yaw) * 0.55 * greeting;
     const upright = (1 - sit) * (1 - jumpW - landW);
-    const moving = upright * this.activity;
+    const moving = upright * runMix;
+    const walking = upright * walkMix;
     this.actions.jump.setEffectiveWeight(jumpW);
     this.actions.land.setEffectiveWeight(landW);
     this.actions.run.setEffectiveWeight(reduced ? 0 : moving);
-    this.actions.idle.setEffectiveWeight(reduced ? upright : upright - moving);
+    this.actions.walk.setEffectiveWeight(reduced ? 0 : walking);
+    this.actions.idle.setEffectiveWeight(reduced ? upright : upright - moving - walking);
     this.actions.sit.setEffectiveWeight(sit);
-    this.actions.run.timeScale = 1 - 0.3 * smoothstep(3.15, 3.42, s);
+    // Cadence rises with speed so the feet keep up with the ground.
+    this.actions.walk.timeScale = 0.75 + 0.9 * Math.min(1, this.speed / 0.42);
+    this.actions.run.timeScale = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
     if (reduced) this.mixer.setTime(0);
     else this.mixer.update(dt);
     if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
     if (!reduced) this.startQueuedWave(dt);
-    if (this.waveTime >= 0 && this.shoulders && this.neckJoint) {
+    if (this.waveTime >= 0 && this.waveEmote) {
       this.waveTime = reduced ? -1 : this.waveTime + dt;
-      if (this.waveTime >= 0) {
-        // Layered over whatever the clip does: the arm rises sideways and waves; the head leans away from it.
-        const joint = this.waveSide === 1 ? this.shoulders.right : this.shoulders.left;
-        // Standing: the Roblox wave emote (arm up, a little out and forward); seated, with the body turned, a lower
-        // wave held slightly behind the face keeps the face clear.
-        const seated = this.waveSide === 1;
-        joint.quaternion.copy(waveShoulder(this.waveTime, joint.quaternion, this.waveSide, this.waveQuat, 2.35, seated ? -0.12 : 0.22));
-        this.neckJoint.quaternion.multiply(this.waveTilt.setFromAxisAngle(NECK_ROLL, this.waveSide * 0.1 * waveWeight(this.waveTime)));
-      }
-      if (this.waveTime > WAVE_DURATION) this.waveTime = -1;
+      if (this.waveTime >= 0) this.applyWave(this.waveTime);
+      if (this.waveTime > this.waveEmote.duration) this.waveTime = -1;
     }
+    if (!reduced) this.applyLook(s, sit, greeting, dt);
 
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
     if (!reduced) {
-      const speed = RUN_SPEED * moving * (1 - reveal) * dt;
+      const speed = (RUN_SPEED * moving * this.actions.run.timeScale + WALK_SPEED * walking * this.actions.walk.timeScale) * (1 - reveal) * dt;
       // Studs: treadmill distance in the studio, real distance along the road afterwards.
       this.studsRun += speed + Math.abs(key.pos[0] - this.lastX);
       this.treadmill.x -= Math.sin(key.yaw) * speed;
@@ -621,6 +642,70 @@ export class StoryScene {
   };
 
   /** Right foot lands near t=0.00s and left near t=0.31s of the 0.63s `run v4` cycle. */
+  /**
+   * Layer the wave emote over the mixer result with Roblox's fade in/out. Standing, it drives every joint it
+   * animates (like an Action-priority track); seated, only the right arm so Sussy stays sitting.
+   */
+  private applyWave(t: number) {
+    const emote = this.waveEmote!;
+    const weight = emoteWeight(t, emote.duration);
+    const arm = jointNode("Right Arm");
+    for (const node of emote.joints.keys()) {
+      if (this.waveSeated && node !== arm) continue;
+      const joint = this.jointsByNode.get(node);
+      if (!joint || !emote.sample(node, t, this.poseQ, this.poseP)) continue;
+      joint.quaternion.slerp(this.poseQ, weight);
+      joint.position.lerp(this.poseP, weight);
+    }
+  }
+
+  /**
+   * Sussy looks at what the page is showing: the focused tech on the conveyor, or the roadside stop being passed.
+   * The neck turns first (Neck joint: Z = yaw towards the character's left, X = pitch, negative looks up); when
+   * standing still a bigger turn is shared with the body.
+   */
+  private applyLook(s: number, sit: number, greeting: number, dt: number) {
+    let weight = 0;
+    const tech = techVisibility(s);
+    if (tech > 0.4 && this.carousel.focusPoint(this.lookTarget)) weight = tech;
+    else {
+      const near = this.milestones.nearestBoard(this.character.position.x, this.lookTarget);
+      weight = (1 - smoothstep(4, 11, near)) * worldReveal(s);
+    }
+    weight *= (1 - sit) * (1 - greeting);
+    let yaw = 0;
+    let pitch = 0;
+    if (weight > 0.001 && this.headFrame) {
+      this.headFrame.getWorldPosition(this.lookDir);
+      this.lookDir.subVectors(this.lookTarget, this.lookDir);
+      // Into the character's frame (it only rotates about Y); the character faces local -Z.
+      this.lookDir.applyAxisAngle(THREE.Object3D.DEFAULT_UP, -this.character.rotation.y);
+      const turn = Math.atan2(-this.lookDir.x, -this.lookDir.z);
+      // Only things ahead or beside: a stop already passed (behind) is let go rather than turning the back on the viewer.
+      weight *= 1 - smoothstep(1.55, 2.1, Math.abs(turn));
+      yaw = turn * weight;
+      pitch = Math.atan2(this.lookDir.y, Math.hypot(this.lookDir.x, this.lookDir.z)) * weight;
+    }
+    this.look.x = damp(this.look.x, yaw, 4, dt);
+    this.look.y = damp(this.look.y, pitch, 4, dt);
+    // While walking or idle the body helps with turns beyond the neck's range; while running it keeps its line.
+    const still = 1 - smoothstep(0.2, 0.6, this.speed);
+    const neckYaw = THREE.MathUtils.clamp(this.look.x, -LOOK_YAW, LOOK_YAW);
+    const bodyYaw = THREE.MathUtils.clamp(this.look.x - neckYaw, -BODY_TURN, BODY_TURN) * still;
+    this.character.rotation.y += bodyYaw;
+    if (this.neckJoint) {
+      const headYaw = THREE.MathUtils.clamp(this.look.x - bodyYaw, -LOOK_YAW, LOOK_YAW);
+      this.neckJoint.quaternion
+        .multiply(this.lookQ.setFromAxisAngle(AXIS_Z, headYaw))
+        .multiply(this.lookQ.setFromAxisAngle(AXIS_X, -THREE.MathUtils.clamp(this.look.y, -LOOK_PITCH, LOOK_PITCH)));
+    }
+  }
+
+  /** Scroll distance (CSS px) since the last call; its rate sets Sussy's walk/run speed. */
+  addScroll(pixels: number) {
+    this.scrollAccum += Math.abs(pixels);
+  }
+
   private playFootsteps(moving: number, surface: number, hopTime: number) {
     const run = this.actions!.run;
     const duration = run.getClip().duration;

@@ -159,7 +159,7 @@ it("keeps initial DPR through shader warmup and waits for sustained recovery bef
 
 it("holds the goodbye wave until Sussy has sat down, then waves with the arm facing the viewer", async () => {
   await scene.load();
-  const state = scene as unknown as { waveTime: number; waveSide: number; story: number };
+  const state = scene as unknown as { waveTime: number; waveSeated: boolean; story: number };
   tick();
   scene.setStory(3.75); // a long jump: the scene's own story value is still near the start
   scene.wave();
@@ -171,7 +171,7 @@ it("holds the goodbye wave until Sussy has sat down, then waves with the arm fac
     if (state.waveTime >= 0) started = state.story;
   }
   expect(started).toBeGreaterThan(3.55); // seated (sitMix > 0.92)
-  expect(state.waveSide).toBe(1);
+  expect(state.waveSeated).toBe(true); // seated: only the right arm waves, Sussy stays sitting
 });
 
 it("ignores touch moves for hover and forgets a tapped point, and a scroll makes a resting mouse stale", async () => {
@@ -189,26 +189,46 @@ it("ignores touch moves for hover and forgets a tapped point, and a scroll makes
   expect(state.pointerFresh).toBe(false);
 });
 
-it("runs while scrolling (and in the opening shot) but idles when the page rests", async () => {
+it("walks on a gentle scroll, accelerates into a run on a fast one and idles when the page rests", async () => {
   await scene.load();
-  const state = scene as unknown as { actions: Record<"run" | "idle", THREE.AnimationAction>; waveTime: number };
-  const settle = (frames: number) => { for (let i = 0; i < frames; i++) tick(); };
+  const state = scene as unknown as { actions: Record<"run" | "walk" | "idle", THREE.AnimationAction>; waveTime: number };
+  const weight = (name: "run" | "walk" | "idle") => state.actions[name].getEffectiveWeight();
+  // Scroll `pxPerFrame` every frame (60 fps) for `frames` frames.
+  const scroll = (pxPerFrame: number, frames: number) => { for (let i = 0; i < frames; i++) { scene.addScroll(pxPerFrame); tick(); } };
   scene.setStory(0.2);
-  settle(90);
-  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.95); // opening shot keeps running
+  scroll(0, 90);
+  expect(weight("run")).toBeGreaterThan(0.95); // the opening shot keeps running
   scene.setStory(1.5);
-  settle(10);
-  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.5); // still catching up with the scroll
-  settle(240);
-  expect(state.actions.run.getEffectiveWeight()).toBeLessThan(0.05);
-  expect(state.actions.idle.getEffectiveWeight()).toBeGreaterThan(0.95);
-  // The hello wave stops the opening run: Sussy stands to wave, then runs on.
+  scroll(0, 300);
+  expect(weight("idle")).toBeGreaterThan(0.95); // resting page: idle
+  scroll(3, 120); // ~180 px/s: a gentle scroll
+  expect(weight("walk")).toBeGreaterThan(0.8);
+  expect(weight("run")).toBeLessThan(0.05);
+  scroll(20, 4); // a burst of fast scrolling...
+  expect(weight("run")).toBeLessThan(0.5); // ...does not snap straight into a sprint
+  scroll(20, 90); // ~1200 px/s sustained
+  expect(weight("run")).toBeGreaterThan(0.9);
+  scroll(0, 240);
+  expect(weight("idle")).toBeGreaterThan(0.95);
+  // The hello wave is a stop: Sussy stands to wave, then runs on.
   scene.setStory(0.2);
-  settle(120);
+  scroll(0, 120);
   scene.wave();
-  settle(50);
+  scroll(0, 40);
   expect(state.waveTime).toBeGreaterThan(0);
-  expect(state.actions.run.getEffectiveWeight()).toBeLessThan(0.1);
-  settle(200);
-  expect(state.actions.run.getEffectiveWeight()).toBeGreaterThan(0.9);
+  expect(weight("run")).toBeLessThan(0.1);
+  scroll(0, 200);
+  expect(weight("run")).toBeGreaterThan(0.9);
+});
+
+it("turns the head towards the focused tech while standing on the conveyor", async () => {
+  await scene.load();
+  const state = scene as unknown as { look: THREE.Vector2 };
+  scene.setStory(1.5);
+  for (let i = 0; i < 240; i++) tick();
+  // The conveyor runs in front of Sussy (towards the camera), i.e. to the side of the running direction.
+  expect(Math.abs(state.look.x)).toBeGreaterThan(0.5);
+  scene.setStory(3.9); // seated: no look-at, the sit clip owns the head
+  for (let i = 0; i < 240; i++) tick();
+  expect(Math.abs(state.look.x)).toBeLessThan(0.05);
 });

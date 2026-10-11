@@ -77,13 +77,29 @@ it("plants one static milestone per project along the road once the outdoor worl
   milestones.dispose();
 });
 
-it("raises the wave quickly, holds it and lowers it back to zero", async () => {
-  const { waveWeight, WAVE_DURATION } = await import("../lib/rbx/rig");
-  expect(waveWeight(-0.1)).toBe(0);
-  expect(waveWeight(0)).toBe(0);
-  expect(waveWeight(1)).toBeCloseTo(1);
-  expect(waveWeight(WAVE_DURATION)).toBeCloseTo(0);
-  expect(waveWeight(WAVE_DURATION + 0.1)).toBe(0);
+it("fades a one-shot emote in and out like a Roblox animation track", async () => {
+  const { emoteWeight } = await import("../lib/rbx/rig");
+  expect(emoteWeight(-0.1, 1.5)).toBe(0);
+  expect(emoteWeight(0, 1.5)).toBe(0);
+  expect(emoteWeight(0.075, 1.5)).toBeCloseTo(0.5);
+  expect(emoteWeight(0.75, 1.5)).toBe(1);
+  expect(emoteWeight(1.5, 1.5)).toBeCloseTo(0);
+  expect(emoteWeight(1.6, 1.5)).toBe(0);
+});
+
+it("finds the roadside board nearest to Sussy", async () => {
+  const { Milestones } = await import("../components/story/scene/milestones");
+  const { portfolio } = await import("../data/portfolio");
+  const milestones = new Milestones(portfolio.profiles.dev.projects, "#fff");
+  const out = new THREE.Vector3();
+  const path = (story: number) => [-(story - 2) * 40, 0] as const;
+  milestones.update(1, 0, path);
+  expect(milestones.nearestBoard(0, out)).toBe(Infinity); // hidden before the outdoor world rises
+  milestones.update(2.6, 1, path);
+  const near = milestones.nearestBoard(path(2.5)[0], out);
+  expect(near).toBeLessThan(3);
+  expect(out.y).toBeGreaterThan(3);
+  milestones.dispose();
 });
 
 it("bakes a meshopt-quantised node transform into float geometry", () => {
