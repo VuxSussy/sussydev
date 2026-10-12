@@ -5,7 +5,7 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { portfolio, type Project, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, emoteWeight, jointNode, poseSampler, type ClipJson, type Motor } from "@/lib/rbx/rig";
 import { arriveMix, chapterJumpTime, damp, DOOR_STORY, doorFlood, journeyX, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
-import { createBlobShadow, createDoorFlood, createRobloxProps, createSky, createStudioDoor, createStudioFloor, createSunsetWorld, ROAD_START } from "./environment";
+import { createBlobShadow, createDoorFlood, createSky, createStudioDoor, createStudioFloor, createStudioProps, createSunsetWorld, ROAD_START } from "./environment";
 import { Footsteps } from "./footsteps";
 import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
@@ -18,6 +18,10 @@ export type StorySceneOptions = {
   onProgress?: (fraction: number) => void;
   onTechHover?: (index: number) => void;
   onTechSelect?: (index: number) => void;
+  /** The GPU dropped the WebGL context (mobile GPU reset, driver crash); rendering is paused until it returns. */
+  onContextLost?: () => void;
+  /** The context came back and the scene is drawing again. */
+  onContextRestored?: () => void;
 };
 
 type Key = { s: number; cam: [number, number, number]; target: [number, number, number]; yaw: number };
@@ -118,7 +122,7 @@ export class StoryScene {
   /** Seconds since Sussy was clicked (-1 = idle). Chapter hops are derived from story progress instead. */
   private clickHopTime = -1;
   /** Roblox set dressing in the studio (fades with it). */
-  private robloxProps = createRobloxProps();
+  private props = createStudioProps();
   private door = createStudioDoor();
   private flood = createDoorFlood();
   private floodCenter = new THREE.Vector3();
@@ -205,13 +209,8 @@ export class StoryScene {
     this.quality.tier = coarse ? 2 : 0;
     this.applyPixelRatio();
 
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    const room = new RoomEnvironment();
-    this.environmentTarget = pmrem.fromScene(room, 0.04);
-    this.scene.environment = this.environmentTarget.texture;
+    this.environmentTarget = this.buildEnvironment();
     this.scene.environmentIntensity = 0.45;
-    pmrem.dispose();
-    room.dispose();
     this.scene.fog = this.fog;
 
     this.keyLight.position.set(4, 7, 6);
@@ -219,7 +218,7 @@ export class StoryScene {
     this.sky.material.depthTest = false;
     this.sunset = createSunsetWorld({ grassCount: coarse ? 2200 : 5000, carpetCount: coarse ? 3200 : 8000 });
     this.carousel = new TechCarousel(options.techs, ACCENT);
-    this.scene.add(this.robloxProps.group, this.door.group, this.flood.mesh, this.fillLight, this.fillLight.target);
+    this.scene.add(this.props.group, this.door.group, this.flood.mesh, this.fillLight, this.fillLight.target);
     this.milestones = new Milestones(portfolio.profile.projects);
     this.scene.add(this.milestones.group);
     this.scene.add(this.sky.mesh, this.floor.mesh, this.shadow.mesh, this.sunset.group, this.carousel.group, this.character, this.hemi, this.keyLight, this.rimLight, this.keyLight.target);
@@ -231,8 +230,35 @@ export class StoryScene {
     canvas.addEventListener("pointermove", this.onPointerMove);
     canvas.addEventListener("pointerleave", this.onPointerLeave);
     canvas.addEventListener("click", this.onClick);
+    canvas.addEventListener("webglcontextlost", this.onContextLost);
+    canvas.addEventListener("webglcontextrestored", this.onContextRestored);
     this.timer.connect(document);
   }
+
+  /** Studio reflections: a PMREM of three's RoomEnvironment (rebuilt after a lost context, as GPU targets are gone). */
+  private buildEnvironment() {
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    const room = new RoomEnvironment();
+    const target = pmrem.fromScene(room, 0.04);
+    this.scene.environment = target.texture;
+    pmrem.dispose();
+    room.dispose();
+    return target;
+  }
+
+  // three.js already calls preventDefault on the lost event (so the browser may restore the context) and
+  // re-uploads buffers and textures afterwards; render-target contents are the one thing to rebuild.
+  private onContextLost = () => {
+    this.options.onContextLost?.();
+  };
+
+  private onContextRestored = () => {
+    if (this.disposed) return;
+    this.environmentTarget.dispose();
+    this.environmentTarget = this.buildEnvironment();
+    this.needsRender = true;
+    this.options.onContextRestored?.();
+  };
 
   /** Load the character + animation clips, then start rendering. */
   async load() {
@@ -243,6 +269,16 @@ export class StoryScene {
     // Vegetation (Blender-made tree, bushes, grass, ferns) streams in alongside; the scene works without it.
     new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/nature/nature.glb")
       .then((nature) => { if (!this.disposed) this.sunset.addVegetation(nature.scene); })
+      .catch(() => {});
+    // The studio's floating toolbox (hammers, tools, studded bricks) rises in when it arrives; optional too.
+    new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/props/props.glb")
+      .then((props) => {
+        // Nothing of a late load has reached the GPU yet, so there is nothing to free after unmount. The clones
+        // share the source geometry, which the scene's own dispose releases.
+        if (this.disposed) return;
+        this.props.addModels(props.scene, this.reducedMotion ? -Infinity : this.timer.getElapsed());
+        this.needsRender = true;
+      })
       .catch(() => {});
     const [gltf, index, run, idle, jump, land, walk, wave] = await Promise.all([
       new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).loadAsync("/models/sussy/sussy-r6.glb").then((g) => {
@@ -619,7 +655,7 @@ export class StoryScene {
     const rise = 1 - Math.pow(1 - reveal, 3);
     this.sunset.group.position.y = -9 * (1 - rise);
     this.sunset.update(time, reveal, this.renderer.getPixelRatio(), sunset);
-    this.robloxProps.update(time, 1 - exit);
+    this.props.update(time, 1 - exit, this.camera.aspect < 0.8);
     this.fog.color.copy(this.studioFog).lerp(COLORS.fog, sunset);
     this.fog.near = 30 - 10 * sunset;
     this.fog.far = 160 + 80 * sunset;
@@ -743,6 +779,8 @@ export class StoryScene {
     canvas.removeEventListener("pointermove", this.onPointerMove);
     canvas.removeEventListener("pointerleave", this.onPointerLeave);
     canvas.removeEventListener("click", this.onClick);
+    canvas.removeEventListener("webglcontextlost", this.onContextLost);
+    canvas.removeEventListener("webglcontextrestored", this.onContextRestored);
     this.timer.dispose();
     this.mixer?.stopAllAction();
     if (this.character.children[0]) this.mixer?.uncacheRoot(this.character.children[0]);

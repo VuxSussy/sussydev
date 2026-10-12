@@ -1,14 +1,22 @@
 import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { SVGLoader } from "three/examples/jsm/loaders/SVGLoader.js";
 import type { TechGroup, TechStack } from "@/data/portfolio";
+import { TECH_LOGOS } from "@/data/tech-logos";
 import { smoothstep } from "@/lib/story";
+import { buildLogo, fallbackSpec, LOGO_SIZE } from "./tech-logo";
 
 const SPACING = 3.3;
 /** The lane runs in front of Sussy (towards the camera), far enough that no logo ever touches the character. */
 const LANE_Z = 6.2;
-/** Logo height above the plinth: low, so from the raised camera the logos read as "under Sussy's feet". */
-const LOGO_Y = 0.92;
+/** Top face of the plinth. */
+export const PLINTH_TOP = 0.24;
+/** Largest focus scale of a logo (see update()). */
+const FOCUS_SCALE = 1.12;
+/**
+ * Logo centre height: the lowest point of a focused (scaled-up) logo still clears the plinth by 0.16 studs,
+ * so no mark ever sinks into the grey base. Kept low otherwise, so the logos read as "under Sussy's feet".
+ */
+export const LOGO_Y = PLINTH_TOP + 0.16 + (LOGO_SIZE / 2) * FOCUS_SCALE;
 /** Extra space (in slots) between the Language, Framework and Tool shelves. */
 const GROUP_GAP = 0.75;
 /** Shelf colours, shared with the chips (app/globals.css `.tech-group`). */
@@ -57,30 +65,6 @@ type Item = {
   slot: number;
 };
 
-/** Extruded simple-icons logo, centred, ~1.8 studs wide, facing +Z. */
-function logoGeometry(path: string) {
-  const svg = new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="${path}"/></svg>`);
-  const shapes = svg.paths.flatMap((p) => p.toShapes());
-  const geometry = new THREE.ExtrudeGeometry(shapes, {
-    depth: 2.4, bevelEnabled: true, bevelThickness: 0.5, bevelSize: 0.28, bevelSegments: 2, curveSegments: 8,
-  });
-  geometry.center();
-  geometry.scale(0.075, -0.075, -0.075);
-  geometry.computeVertexNormals();
-  return geometry;
-}
-
-/**
- * Brand colour as is (no grey wash), except near-black marks (Next.js, Three.js, GitHub...) which would vanish
- * on the dark studio floor: those become warm off-white.
- */
-function brandColor(hex: string) {
-  const color = new THREE.Color(hex);
-  const hsl = { h: 0, s: 0, l: 0 };
-  color.getHSL(hsl);
-  return hsl.l < 0.16 ? new THREE.Color("#ece8e0") : color;
-}
-
 export class TechCarousel {
   readonly group = new THREE.Group();
   readonly pickables: THREE.Object3D[] = [];
@@ -103,10 +87,13 @@ export class TechCarousel {
       const plinth = new THREE.Mesh(this.plinthGeometry, this.plinthMaterial);
       plinth.position.y = 0.12;
       plinth.userData.index = index;
-      const color = brandColor(tech.color);
-      // Plastic-like and non-metallic: metal reflects the grey studio and washes the colour out.
-      const logoMaterial = new THREE.MeshStandardMaterial({ color, roughness: 0.38, metalness: 0, emissive: color, emissiveIntensity: 0 });
-      const logo = new THREE.Mesh(logoGeometry(tech.icon), logoMaterial);
+      // The real full-colour mark when we have one, else the one-colour simple-icons path.
+      const { geometry, accent: color } = buildLogo(TECH_LOGOS[tech.name] ?? fallbackSpec(tech.icon, tech.color));
+      // Plastic-like and non-metallic: metal reflects the grey studio and washes the colours out. Colours live in the
+      // vertices and `color` only dims or brightens the whole mark. No tone mapping: AgX turns brand colours pastel
+      // under the bright studio key, so the material is kept dim enough not to clip instead.
+      const logoMaterial = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.52, metalness: 0, envMapIntensity: 0.3, emissive: color, emissiveIntensity: 0, toneMapped: false });
+      const logo = new THREE.Mesh(geometry, logoMaterial);
       logo.position.y = LOGO_Y;
       logo.rotation.x = -0.12;
       logo.userData.index = index;
@@ -170,11 +157,11 @@ export class TechCarousel {
       item.root.scale.setScalar(Math.max(edge, 0.001) * (0.86 + 0.14 * rise));
       item.root.visible = edge > 0.01;
       item.logo.position.y = LOGO_Y + f * 0.22 + Math.sin(time * 1.4 + i) * 0.05;
-      item.logo.scale.setScalar(0.92 + f * 0.2);
+      item.logo.scale.setScalar(0.92 + f * (FOCUS_SCALE - 0.92));
       item.logo.rotation.y = Math.sin(time * 0.6 + i * 0.8) * 0.18 * (1 - f) + offset * -0.12;
       // Unfocused logos keep their hue and only dim; the focused one glows a little.
-      item.logoMaterial.color.copy(item.color).multiplyScalar(0.5 + 0.5 * f);
-      item.logoMaterial.emissiveIntensity = 0.06 + f * 0.3;
+      item.logoMaterial.color.setScalar(0.34 + 0.16 * f);
+      item.logoMaterial.emissiveIntensity = 0.02 + f * 0.05;
       item.ringMaterial.opacity = f * 0.85 * rise;
       item.stripMaterial.opacity = (0.45 + 0.55 * f) * rise;
       if (item.label) item.label.opacity = 0.9 * rise;

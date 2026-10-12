@@ -8,6 +8,8 @@ type LoadingScreenProps = { progress: number; done: boolean; reducedMotion: bool
 
 /** The loader stays up at least this long, so the roll reads as a moment rather than a flicker. */
 export const LOADER_MIN_MS = 3500;
+/** ...and at most this long: past it the page shows even if the 3D scene is still streaming in. */
+export const LOADER_MAX_MS = 15000;
 /** Studs along the track (they light up as the head rolls over them). */
 const STUDS = 12;
 

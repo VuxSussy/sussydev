@@ -254,3 +254,29 @@ it("never spins the head: frames where the mixer output does not change leave th
   for (let i = 0; i < 120; i++) frame?.(timestamp);
   expect(head().angleTo(waving)).toBeLessThan(1e-4);
 });
+
+it("reports a lost WebGL context and rebuilds the reflections when it comes back", async () => {
+  const lost = vi.fn();
+  const restored = vi.fn();
+  scene.dispose();
+  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack, reducedMotion: true, onContextLost: lost, onContextRestored: restored });
+  await scene.load();
+  const state = scene as unknown as { environmentTarget: THREE.WebGLRenderTarget; scene: THREE.Scene };
+  const before = state.environmentTarget;
+  const freed = vi.spyOn(before, "dispose");
+  tick();
+  const renders = gpu.render.mock.calls.length;
+  canvas.dispatchEvent(new Event("webglcontextlost"));
+  expect(lost).toHaveBeenCalledTimes(1);
+  canvas.dispatchEvent(new Event("webglcontextrestored"));
+  expect(restored).toHaveBeenCalledTimes(1);
+  expect(freed).toHaveBeenCalledTimes(1);
+  expect(state.environmentTarget).not.toBe(before);
+  expect(state.scene.environment).toBe(state.environmentTarget.texture);
+  // Reduced motion only draws when something changed: the restore must force a frame.
+  tick();
+  expect(gpu.render.mock.calls.length).toBe(renders + 1);
+  scene.dispose();
+  canvas.dispatchEvent(new Event("webglcontextlost"));
+  expect(lost).toHaveBeenCalledTimes(1);
+});
