@@ -12,7 +12,9 @@ import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setShowcase, 
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { ChatBubble } from "./chat-bubble";
-import { LOADER_MIN_MS, LoadingScreen } from "./loading-screen";
+import { LOADER_MAX_MS, LOADER_MIN_MS, LoadingScreen } from "./loading-screen";
+/** A lost WebGL context that has not come back after this long falls back to the static page. */
+const CONTEXT_RESTORE_MS = 4000;
 
 const LOCALE_KEY = "sussy-locale";
 const LOCALE_EVENT = "sussy-locale-change";
@@ -237,7 +239,11 @@ export function PortfolioStory() {
     let disposed = false;
     let scene: StoryScene | null = null;
     let readyTimer: number | undefined;
+    let lostTimer: number | undefined;
     const start = performance.now();
+    // On a slow network the copy should not wait behind the loader forever: lift it anyway (the scene keeps
+    // loading and fades in on its own).
+    const maxTimer = window.setTimeout(() => !disposed && setReady(true), LOADER_MAX_MS);
     import("./scene/story-scene")
       .then(async ({ StoryScene }) => {
         if (disposed) return;
@@ -248,6 +254,18 @@ export function PortfolioStory() {
           onProgress: (value) => !disposed && setProgress(value),
           onTechHover: (index) => !disposed && setHoveredTech(index),
           onTechSelect: (index) => selectSceneTech(index),
+          onContextLost: () => {
+            window.clearTimeout(lostTimer);
+            lostTimer = window.setTimeout(() => {
+              if (disposed) return;
+              setWebglFailed(true);
+              setReady(true);
+            }, CONTEXT_RESTORE_MS);
+          },
+          onContextRestored: () => {
+            window.clearTimeout(lostTimer);
+            if (!disposed) setWebglFailed(false);
+          },
         });
         sceneRef.current = scene;
         if (process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("debug")) {
@@ -278,6 +296,8 @@ export function PortfolioStory() {
     return () => {
       disposed = true;
       window.clearTimeout(readyTimer);
+      window.clearTimeout(lostTimer);
+      window.clearTimeout(maxTimer);
       scene?.dispose();
       sceneRef.current = null;
       const debug = window as unknown as { __sussyScene?: StoryScene };

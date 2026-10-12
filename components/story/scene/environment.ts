@@ -739,24 +739,6 @@ function drawnTexture(size: number, draw: (ctx: CanvasRenderingContext2D, size: 
   return texture;
 }
 
-/** Stud texture for classic Roblox parts: soft round studs on a neutral tile (tinted by material colour). */
-function studTexture() {
-  const texture = drawnTexture(64, (ctx, size) => {
-    ctx.fillStyle = "#d8d8d8";
-    ctx.fillRect(0, 0, size, size);
-    const gradient = ctx.createRadialGradient(size * 0.45, size * 0.42, 2, size / 2, size / 2, size * 0.32);
-    gradient.addColorStop(0, "#ffffff");
-    gradient.addColorStop(0.7, "#e2e2e2");
-    gradient.addColorStop(1, "#bdbdbd");
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.arc(size / 2, size / 2, size * 0.3, 0, Math.PI * 2);
-    ctx.fill();
-  });
-  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  return texture;
-}
-
 /** SpawnLocation emblem: Roblox's spawn ring drawn on the pad's top face. */
 function spawnTexture() {
   return drawnTexture(256, (ctx, size) => {
@@ -774,21 +756,46 @@ function spawnTexture() {
   });
 }
 
-/**
- * Roblox-mode set dressing: a SpawnLocation behind Sussy and a few classic studded parts drifting in the
- * background like a Toolbox showcase. Colours are the classic BrickColors, desaturated to stay calm.
- */
-export function createRobloxProps() {
-  const group = new THREE.Group();
-  const studs = studTexture();
-  const brick = (color: string, size: [number, number, number]) => {
-    const map = studs.clone();
-    map.repeat.set(size[0], size[2]);
-    map.needsUpdate = true;
-    const material = new THREE.MeshStandardMaterial({ color: new THREE.Color(color).lerp(new THREE.Color("#8a93a3"), 0.35), map, roughness: 0.7 });
-    return new THREE.Mesh(new THREE.BoxGeometry(...size), material);
-  };
+/** One floating prop: which model in props.glb, where it hangs, how it is turned and how big it is. */
+type Floater = {
+  model: string;
+  pos: [number, number, number];
+  turn: [number, number, number];
+  scale: number;
+  tint?: string;
+  /** Spot (and size factor) on a portrait phone, where the copy fills the top half; omitted = hidden there. */
+  phone?: { pos: [number, number, number]; scale: number };
+};
 
+/**
+ * The studio's toolbox, hanging in the dark behind Sussy: a claw hammer and a sledgehammer, a wrench and a
+ * screwdriver (Roblox Studio's own icons are a hammer and tools), plus three classic studded bricks. Tools keep
+ * a readable three-quarter angle and only sway; bricks read from every side, so they turn slowly.
+ * Models: public/models/props/props.glb (scripts/blender/build-props.py). Tools are authored in metres, so their
+ * scale turns a 0.3 m hammer into a ~5-stud prop; bricks are authored in studs.
+ */
+export const FLOATERS: readonly Floater[] = [
+  // Laid out on the desktop hero frame: left of Sussy above the headline, right of Sussy between the
+  // leaderboard and the chapter list. Nothing hangs over the copy, the header or the HUD. On a phone only two
+  // small ones stay, in the gap right of the headline.
+  { model: "Sledgehammer", pos: [-23, 12.5, -44], turn: [0.18, 0.55, 0.7], scale: 12.5 },
+  { model: "Brick2x4", pos: [-11.5, 13.1, -50], turn: [0.35, 0.8, 0.12], scale: 0.9, tint: "#c4281c" },
+  { model: "Screwdriver", pos: [-4, 10, -48], turn: [0.35, 0.4, -1.15], scale: 18 },
+  { model: "ClawHammer", pos: [10.5, 8.8, -38], turn: [0.25, -0.5, -0.62], scale: 16, phone: { pos: [6, 15, -30], scale: 0.7 } },
+  { model: "Brick2x2", pos: [21.4, 7.2, -60], turn: [0.5, 0.3, 0.25], scale: 1.2, tint: "#0d69ac", phone: { pos: [6.8, 19.2, -30], scale: 0.65 } },
+  { model: "Wrench", pos: [20.3, 6.9, -36], turn: [0.9, 0.35, 0.95], scale: 19 },
+];
+
+/** Seconds for one prop to rise into place once the models arrive, and the stagger between props. */
+const PROP_ENTER = 1.1;
+const PROP_STAGGER = 0.07;
+
+/**
+ * Studio set dressing: a SpawnLocation behind Sussy (built here, so it shows at once) and the floating toolbox,
+ * added by `addModels` when props.glb has streamed in. The page works without the models.
+ */
+export function createStudioProps() {
+  const group = new THREE.Group();
   const spawn = new THREE.Mesh(
     new THREE.BoxGeometry(6, 0.4, 6),
     [
@@ -800,34 +807,63 @@ export function createRobloxProps() {
   spawn.position.set(0, 0.2, -6.5);
   group.add(spawn);
 
-  const floaters = [
-    { color: "#c4281c", size: [4, 1.2, 2] as [number, number, number], pos: [-20, 9, -36] },
-    { color: "#0d69ac", size: [2, 2, 2] as [number, number, number], pos: [17, 12, -40] },
-    { color: "#f5cd30", size: [6, 1.2, 2] as [number, number, number], pos: [-4, 15, -48] },
-    { color: "#4b974b", size: [2, 4, 2] as [number, number, number], pos: [24, 6, -32] },
-    { color: "#a34b4b", size: [1, 1, 4] as [number, number, number], pos: [-26, 5, -30] },
-  ].map((item, index) => {
-    const mesh = brick(item.color, item.size);
-    mesh.position.set(item.pos[0], item.pos[1], item.pos[2]);
-    mesh.rotation.set(index * 0.7, index * 1.3, index * 0.4);
-    mesh.userData.base = mesh.position.y;
-    mesh.userData.spin = { x: mesh.rotation.x, y: mesh.rotation.y, dir: index % 2 ? 1 : -1 };
-    group.add(mesh);
-    return mesh;
-  });
+  type Placed = { root: THREE.Object3D; item: Floater; phase: number; spins: boolean };
+  const placed: Placed[] = [];
+  let bornAt = Number.NaN;
+  const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
   return {
     group,
-    update(time: number, visibility: number) {
+    get loaded() {
+      return placed.length > 0;
+    },
+    /**
+     * Clone the named models from props.glb into place. `now` is the scene clock (props rise in from there);
+     * pass -Infinity to show them at once (reduced motion).
+     */
+    addModels(models: THREE.Object3D, now: number) {
+      if (placed.length) return;
+      FLOATERS.forEach((item, index) => {
+        const source = models.getObjectByName(item.model);
+        if (!source) return;
+        // Keep the node's own transform (meshopt quantisation stores a scale there) and size it from outside.
+        const root = new THREE.Group();
+        root.add(source.clone(true));
+        root.scale.setScalar(item.scale);
+        root.traverse((object) => {
+          if (!(object instanceof THREE.Mesh)) return;
+          const material = (object.material as THREE.MeshStandardMaterial).clone();
+          // Classic BrickColors, a little calmer so they sit behind the copy; tools keep their own materials.
+          if (item.tint) material.color.set(item.tint).lerp(new THREE.Color("#8a93a3"), 0.18);
+          material.envMapIntensity = item.tint ? 0.6 : 1.1;
+          object.material = material;
+        });
+        const holder = new THREE.Group();
+        holder.add(root);
+        holder.rotation.set(...item.turn);
+        group.add(holder);
+        placed.push({ root: holder, item, phase: index * 1.7, spins: !!item.tint });
+      });
+      bornAt = now;
+    },
+    /** @param portrait phone-shaped viewport: use the `phone` spots and hide the rest */
+    update(time: number, visibility: number, portrait = false) {
       group.visible = visibility > 0.001;
       if (!group.visible) return;
       const sink = (1 - visibility) * 8;
       spawn.position.y = 0.2 - sink * 0.2;
-      floaters.forEach((mesh, index) => {
-        mesh.position.y = (mesh.userData.base as number) + Math.sin(time * 0.5 + index * 1.7) * 0.35 - sink;
-        const spin = mesh.userData.spin as { x: number; y: number; dir: number };
-        mesh.rotation.y = spin.y + time * 0.09 * spin.dir;
-        mesh.rotation.x = spin.x + time * 0.05;
+      placed.forEach(({ root, item, phase, spins }, index) => {
+        const spot = portrait ? item.phone : { pos: item.pos, scale: 1 };
+        // Rise in from below with a decelerating ease (metal: no overshoot), staggered left to right.
+        const enter = Number.isFinite(bornAt) ? easeOut(Math.min(1, Math.max(0, (time - bornAt - index * PROP_STAGGER) / PROP_ENTER))) : 1;
+        root.visible = !!spot && enter > 0.001;
+        if (!spot) return;
+        // Ambient: slow sine bob and sway with different periods per prop, so they never move in step.
+        root.position.set(spot.pos[0], spot.pos[1] + Math.sin(time * 0.48 + phase) * 0.35 - sink - (1 - enter) * 6, spot.pos[2]);
+        root.scale.setScalar(spot.scale * (0.6 + 0.4 * enter));
+        root.rotation.x = item.turn[0] + Math.sin(time * 0.31 + phase) * 0.08;
+        root.rotation.z = item.turn[2] + Math.sin(time * 0.27 + phase * 1.3) * 0.1;
+        root.rotation.y = spins ? item.turn[1] + time * 0.09 * (index % 2 ? 1 : -1) : item.turn[1] + Math.sin(time * 0.21 + phase) * 0.45;
       });
     },
   };

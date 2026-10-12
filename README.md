@@ -46,7 +46,7 @@ Playwright tests require the browser configured in `playwright.config.ts`. The p
 
 ## Assets
 
-The R6 avatar comes from Roblox Studio and is refined in Blender. Animation extraction reads Roblox `.rbxm` files; the movement fixture credits are documented in `tests/fixtures/README.md`. Tool logos use Simple Icons. Brand names and logos belong to their respective owners.
+The R6 avatar comes from Roblox Studio and is refined in Blender. Animation extraction reads Roblox `.rbxm` files; the movement fixture credits are documented in `tests/fixtures/README.md`. Tech logos come from devicon (MIT), the official Luau and roblox-ts sites, Aseprite's app icon and Simple Icons (CC0). The floating hammers, tools and bricks are modelled by `scripts/blender/build-props.py`. Brand names and logos belong to their respective owners.
 
 Personal details and project claims should be updated with verified information before using this portfolio for applications.
 
