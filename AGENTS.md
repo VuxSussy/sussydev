@@ -19,6 +19,7 @@ npm run build          # vinext build — must succeed
 npm run extract:anims -- "<file.rbxm>" public/anims
 npm run build:model    # Blender headless build + meshopt optimize → public/models/sussy/sussy-r6.glb
 npm run build:nature   # Blender headless tree/bush/grass/fern + meshopt → public/models/nature/nature.glb
+npm run build:props    # Blender headless hammers/tools/studded bricks + meshopt → public/models/props/props.glb
 ```
 
 If the dev server reports "Network connection lost" after adding a route, restart it.
@@ -26,7 +27,9 @@ If the dev server reports "Network connection lost" after adding a route, restar
 ## Stack & layout
 
 - Vinext 1.0 beta (Next.js App Router compatible), React 19, TypeScript, Tailwind 4 (tokens in `app/globals.css`),
-  three.js r185 (vanilla, no R3F), simple-icons for tech logos, lucide-react for UI icons.
+  three.js r185 (vanilla, no R3F), lucide-react for UI icons. Tech logos on the conveyor are the real full-colour
+  marks (`data/tech-logos.ts`: original SVGs extruded layer by layer, Aseprite as voxels, built in
+  `scene/tech-logo.ts`); simple-icons paths are the fallback and the chip icons.
 - One portfolio (Roblox Developer) at `/`; `/roblox` permanently redirects there (the Dev and Roblox portfolios were
   merged in v4.0). The root layout's `PortfolioShell` renders `components/story/portfolio-story.tsx` on `/`. Content
   lives only in `data/portfolio.ts` (`portfolio.profile` + contacts), English copy in `data/i18n.ts`.
@@ -43,8 +46,12 @@ If the dev server reports "Network connection lost" after adding a route, restar
 - Match the surrounding style: compact TSX, comments only for non-obvious "why", Vietnamese UI copy.
 - Never invent personal data. Contact fields stay empty until the owner provides them (UI shows "Đang cập nhật").
 - Keep the dark, editorial look (reference: "KNOT / 001 — A material study"): Archivo display, Space Grotesk body,
-  eyebrow `NN / 04 —— LABEL`, right chapter rail, bottom HUD with readout.
-- Animate only `transform`/`opacity` in CSS. All scene motion is a pure function of the damped story value,
+  eyebrow `NN / 04 —— LABEL`, right chapter rail, bottom HUD with readout. `docs/design-dna.json` records the
+  tokens, style and 3D effects; check new work against it.
+- 3D props never sit over the copy, the header or the HUD: place them with projected screen positions at 1440×810
+  and give a `phone` spot (or none) for portrait screens (`FLOATERS` in environment.ts).
+- Animate only `transform`/`translate`/`opacity`/`clip-path` in CSS. Per-frame DOM loops write styles only; read
+  sizes through a ResizeObserver (see chat-bubble.tsx). All scene motion is a pure function of the damped story value,
   so scrolling backwards must look identical.
 - Respect reduced motion (`useSyncExternalStore` toggle + `prefers-reduced-motion`).
 - Commit in small steps on a feature branch; do not push or merge to `main` without the owner's OK.
@@ -78,7 +85,17 @@ Check desktop 1440×900 and mobile 375×812 for every visual change.
   listener works for exporting large payloads.
 - After `build-sussy.py`, always run `npm run optimize:model` (meshopt). The rig keeps node transforms on meshes
   because they carry meshopt dequantization. Code that re-places glTF nodes (vegetation) must bake them first
-  with `bakedGeometry()` (environment.ts), otherwise the geometry collapses to the -1..1 quantised range.
+  with `bakedGeometry()` (environment.ts), otherwise the geometry collapses to the -1..1 quantised range. Clones of
+  glTF nodes keep the node transform and are sized by a parent group (studio props).
+- `optimize:props` passes `--palette false`: palette textures would merge the steel, wood and rubber materials and
+  break per-prop brick tints.
+- Robustness: a lost WebGL context pauses the scene and rebuilds the PMREM environment on restore; if it does not
+  come back within 4 s the page shows the static poster. The loader lifts after 15 s even if the scene is still
+  loading.
+- Agent skills used for this work (installed in `~/.claude/skills`): threejs-* (cloudai-x), gsap-* (greensock),
+  design-dna (zanwei), motion-design (LottieFiles), genjutsu (AThevon: cast/paint/design-audit), Blender skills
+  (prop-artist, blender-director, export-pipeline... from arjun988; blender-web-pipeline from freshtechbro).
+  `python3 -I ~/.claude/skills/_jutsu/design-audit/scripts/audit.py .` is a read-only static audit.
 
 ## Copy style
 

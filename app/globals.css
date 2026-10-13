@@ -200,8 +200,9 @@ button, a[href] { cursor: pointer; }
 @keyframes showcase-in { from { opacity: 0; transform: translateX(-36px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
 .showcase-dots { display: flex; gap: 0.5rem; }
 .showcase-dots button { width: 44px; height: 44px; display: grid; place-items: center; margin: 0 -0.55rem; }
-.showcase-dots button::before { content: ""; width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--border-strong); transition: background 300ms, width 300ms; }
-.showcase-dots button[aria-current="true"]::before { width: 1.6rem; border-radius: 999px; background: var(--accent); }
+/* The dot grows into a pill by unclipping a fixed 1.6rem pill (paint only), not by animating its width. */
+.showcase-dots button::before { content: ""; width: 1.6rem; height: 0.55rem; background: var(--border-strong); clip-path: inset(0 0.525rem round 999px); transition: background 300ms, clip-path 300ms var(--ease-out); }
+.showcase-dots button[aria-current="true"]::before { background: var(--accent); clip-path: inset(0 0 round 999px); }
 .showcase-stops { list-style: none; margin: 0; padding: 0; }
 /* 1100 px per stop: 3300 px from the first screen to the last, about 3.5 s at a full-run scroll (RUN_SCROLL_SPEED). */
 .showcase-stops li { height: 1100px; }
@@ -225,13 +226,14 @@ button, a[href] { cursor: pointer; }
 .contact-list { list-style: none; margin: 0; padding: 0; display: grid; border-top: 1px solid rgba(255, 220, 200, 0.14); }
 .contact-list li { border-bottom: 1px solid rgba(255, 220, 200, 0.14); }
 .contact-list a, .contact-pending { display: grid; grid-template-columns: 1.25rem 6.5rem 1fr auto; align-items: center; gap: 0.9rem; min-height: 52px; padding: 0.4rem 0; }
-.contact-list a { transition: color 200ms, padding 300ms var(--ease-out); }
-.contact-list a:hover { color: var(--accent); padding-left: 0.4rem; }
+/* The hover nudge is a translate (compositor only), not a padding change that re-lays out the row. */
+.contact-list a { transition: color 200ms, translate 300ms var(--ease-out); }
+.contact-list a:hover { color: var(--accent); translate: 0.4rem 0; }
 .contact-label { font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); }
 .contact-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .contact-pending { color: var(--text-muted); grid-template-columns: 1.25rem 6.5rem 1fr; }
 .contact-pending .contact-value { font-style: italic; }
-.copy-button { justify-self: start; display: inline-flex; align-items: center; gap: 0.6rem; min-height: 44px; padding: 0.6rem 1.1rem; border: 1px solid rgba(255, 220, 200, 0.25); font-size: 0.875rem; }
+.copy-button { justify-self: start; display: inline-flex; align-items: center; gap: 0.6rem; min-height: 44px; padding: 0.6rem 1.1rem; border: 1px solid rgba(255, 220, 200, 0.25); font-size: 0.875rem; transition: color 200ms, border-color 200ms; }
 .copy-button:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---------- Changelog ---------- */
@@ -246,7 +248,7 @@ button, a[href] { cursor: pointer; }
 .release-body h2 { font-size: 1.35rem; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
 .release-body ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.45rem; color: var(--text-secondary); }
 .release:first-child .release-version { color: var(--accent); }
-.hud-meta a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); }
+.hud-meta a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); transition: color 200ms; }
 .hud-meta a:hover { color: var(--text-primary); }
 @media (max-width: 640px) { .release { grid-template-columns: 1fr; gap: 0.6rem; } }
 
@@ -266,8 +268,9 @@ button, a[href] { cursor: pointer; }
 .case-pending a, .card-foot a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
 .case-others { margin-top: 2rem; display: grid; gap: 0.8rem; }
 .case-others ul { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--border); }
-.case-others a { display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; align-items: center; padding: 1rem 0; border-bottom: 1px solid var(--border); transition: color 200ms, padding 300ms var(--ease-out); }
-.case-others a:hover { color: var(--accent); padding-left: 0.4rem; }
+.case-others li { border-bottom: 1px solid var(--border); }
+.case-others a { display: grid; grid-template-columns: 1fr auto auto; gap: 1rem; align-items: center; padding: 1rem 0; transition: color 200ms, translate 300ms var(--ease-out); }
+.case-others a:hover { color: var(--accent); translate: 0.4rem 0; }
 .case-others a span:nth-child(2) { color: var(--text-muted); font-size: 0.8125rem; }
 @media (max-width: 760px) { .case-section { grid-template-columns: 1fr; gap: 0.8rem; } .case-others a { grid-template-columns: 1fr auto; } .case-others a span:nth-child(2) { display: none; } }
 

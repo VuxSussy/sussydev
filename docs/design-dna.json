@@ -1,0 +1,198 @@
+{
+  "meta": {
+    "name": "Sussy / 001 — Roblox developer portfolio",
+    "description": "Design DNA of this site, read from its own source (app/globals.css, app/layout.tsx, components/story/scene/*). It is the reference for new pages, 3D props and motion, so they stay in the same night-baseplate world. Colours are the CSS tokens themselves, not estimates from screenshots.",
+    "source_references": ["app/globals.css :root tokens", "app/layout.tsx fonts", "components/story/scene (three.js scene)", "scripts/blender (props, nature, avatar)"],
+    "created_at": "2026-10-13"
+  },
+  "design_system": {
+    "color": {
+      "palette_type": "dark monochrome navy with one cool accent; warm sunset tints only in the last chapter",
+      "primary": { "hex": "#f1efea", "role": "warm off-white for headlines and body copy on the navy baseplate" },
+      "secondary": { "hex": "#a6b0c0", "role": "secondary copy, eyebrows, HUD labels" },
+      "accent": { "hex": "#6cb4ff", "role": "muted Roblox blue: focus rings, active chips, the focus ring on the tech conveyor, the showcase dots" },
+      "neutral": {
+        "scale": ["#f1efea", "#a6b0c0", "#929caf", "#142035", "#0a0f18"],
+        "usage": "Lightest end is foreground text on the #0a0f18 background; #929caf is muted meta text (still AA on the background); #142035 is the raised surface. Borders are rgba(200, 220, 255, 0.12 / 0.28)."
+      },
+      "semantic": { "success": "#4b974b", "warning": "#f5cd30", "error": "#c4281c", "info": "#6cb4ff" },
+      "surface": { "background": "#0a0f18", "card": "rgba(16, 24, 40, 0.62)", "elevated": "rgba(12, 18, 30, 0.8)" },
+      "contrast_strategy": "Light text on deep navy with low-alpha cool borders. Brand colours appear only as content (tech logos in their real colours, BrickColor bricks, group stripes language #ffb86b / framework #6ee7ff / tool #c3a6ff), never as UI chrome."
+    },
+    "typography": {
+      "type_scale": {
+        "display": { "size": "clamp(3rem, 7.2vw, 6.6rem)", "weight": "500", "line_height": "0.98", "tracking": "-0.045em" },
+        "heading_1": { "size": "clamp(2.4rem, 5vw, 4.6rem)", "weight": "500", "line_height": "0.98", "tracking": "-0.045em" },
+        "heading_2": { "size": "clamp(2rem, 3.6vw, 3.4rem)", "weight": "500", "line_height": "1", "tracking": "-0.04em" },
+        "heading_3": { "size": "clamp(1.35rem, 2vw, 1.75rem)", "weight": "500", "line_height": "1.15", "tracking": "-0.03em" },
+        "body": { "size": "1rem", "weight": "400", "line_height": "1.55", "tracking": "0" },
+        "body_small": { "size": "0.9rem", "weight": "400", "line_height": "1.5", "tracking": "0" },
+        "caption": { "size": "0.8rem", "weight": "400", "line_height": "1.4", "tracking": "0.02em" },
+        "overline": { "size": "0.75rem", "weight": "500", "line_height": "1.2", "tracking": "0.22em" }
+      },
+      "font_families": { "heading": "Archivo (300-600, latin + vietnamese)", "body": "Space Grotesk (400-600, latin + vietnamese)", "mono": "JetBrains Mono / SFMono-Regular / Menlo (canvas labels on the 3D floor)" },
+      "font_style_notes": "Tight negative tracking on big Archivo headlines, wide-tracked uppercase overlines (chapter eyebrows like 02 / 04 — TECH STACK), tabular numerals for the HUD readout (STORY 008%). Vietnamese diacritics must survive every size."
+    },
+    "spacing": {
+      "base_unit": "4px (rem-based, 0.25rem steps)",
+      "scale": ["0.25rem", "0.5rem", "0.9rem", "1rem", "1.5rem", "2rem", "3rem", "30vh section lead-in"],
+      "content_density": "sparse: one statement per viewport, copy column on the left, the 3D scene owns the rest",
+      "section_rhythm": "scroll-length chapters (hundreds of vh) rather than stacked sections; the story value 0..4 drives the scene"
+    },
+    "layout": {
+      "grid_system": "fixed full-bleed WebGL stage behind a single left copy column plus fixed HUD (header, leaderboard, chapter rail, footer readout)",
+      "max_content_width": "30rem copy column, 28rem showcase panel",
+      "columns": "1 (copy) over a full-bleed scene; HUD pinned to the corners",
+      "gutter": "clamp(1rem, 4.5vw, 5.5rem)",
+      "breakpoints": ["560px", "640px", "760px", "900px", "1240px"],
+      "alignment_tendency": "left-aligned copy, character framed right of centre; on portrait phones copy on top and Sussy below"
+    },
+    "shape": {
+      "border_radius": { "small": "2-4px", "medium": "12px (chat bubble)", "large": "TV housing and plinths are rounded boxes in 3D", "pill": "999px" },
+      "border_usage": "1px hairlines in rgba(200, 220, 255, 0.12); strong 0.28 for active states",
+      "divider_style": "thin horizontal rules beside eyebrows and in the HUD; no heavy dividers"
+    },
+    "elevation": {
+      "shadow_style": "soft dark drops plus inset bottom edges that read like Roblox UI buttons",
+      "levels": { "low": "inset 0 -2px 0 rgba(0,0,0,0.25)", "medium": "0 10px 30px rgba(0,0,0,0.35)", "high": "backdrop blur(16px) saturate(130%) glass panels" },
+      "depth_cues": "real 3D depth from the scene (fog, AgX tone mapping, blob shadow); DOM layers use glass blur instead of big shadows"
+    },
+    "iconography": {
+      "style": "full-colour brand marks extruded in 3D for the tech stack; simple-icons paths as fallback and in the chips",
+      "stroke_weight": "n/a (filled marks)",
+      "size_scale": "1.6 studs per logo on a 2.4-stud plinth; 24px icons in DOM",
+      "preferred_set": "devicon originals, official SVGs (luau.org, roblox-ts.com), simple-icons (CC0)"
+    },
+    "motion": {
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1) for DOM; damped springs (damp) for the camera and Sussy; sine for ambient loops",
+      "duration_scale": { "micro": "200-300ms", "normal": "420ms", "macro": "620ms panels, 1.1s prop rise-in, 3.5s minimum loader" },
+      "entrance_pattern": "rise and settle: copy slides up 1.75rem with opacity, panels slide in from the left, props rise from below with a decelerating ease and a 70ms stagger",
+      "exit_pattern": "fade upwards before sliding under the fixed header; studio props sink as the door opens",
+      "philosophy": "Corporate-calm UI, playful character. Scroll speed drives Sussy (walk vs run); nothing loops fast; reduced motion freezes ambient motion and keeps every state reachable."
+    },
+    "components": {
+      "button_style": "ghost buttons with hairline borders; Roblox-like inset bottom edge on active chips",
+      "input_style": "none (no forms; contacts are links)",
+      "card_style": "glass cards (surface rgba with blur) with hairline border",
+      "navigation_pattern": "fixed header + right chapter rail with growing line + J/K keys + scene clicks",
+      "modal_style": "none; the showcase panel is a fixed left dock, a bottom sheet on phones",
+      "list_style": "grouped chips in fieldsets (language / framework / tool) with coloured legends",
+      "component_notes": "Leaderboard HUD (PLAYER / STAGE / STUDS) and the chat bubble over Sussy's head are the Roblox signatures; keep them."
+    }
+  },
+  "design_style": {
+    "aesthetic": {
+      "mood": "quiet night in Roblox Studio, then a warm sunset walk",
+      "visual_metaphor": "a playable level: baseplate studio, a door, a road with roadside TVs, a tree to sit under",
+      "era_influence": "modern Roblox (2022 tilt logo, R6 avatar, BrickColors) with a calm editorial layer",
+      "genre": "interactive 3D portfolio / scrollytelling",
+      "personality_traits": ["craftsman", "playful but precise", "game-literate"],
+      "adjectives": ["calm", "tactile", "studded", "navy", "deliberate"]
+    },
+    "visual_language": {
+      "complexity": "medium: rich 3D scene, minimal DOM",
+      "ornamentation": "low in DOM, functional in 3D (tools, studs, neon group stripes)",
+      "whitespace_usage": "generous; the scene is the whitespace",
+      "visual_weight_distribution": "headline left, character right; props frame the top band only",
+      "focal_strategy": "Sussy is always the focal point; props and logos sit around, never over, the copy or HUD",
+      "contrast_level": "high for text, low for chrome",
+      "texture_usage": "procedural studs on the floor, turf noise in the meadow, CRT scanlines on the TVs"
+    },
+    "composition": {
+      "hierarchy_method": "scale of the Archivo headline, then eyebrow, then lede",
+      "balance_type": "asymmetric (copy left, scene right)",
+      "flow_direction": "vertical scroll mapped to a left-to-right walk along the road",
+      "grouping_strategy": "chapters (01-04) and tech shelves (language / framework / tool)",
+      "negative_space_role": "keeps the 3D scene readable behind the copy"
+    },
+    "imagery": {
+      "photo_treatment": "none; project screens are captured frames shown on CRT TVs",
+      "illustration_style": "low-poly real-time 3D modelled in Blender, Roblox proportions",
+      "graphic_elements": ["studs", "SpawnLocation ring", "neon group stripes", "chat bubble", "leaderboard"],
+      "pattern_usage": "stud grid on the baseplate",
+      "image_shape": "16:9 TV screens with rounded housings"
+    },
+    "interaction_feel": {
+      "feedback_style": "the scene answers: hover lifts a logo, click makes Sussy jump, scroll speed sets the gait",
+      "hover_behavior": "brighten and lift (no colour swaps)",
+      "transition_personality": "smooth, damped, never bouncy on UI",
+      "loading_style": "Sussy's head rolling along a row of studs in the bottom-right corner, at least 3.5s, at most 15s",
+      "microinteraction_density": "low in DOM, moderate in 3D"
+    },
+    "brand_voice_in_ui": {
+      "tone": "plain, first person, a little playful (gg! Mình là Sussy.)",
+      "formality": "informal Vietnamese with an English toggle",
+      "cta_style": "short verbs (Liên hệ, Đọc case study)",
+      "empty_state_approach": "say it plainly: Đang cập nhật",
+      "error_tone": "calm; the page falls back to a static poster instead of showing an error"
+    }
+  },
+  "visual_effects": {
+    "overview": {
+      "effect_intensity": "high (full WebGL scene)",
+      "performance_tier": "adaptive: DPR tiers 1.5/1.25/1/0.8 with warm-up, fewer grass instances on touch devices",
+      "fallback_strategy": "static poster when WebGL fails, a load rejects or a lost context does not come back within 4s; reduced motion renders only on change",
+      "primary_technology": "three.js (WebGLRenderer, AgX tone mapping, RoomEnvironment PMREM), Blender-built GLBs with meshopt"
+    },
+    "background_effects": {
+      "type": "gradient sky dome with stars at dusk",
+      "description": "Studio: deep navy fog and a stud grid. Sunset: shader sky mixing to warm tones, then night stars when Sussy sits.",
+      "technology": "ShaderMaterial sky + THREE.Fog",
+      "params": { "color_palette": ["#0a1120", "#b07a74", "#ffb27a"], "speed": "story-driven", "density": "n/a", "opacity": "1", "blend_mode": "normal" }
+    },
+    "particle_systems": {
+      "enabled": true,
+      "type": "fireflies, falling leaves, a flock of birds",
+      "description": "Points sprites over the meadow at sunset only",
+      "technology": "THREE.Points with custom shaders",
+      "params": { "count": "tens to low hundreds", "shape": "soft dots, leaf ellipses, V-shaped birds", "size_range": "pixel-ratio scaled", "movement_pattern": "sine drift, fall with spin, slow flight across the sky", "color_behavior": "warm, fading with reveal", "interaction": "none", "spawn_area": "around the road and the tree" }
+    },
+    "3d_elements": {
+      "enabled": true,
+      "type": "character + set",
+      "description": "R6 Sussy rig with Roblox animations, tech conveyor of full-colour extruded logos on plinths, floating studio toolbox (claw hammer, sledgehammer, wrench, screwdriver, studded bricks), door to a meadow road with CRT TVs",
+      "technology": "three.js",
+      "params": { "renderer": "WebGL2, sRGB output, AgX", "lighting": "key + rim + hemisphere + PMREM room environment; fill light at arrival", "camera": "keyframed per story value, damped", "materials": "MeshStandard PBR; vertex-coloured logos without tone mapping; plastic bricks tinted per instance", "geometry": "Blender GLBs (meshopt) and extruded SVG layers", "post_processing": "none (kept cheap)", "interaction_model": "scroll scrubs the story; hover/click on logos and Sussy" }
+    },
+    "shader_effects": {
+      "enabled": true,
+      "type": "CRT screens, door light flood, turf noise, sky",
+      "description": "Screen-space flood from the door, scanlines on the TVs, noise on the ground",
+      "technology": "GLSL via ShaderMaterial and onBeforeCompile",
+      "params": { "uniforms": "uTime, uMix, uSpread, uStrength", "vertex_manipulation": "grass sway", "fragment_output": "colour", "noise_type": "value noise", "distortion": "none" }
+    },
+    "scroll_effects": {
+      "parallax": { "enabled": true, "layers": "camera parallax between conveyor, character and background props", "depth_range": "z 6 to -60", "speed_curve": "damped" },
+      "scroll_triggered_animations": { "enabled": true, "trigger_points": "chapter boundaries 0.65 / 1.65, door at 2.3, showcase stops measured from the DOM", "animation_type": "story scrub", "scrub_behavior": "continuous, damped towards the scroll target" },
+      "scroll_morphing": { "enabled": true, "description": "studio floor sinks and the meadow rises through the door" }
+    },
+    "text_effects": {
+      "type": "scroll-linked fade",
+      "description": "copy fades and lifts as it enters and before it slides under the header",
+      "technology": "CSS scroll-driven animations (animation-timeline)",
+      "params": { "split_strategy": "none", "animation_per_unit": "block", "stagger": "none", "effect_style": "opacity + translate" }
+    },
+    "cursor_effects": {
+      "enabled": false,
+      "type": "none",
+      "description": "native cursor; hover is handled in the 3D scene",
+      "params": { "shape": "n/a", "size": "n/a", "blend_mode": "n/a", "trail": "none", "interaction_zone": "n/a" }
+    },
+    "image_effects": {
+      "type": "CRT",
+      "description": "project captures drawn cover-fit on a canvas texture behind a scanline shader; power-on with distance",
+      "technology": "CanvasTexture + ShaderMaterial",
+      "params": { "filter_pipeline": "scanlines, vignette", "hover_transform": "none", "reveal_animation": "power up as Sussy approaches", "distortion_type": "none" }
+    },
+    "glassmorphism_neumorphism": {
+      "enabled": true,
+      "style": "glassmorphism",
+      "params": { "blur_radius": "6-16px", "transparency": "0.62-0.8", "border_treatment": "1px rgba(200,220,255,0.12)", "shadow_type": "none or soft drop", "light_source_angle": "top" }
+    },
+    "canvas_drawings": {
+      "enabled": true,
+      "type": "texture painting",
+      "description": "floor labels (LANGUAGE / FRAMEWORK / TOOL), SpawnLocation ring and TV screens are drawn on 2D canvases and used as textures"
+    }
+  }
+}

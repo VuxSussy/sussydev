@@ -9,7 +9,7 @@ import type { StorySceneOptions } from "../components/story/scene/story-scene";
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 const scene = vi.hoisted(() => ({
   constructor: vi.fn(), load: vi.fn(async () => {}), dispose: vi.fn(), setStory: vi.fn(),
-  setReducedMotion: vi.fn(), setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(),
+  setReducedMotion: vi.fn(), setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(), wave: vi.fn(), headScreenPosition: vi.fn(() => null),
 }));
 let options: StorySceneOptions;
 
@@ -25,6 +25,8 @@ vi.mock("../components/story/scene/story-scene", () => ({ StoryScene: class {
   setProjects = scene.setProjects;
   refresh = scene.refresh;
   addScroll = scene.addScroll;
+  wave = scene.wave;
+  headScreenPosition = scene.headScreenPosition;
 } }));
 
 import { PortfolioShell } from "../components/story/portfolio-shell";
@@ -127,5 +129,27 @@ describe("portfolio story", () => {
     expect(scene.dispose).toHaveBeenCalledTimes(1);
     expect(host.querySelector(".stage")?.classList.contains("is-fallback")).toBe(true);
     expect(host.querySelector(".stage-poster")).not.toBeNull();
+  });
+  it("lifts the loader after its cap even if the scene is still loading", async () => {
+    await act(async () => { root.render(null); });
+    scene.load.mockImplementationOnce(() => new Promise(() => {}));
+    await renderRoute("/");
+    await act(async () => { await vi.advanceTimersByTimeAsync(14_000); });
+    expect(host.querySelector(".loader")?.classList.contains("is-done")).toBe(false);
+    await act(async () => { await vi.advanceTimersByTimeAsync(1_100); });
+    expect(host.querySelector(".loader")?.classList.contains("is-done")).toBe(true);
+    expect(host.querySelector(".stage")?.classList.contains("is-fallback")).toBe(false);
+  });
+
+  it("falls back to the poster only when a lost WebGL context does not come back", async () => {
+    await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
+    const stage = () => host.querySelector(".stage")!;
+    await act(async () => { options.onContextLost?.(); await vi.advanceTimersByTimeAsync(2000); });
+    await act(async () => { options.onContextRestored?.(); await vi.advanceTimersByTimeAsync(5000); });
+    expect(stage().classList.contains("is-fallback")).toBe(false);
+    await act(async () => { options.onContextLost?.(); await vi.advanceTimersByTimeAsync(4100); });
+    expect(stage().classList.contains("is-fallback")).toBe(true);
+    await act(async () => { options.onContextRestored?.(); });
+    expect(stage().classList.contains("is-fallback")).toBe(false);
   });
 });

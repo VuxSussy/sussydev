@@ -18,7 +18,9 @@
     "optimize:model": "gltf-transform optimize public/models/sussy/sussy-r6.glb public/models/sussy/sussy-r6.glb --compress meshopt --texture-compress webp --texture-size 512 --simplify false --join false --instance false --flatten false",
     "test:e2e": "playwright test",
     "build:nature": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-nature.py && npm run optimize:nature",
-    "optimize:nature": "gltf-transform optimize public/models/nature/nature.glb public/models/nature/nature.glb --compress meshopt --simplify false --join false --instance false --flatten false"
+    "optimize:nature": "gltf-transform optimize public/models/nature/nature.glb public/models/nature/nature.glb --compress meshopt --simplify false --join false --instance false --flatten false",
+    "build:props": "/Applications/Blender.app/Contents/MacOS/Blender -b -P scripts/blender/build-props.py && npm run optimize:props",
+    "optimize:props": "gltf-transform optimize public/models/props/props.glb public/models/props/props.glb --compress meshopt --simplify false --join false --instance false --flatten false --palette false"
   },
   "dependencies": {
     "@types/three": "^0.185.4",
