@@ -8,6 +8,18 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.2",
+    date: "2026-10-13",
+    title: "Đồ nghề thật",
+    notes: [
+      "Logo tech stack dùng đúng màu của bản gốc: Python xanh vàng, chữ TS trắng trên nền xanh, Luau và roblox-ts có logo riêng, Aseprite dựng từ pixel art 16×16 của app.",
+      "Logo nổi cao hơn bệ xám ít nhất 0,16 stud, kể cả khi đang được chọn, nên không còn cắm xuống bệ.",
+      "Các khối lơ lửng ở đầu trang đổi thành búa nhổ đinh, búa tạ, cờ lê và tua vít dựng trong Blender. Giữ lại hai viên gạch có stud thật. Trên điện thoại chỉ còn hai món nhỏ cạnh tiêu đề.",
+      "Nếu trình duyệt mất WebGL giữa chừng, cảnh tự dựng lại khi có lại, quá 4 giây thì hiện ảnh tĩnh. Loading tự mở sau 15 giây khi mạng chậm.",
+      "Bong bóng chat không còn bắt trình duyệt tính lại layout mỗi khung hình.",
+    ],
+  },
+  {
     version: "4.1",
     date: "2026-10-11",
     title: "Màn hình lớn, đường dài hơn",
