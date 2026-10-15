@@ -8,7 +8,7 @@ import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
 import { portfolio, TECH_GROUPS, type ContactLink } from "@/data/portfolio";
-import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setShowcase, showcaseActive, showcaseIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
+import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setDemo, demoActive, demoIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
 import { ChatBubble } from "./chat-bubble";
@@ -88,7 +88,7 @@ export function PortfolioStory() {
   const [chapter, setChapter] = useState(0);
   const [techIndex, setTechIndex] = useState(0);
   const [projectIndex, setProjectIndex] = useState(0);
-  const [showcaseOn, setShowcaseOn] = useState(false);
+  const [demoOn, setDemoOn] = useState(false);
   const [hoveredTech, setHoveredTech] = useState(-1);
   const [copied, setCopied] = useState(false);
   const studsRef = useRef<HTMLSpanElement>(null);
@@ -177,7 +177,7 @@ export function PortfolioStory() {
   }, []);
 
   const selectSceneTech = useEffectEvent(selectTech);
-  // Line the roadside screens up with the showcase's stop markers: screen i is beside Sussy while marker i is
+  // Line the roadside screens up with the demo's stop markers: screen i is beside Sussy while marker i is
   // mid-viewport (the story value is read at the viewport's centre line, so a marker's centre is its story value).
   useEffect(() => {
     const list = stopsRef.current;
@@ -192,7 +192,7 @@ export function PortfolioStory() {
         const rect = card.getBoundingClientRect();
         return 2 + (rect.top + rect.height / 2 - box.top) / Math.max(box.height, 1);
       };
-      setShowcase(storyAt(cards[0]), storyAt(cards[cards.length - 1]));
+      setDemo(storyAt(cards[0]), storyAt(cards[cards.length - 1]));
       sceneRef.current?.refresh();
     };
     measure();
@@ -217,8 +217,8 @@ export function PortfolioStory() {
       setChapter(chapterIndex(story));
       setBeat(speechBeat(story));
       setTechIndex(Math.round(techPosition(story, techs.length)));
-      setProjectIndex(showcaseIndex(story, portfolio.profile.projects.length));
-      setShowcaseOn(showcaseActive(story));
+      setProjectIndex(demoIndex(story, portfolio.profile.projects.length));
+      setDemoOn(demoActive(story));
       if (readoutRef.current) readoutRef.current.textContent = `${String(Math.round((story / CHAPTERS.length) * 100)).padStart(3, "0")}%`;
     };
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update); };
@@ -460,22 +460,22 @@ export function PortfolioStory() {
                 ))}
               </ol>
             </div>
-            <div className="showcase">
-              {/* Slides in from the left while Sussy is on the showcase stretch, and out again after the last screen. */}
-              <div className={`showcase-dock${showcaseOn ? " is-active" : ""}`} aria-hidden={!showcaseOn} inert={!showcaseOn}>
-                <aside className="showcase-panel" aria-labelledby="showcase-title">
+            <div className="demo">
+              {/* Slides in from the left while Sussy is on the demo stretch, and out again after the last screen. */}
+              <div className={`demo-dock${demoOn ? " is-active" : ""}`} aria-hidden={!demoOn} inert={!demoOn}>
+                <aside className="demo-panel" aria-labelledby="demo-title">
                   <p className="eyebrow">{t.project} {pad(projectIndex + 1)} / {pad(profile.projects.length)} <span className="eyebrow-line" aria-hidden="true" /></p>
-                  <div className="showcase-body" key={projectIndex} aria-live="polite">
+                  <div className="demo-body" key={projectIndex} aria-live="polite">
                     <p className="card-meta"><span>{currentProject.year}</span><span>{currentProject.category}</span></p>
-                    <h3 id="showcase-title">{currentProject.title}</h3>
-                    <p className="showcase-summary">{currentProject.summary}</p>
+                    <h3 id="demo-title">{currentProject.title}</h3>
+                    <p className="demo-summary">{currentProject.summary}</p>
                     {caseStudies[currentProject.slug] ? (
                       <p className="card-foot"><Link prefetch={false} href={`/du-an/${currentProject.slug}`}>{t.readCase}</Link></p>
                     ) : (
                       currentProject.impact && <p className="card-foot">{currentProject.impact}</p>
                     )}
                   </div>
-                  <nav className="showcase-dots" aria-label={t.projectsNav}>
+                  <nav className="demo-dots" aria-label={t.projectsNav}>
                     {profile.projects.map((project, index) => (
                       <button
                         key={project.slug}
@@ -488,8 +488,8 @@ export function PortfolioStory() {
                   </nav>
                 </aside>
               </div>
-              {/* One marker per roadside screen: their positions set where Sussy stops (see setShowcase). */}
-              <ol className="showcase-stops" ref={stopsRef} aria-hidden="true">
+              {/* One marker per roadside screen: their positions set where Sussy stops (see setDemo). */}
+              <ol className="demo-stops" ref={stopsRef} aria-hidden="true">
                 {profile.projects.map((project) => <li key={project.slug} />)}
               </ol>
             </div>

@@ -92,25 +92,25 @@ export const ROAD = {
 } as const;
 export const DOOR_STORY = 2.3;
 /**
- * The showcase: Sussy walks from the first stop (start) to the last (end). The page measures where its project cards
- * sit and calls `setShowcase`, so screen i is beside Sussy while card i is in the middle of the viewport.
+ * The demo: Sussy walks from the first stop (start) to the last (end). The page measures where its project cards
+ * sit and calls `setDemo`, so screen i is beside Sussy while card i is in the middle of the viewport.
  */
-export const SHOWCASE = { start: 2.5, end: 2.92 };
-const SHOWCASE_DEFAULT = { ...SHOWCASE };
-export function setShowcase(start: number, end: number) {
+export const DEMO = { start: 2.5, end: 2.92 };
+const DEMO_DEFAULT = { ...DEMO };
+export function setDemo(start: number, end: number) {
   // A clear run after the door's light (gone at ~2.46), and the last stop before the contact chapter.
-  SHOWCASE.start = Math.min(Math.max(start, 2.5), 2.7);
-  SHOWCASE.end = Math.min(Math.max(end, SHOWCASE.start + 0.12), 2.95);
+  DEMO.start = Math.min(Math.max(start, 2.5), 2.7);
+  DEMO.end = Math.min(Math.max(end, DEMO.start + 0.12), 2.95);
 }
-export const resetShowcase = () => setShowcase(SHOWCASE_DEFAULT.start, SHOWCASE_DEFAULT.end);
-/** Sussy is on the showcase stretch (a little before the first screen to a little after the last). */
-export const showcaseActive = (story: number) => story >= SHOWCASE.start - 0.035 && story <= SHOWCASE.end + 0.03;
+export const resetDemo = () => setDemo(DEMO_DEFAULT.start, DEMO_DEFAULT.end);
+/** Sussy is on the demo stretch (a little before the first screen to a little after the last). */
+export const demoActive = (story: number) => story >= DEMO.start - 0.035 && story <= DEMO.end + 0.03;
 /** The project whose screen Sussy is at (or walking to): the nearest stop. */
-export const showcaseIndex = (story: number, count: number) =>
-  count > 1 ? Math.min(count - 1, Math.max(0, Math.round(((story - SHOWCASE.start) / (SHOWCASE.end - SHOWCASE.start)) * (count - 1)))) : 0;
+export const demoIndex = (story: number, count: number) =>
+  count > 1 ? Math.min(count - 1, Math.max(0, Math.round(((story - DEMO.start) / (DEMO.end - DEMO.start)) * (count - 1)))) : 0;
 /** Story value at which Sussy stands at stop `index` of `count`. */
 export const stopStory = (index: number, count: number) =>
-  SHOWCASE.start + (SHOWCASE.end - SHOWCASE.start) * (count > 1 ? index / (count - 1) : 0);
+  DEMO.start + (DEMO.end - DEMO.start) * (count > 1 ? index / (count - 1) : 0);
 
 export function doorFlood(story: number) {
   return {
@@ -133,7 +133,7 @@ function hermite(s: number, s0: number, x0: number, v0: number, s1: number, x1: 
 }
 
 /** How much the pace eases off in front of each screen (0 = even, 1 = full stop); light, so a steady scroll keeps a steady gait. */
-const SHOWCASE_DWELL = 0.3;
+const DEMO_DWELL = 0.3;
 const JOURNEY_START = 2.06;
 /** Sussy reaches the tree. */
 export const ARRIVE_STORY = 3.3;
@@ -146,21 +146,21 @@ const DOOR_SPEED = 95;
  */
 export function journeyX(story: number, stops: number) {
   const n = Math.max(stops, 1);
-  const span = SHOWCASE.end - SHOWCASE.start;
+  const span = DEMO.end - DEMO.start;
   const average = (ROAD.lastStop - ROAD.firstStop) / span;
   // Pace at a screen (the slowest point of the walk), so the run hands over to the walk without a jolt.
-  const atStop = n > 1 ? average * (1 - SHOWCASE_DWELL) : 0;
+  const atStop = n > 1 ? average * (1 - DEMO_DWELL) : 0;
   if (story <= JOURNEY_START) return 0;
   if (story < DOOR_STORY) return hermite(story, JOURNEY_START, 0, 0, DOOR_STORY, ROAD.door, -DOOR_SPEED);
-  if (story < SHOWCASE.start) return hermite(story, DOOR_STORY, ROAD.door, -DOOR_SPEED, SHOWCASE.start, ROAD.firstStop, atStop);
-  if (story < SHOWCASE.end && n > 1) {
-    const u = ((story - SHOWCASE.start) / span) * (n - 1);
+  if (story < DEMO.start) return hermite(story, DOOR_STORY, ROAD.door, -DOOR_SPEED, DEMO.start, ROAD.firstStop, atStop);
+  if (story < DEMO.end && n > 1) {
+    const u = ((story - DEMO.start) / span) * (n - 1);
     const f = u - Math.floor(u);
-    const eased = Math.floor(u) + f - (SHOWCASE_DWELL * Math.sin(2 * Math.PI * f)) / (2 * Math.PI);
+    const eased = Math.floor(u) + f - (DEMO_DWELL * Math.sin(2 * Math.PI * f)) / (2 * Math.PI);
     return ROAD.firstStop + ((ROAD.lastStop - ROAD.firstStop) * eased) / (n - 1);
   }
   const from = n > 1 ? ROAD.lastStop : ROAD.firstStop;
-  return hermite(story, SHOWCASE.end, from, atStop, ARRIVE_STORY, ROAD.sit, 0);
+  return hermite(story, DEMO.end, from, atStop, ARRIVE_STORY, ROAD.sit, 0);
 }
 export const arriveMix = (story: number) => smoothstep(3.22, 3.42, story);
 

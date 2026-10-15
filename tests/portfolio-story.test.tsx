@@ -3,7 +3,7 @@ import { act, createElement, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { portfolio } from "../data/portfolio";
-import { resetShowcase, stopStory, storyForTech } from "../lib/story";
+import { resetDemo, stopStory, storyForTech } from "../lib/story";
 import type { StorySceneOptions } from "../components/story/scene/story-scene";
 
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
@@ -55,7 +55,7 @@ async function scrollToStory(story: number) {
 beforeEach(async () => {
   vi.useFakeTimers();
   vi.clearAllMocks();
-  resetShowcase();
+  resetDemo();
   Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
   localStorage.clear();
   Object.defineProperty(window, "innerHeight", { configurable: true, value: 1000 });
@@ -103,12 +103,12 @@ describe("portfolio story", () => {
 
   it("shows the project Sussy is at in the side panel, and its dots jump between projects", async () => {
     const projects = portfolio.profile.projects;
-    const title = () => host.querySelector(".showcase-panel h3")?.textContent;
+    const title = () => host.querySelector(".demo-panel h3")?.textContent;
     await scrollToStory(stopStory(0, projects.length));
     expect(title()).toBe(projects[0].title);
     await scrollToStory(stopStory(projects.length - 1, projects.length));
     expect(title()).toBe(projects[projects.length - 1].title);
-    const dots = host.querySelectorAll<HTMLButtonElement>(".showcase-dots button");
+    const dots = host.querySelectorAll<HTMLButtonElement>(".demo-dots button");
     expect(dots).toHaveLength(projects.length);
     expect(dots[projects.length - 1].getAttribute("aria-current")).toBe("true");
     await act(async () => { dots[1].click(); });

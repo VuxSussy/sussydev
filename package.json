@@ -37,7 +37,6 @@
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@gltf-transform/cli": "^4.5.1",
-    "@openai/sites-vite-plugin": "0.2.0",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "4.2.1",
     "@tailwindcss/vite": "4.3.3",

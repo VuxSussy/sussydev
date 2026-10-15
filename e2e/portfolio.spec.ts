@@ -75,21 +75,21 @@ test.describe("portfolio story", () => {
   test("the project panel follows Sussy from one roadside TV to the next", async ({ page }) => {
     await page.goto("/");
     await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
-    const panel = page.locator(".showcase-panel");
-    const stops = page.locator(".showcase-stops li");
+    const panel = page.locator(".demo-panel");
+    const stops = page.locator(".demo-stops li");
     const count = await stops.count();
     expect(count).toBeGreaterThan(1);
     const titles: string[] = [];
     for (let i = 0; i < count; i++) {
       // Put stop i on the viewport's centre line, where the story value is read.
       await stops.nth(i).evaluate((el) => { const r = el.getBoundingClientRect(); window.scrollBy(0, r.top + r.height / 2 - window.innerHeight / 2); });
-      await expect(panel.locator(".showcase-dots button").nth(i)).toHaveAttribute("aria-current", "true");
+      await expect(panel.locator(".demo-dots button").nth(i)).toHaveAttribute("aria-current", "true");
       await expect(panel).toBeInViewport();
       titles.push((await panel.locator("h3").textContent()) ?? "");
     }
     expect(new Set(titles).size).toBe(count);
     // The dots jump back to the first project.
-    await panel.locator(".showcase-dots button").first().click();
+    await panel.locator(".demo-dots button").first().click();
     await expect(panel.locator("h3")).toHaveText(titles[0], { timeout: 10_000 });
   });
 

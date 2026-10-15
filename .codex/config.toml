@@ -1,3 +1,0 @@
-# Project defaults for Codex (owner request: GPT-6.1 with extra-high reasoning).
-model = "gpt-6.1-sol"
-model_reasoning_effort = "xhigh"

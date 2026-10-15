@@ -10,7 +10,7 @@
       "palette_type": "dark monochrome navy with one cool accent; warm sunset tints only in the last chapter",
       "primary": { "hex": "#f1efea", "role": "warm off-white for headlines and body copy on the navy baseplate" },
       "secondary": { "hex": "#a6b0c0", "role": "secondary copy, eyebrows, HUD labels" },
-      "accent": { "hex": "#6cb4ff", "role": "muted Roblox blue: focus rings, active chips, the focus ring on the tech conveyor, the showcase dots" },
+      "accent": { "hex": "#6cb4ff", "role": "muted Roblox blue: focus rings, active chips, the focus ring on the tech conveyor, the demo dots" },
       "neutral": {
         "scale": ["#f1efea", "#a6b0c0", "#929caf", "#142035", "#0a0f18"],
         "usage": "Lightest end is foreground text on the #0a0f18 background; #929caf is muted meta text (still AA on the background); #142035 is the raised surface. Borders are rgba(200, 220, 255, 0.12 / 0.28)."
@@ -41,7 +41,7 @@
     },
     "layout": {
       "grid_system": "fixed full-bleed WebGL stage behind a single left copy column plus fixed HUD (header, leaderboard, chapter rail, footer readout)",
-      "max_content_width": "30rem copy column, 28rem showcase panel",
+      "max_content_width": "30rem copy column, 28rem demo panel",
       "columns": "1 (copy) over a full-bleed scene; HUD pinned to the corners",
       "gutter": "clamp(1rem, 4.5vw, 5.5rem)",
       "breakpoints": ["560px", "640px", "760px", "900px", "1240px"],
@@ -75,7 +75,7 @@
       "input_style": "none (no forms; contacts are links)",
       "card_style": "glass cards (surface rgba with blur) with hairline border",
       "navigation_pattern": "fixed header + right chapter rail with growing line + J/K keys + scene clicks",
-      "modal_style": "none; the showcase panel is a fixed left dock, a bottom sheet on phones",
+      "modal_style": "none; the demo panel is a fixed left dock, a bottom sheet on phones",
       "list_style": "grouped chips in fieldsets (language / framework / tool) with coloured legends",
       "component_notes": "Leaderboard HUD (PLAYER / STAGE / STUDS) and the chat bubble over Sussy's head are the Roblox signatures; keep them."
     }
@@ -163,7 +163,7 @@
     },
     "scroll_effects": {
       "parallax": { "enabled": true, "layers": "camera parallax between conveyor, character and background props", "depth_range": "z 6 to -60", "speed_curve": "damped" },
-      "scroll_triggered_animations": { "enabled": true, "trigger_points": "chapter boundaries 0.65 / 1.65, door at 2.3, showcase stops measured from the DOM", "animation_type": "story scrub", "scrub_behavior": "continuous, damped towards the scroll target" },
+      "scroll_triggered_animations": { "enabled": true, "trigger_points": "chapter boundaries 0.65 / 1.65, door at 2.3, demo stops measured from the DOM", "animation_type": "story scrub", "scrub_behavior": "continuous, damped towards the scroll target" },
       "scroll_morphing": { "enabled": true, "description": "studio floor sinks and the meadow rises through the door" }
     },
     "text_effects": {
