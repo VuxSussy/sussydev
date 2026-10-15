@@ -335,7 +335,7 @@ export class StoryScene {
     this.renderer.setAnimationLoop(this.frame);
   }
 
-  /** Redraw on the next frame (e.g. after the showcase stops were re-measured). */
+  /** Redraw on the next frame (e.g. after the demo stops were re-measured). */
   refresh() {
     this.needsRender = true;
   }

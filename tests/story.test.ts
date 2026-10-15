@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, DOOR_STORY, doorFlood, journeyX, resetShowcase, ROAD, setShowcase, SHOWCASE, showcaseIndex, speechBeat, stopStory, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, DOOR_STORY, doorFlood, journeyX, resetDemo, ROAD, setDemo, DEMO, demoIndex, speechBeat, stopStory, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -14,7 +14,7 @@ describe("scroll story", () => {
 
   it("clamps the chapter rail including the final chapter", () => {
     expect(CHAPTERS.map((c) => c.id)).toEqual(["mo-dau", "tech-stack", "du-an", "lien-he"]);
-    // The long Work chapter (road + showcase) is read to its end before the rail moves on to Contact.
+    // The long Work chapter (road + demo) is read to its end before the rail moves on to Contact.
     expect([-1, 0, 0.64, 0.65, 1.65, 2.65, 2.93, 2.94, 4, 10].map(chapterIndex)).toEqual([0, 0, 0, 1, 2, 2, 2, 3, 3, 3]);
     // Chat beats: the door line waits for the door, the goodbye waits until Sussy has sat down (sitMix ~ 1).
     expect([0, 0.7, 1.9, 2.0, 2.9, 3.54, 3.55, 4].map(speechBeat)).toEqual([0, 1, 1, 2, 2, 2, 3, 3]);
@@ -99,7 +99,7 @@ describe("tech conveyor and sunset", () => {
   });
 
   it("runs clear of the door's light before the first project screen, then on to the tree", () => {
-    resetShowcase();
+    resetDemo();
     const n = 4;
     // The first stop comes after the light has gone, with a long stretch of road from the door.
     expect(doorFlood(stopStory(0, n)).strength).toBe(0);
@@ -121,14 +121,14 @@ describe("tech conveyor and sunset", () => {
     expect(pace(stopStory(1, n))).toBeLessThan(between);
   });
 
-  it("lines the showcase up with the page and switches the panel at the nearest stop", () => {
-    setShowcase(2.4, 3.2);
+  it("lines the demo up with the page and switches the panel at the nearest stop", () => {
+    setDemo(2.4, 3.2);
     // Clamped: after the door's light, and before the contact chapter.
-    expect(SHOWCASE).toEqual({ start: 2.5, end: 2.95 });
-    setShowcase(2.55, 2.91);
-    expect([2.4, 2.55, 2.6, 2.67, 2.91, 3.2].map((s) => showcaseIndex(s, 4))).toEqual([0, 0, 0, 1, 3, 3]);
+    expect(DEMO).toEqual({ start: 2.5, end: 2.95 });
+    setDemo(2.55, 2.91);
+    expect([2.4, 2.55, 2.6, 2.67, 2.91, 3.2].map((s) => demoIndex(s, 4))).toEqual([0, 0, 0, 1, 3, 3]);
     expect(stopStory(3, 4)).toBeCloseTo(2.91);
-    resetShowcase();
+    resetDemo();
   });
 
   it("scrubs chapter hops from story rather than elapsed frames", () => {

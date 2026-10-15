@@ -78,7 +78,7 @@ export const portfolio = {
     { kind: "gmail", label: "Gmail", value: "" },
     { kind: "linkedin", label: "LinkedIn", value: "" },
     { kind: "facebook", label: "Facebook", value: "" },
-    { kind: "github", label: "GitHub", value: "" },
+    { kind: "github", label: "GitHub", value: "https://github.com/VuxSussy" },
     { kind: "roblox", label: "Roblox", value: "https://www.roblox.com/users/11732948357/profile" },
   ] satisfies ContactLink[],
   profile: {

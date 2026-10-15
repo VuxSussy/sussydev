@@ -18,7 +18,7 @@ export const caseStudies: Record<string, CaseStudy> = {
     facts: [
       { label: "Model nhân vật", value: "≈162 KB" },
       { label: "Test tự động", value: "71 + e2e" },
-      { label: "Đoạn showcase", value: "3300 px" },
+      { label: "Đoạn demo", value: "3300 px" },
     ],
     sections: [
       {

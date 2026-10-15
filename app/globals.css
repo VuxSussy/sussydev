@@ -184,30 +184,30 @@ button, a[href] { cursor: pointer; }
 .chapter-work { padding: 30vh var(--gutter) 3vh; }
 .work-inner { max-width: 40rem; display: grid; gap: 1.6rem; }
 .work-inner h2 { margin-bottom: 1rem; }
-/* The showcase comes after a stretch of road (Sussy runs out of the door first). While Sussy walks or runs past the
+/* The demo comes after a stretch of road (Sussy runs out of the door first). While Sussy walks or runs past the
    roadside screens, a gradient panel slides in from the left and shows the project Sussy is at; the invisible stop
-   markers below are spaced so the stretch takes a while, and their positions set where Sussy stops (setShowcase). */
-.showcase { position: relative; margin-top: 355vh; }
-.showcase-dock { position: fixed; z-index: 12; inset: 0 auto 0 0; display: flex; align-items: center; pointer-events: none; opacity: 0; transform: translateX(-104%); transition: transform 760ms var(--ease-out), opacity 520ms var(--ease-out); }
-.showcase-dock.is-active { opacity: 1; transform: none; }
-.showcase-dock.is-active .showcase-panel { pointer-events: auto; }
-.showcase-panel { position: relative; box-sizing: border-box; width: min(40rem, 48vw); height: 100vh; height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 1.4rem; padding: 6rem 4rem 6rem var(--gutter); background: linear-gradient(90deg, rgba(var(--bg-rgb), 0.94) 0%, rgba(14, 30, 58, 0.82) 48%, rgba(22, 44, 86, 0.38) 78%, rgba(var(--bg-rgb), 0) 100%); }
-.showcase-panel::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; background: linear-gradient(transparent, var(--accent), transparent); opacity: 0.8; }
+   markers below are spaced so the stretch takes a while, and their positions set where Sussy stops (setDemo). */
+.demo { position: relative; margin-top: 355vh; }
+.demo-dock { position: fixed; z-index: 12; inset: 0 auto 0 0; display: flex; align-items: center; pointer-events: none; opacity: 0; transform: translateX(-104%); transition: transform 760ms var(--ease-out), opacity 520ms var(--ease-out); }
+.demo-dock.is-active { opacity: 1; transform: none; }
+.demo-dock.is-active .demo-panel { pointer-events: auto; }
+.demo-panel { position: relative; box-sizing: border-box; width: min(40rem, 48vw); height: 100vh; height: 100svh; display: flex; flex-direction: column; justify-content: center; gap: 1.4rem; padding: 6rem 4rem 6rem var(--gutter); background: linear-gradient(90deg, rgba(var(--bg-rgb), 0.94) 0%, rgba(14, 30, 58, 0.82) 48%, rgba(22, 44, 86, 0.38) 78%, rgba(var(--bg-rgb), 0) 100%); }
+.demo-panel::before { content: ""; position: absolute; left: 0; top: 18%; bottom: 18%; width: 3px; background: linear-gradient(transparent, var(--accent), transparent); opacity: 0.8; }
 /* Each project's text sweeps in from the left too. */
-.showcase-body { display: grid; gap: 0.9rem; max-width: 28rem; animation: showcase-in 620ms var(--ease-out) both; }
-.showcase-body h3 { font-family: var(--font-display); font-size: clamp(2rem, 3.6vw, 3.4rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
-.showcase-summary { color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.6; }
-@keyframes showcase-in { from { opacity: 0; transform: translateX(-36px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
-.showcase-dots { display: flex; gap: 0.5rem; }
-.showcase-dots button { width: 44px; height: 44px; display: grid; place-items: center; margin: 0 -0.55rem; }
+.demo-body { display: grid; gap: 0.9rem; max-width: 28rem; animation: demo-in 620ms var(--ease-out) both; }
+.demo-body h3 { font-family: var(--font-display); font-size: clamp(2rem, 3.6vw, 3.4rem); font-weight: 500; letter-spacing: -0.04em; line-height: 1; }
+.demo-summary { color: var(--text-secondary); font-size: 1.0625rem; line-height: 1.6; }
+@keyframes demo-in { from { opacity: 0; transform: translateX(-36px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+.demo-dots { display: flex; gap: 0.5rem; }
+.demo-dots button { width: 44px; height: 44px; display: grid; place-items: center; margin: 0 -0.55rem; }
 /* The dot grows into a pill by unclipping a fixed 1.6rem pill (paint only), not by animating its width. */
-.showcase-dots button::before { content: ""; width: 1.6rem; height: 0.55rem; background: var(--border-strong); clip-path: inset(0 0.525rem round 999px); transition: background 300ms, clip-path 300ms var(--ease-out); }
-.showcase-dots button[aria-current="true"]::before { background: var(--accent); clip-path: inset(0 0 round 999px); }
-.showcase-stops { list-style: none; margin: 0; padding: 0; }
+.demo-dots button::before { content: ""; width: 1.6rem; height: 0.55rem; background: var(--border-strong); clip-path: inset(0 0.525rem round 999px); transition: background 300ms, clip-path 300ms var(--ease-out); }
+.demo-dots button[aria-current="true"]::before { background: var(--accent); clip-path: inset(0 0 round 999px); }
+.demo-stops { list-style: none; margin: 0; padding: 0; }
 /* 1100 px per stop: 3300 px from the first screen to the last, about 3.5 s at a full-run scroll (RUN_SCROLL_SPEED). */
-.showcase-stops li { height: 1100px; }
-.site[data-reduced-motion="true"] .showcase-body { animation: none; }
-.site[data-reduced-motion="true"] .showcase-dock { transition: none; }
+.demo-stops li { height: 1100px; }
+.site[data-reduced-motion="true"] .demo-body { animation: none; }
+.site[data-reduced-motion="true"] .demo-dock { transition: none; }
 .glass-card { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(14px) saturate(120%); -webkit-backdrop-filter: blur(14px) saturate(120%); padding: clamp(1.25rem, 2.4vw, 2rem); border-radius: 4px; display: grid; gap: 0.7rem; transition: border-color 300ms, transform 500ms var(--ease-out); }
 .glass-card:hover { border-color: var(--border-strong); }
 .glass-card h3 { font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 500; letter-spacing: -0.03em; }
@@ -374,11 +374,11 @@ button, a[href] { cursor: pointer; }
   .tech-group-label { white-space: nowrap; }
   .tech-caption { margin-top: 0.4rem; padding-top: 1rem; }
   /* Phones: the project panel is a gradient sheet along the bottom, under the scene. */
-  .showcase-dock { inset: auto 0 0 0; align-items: flex-end; }
-  .showcase-panel { width: 100%; height: auto; gap: 0.9rem; padding: 4.5rem var(--gutter) 5.2rem; background: linear-gradient(0deg, rgba(var(--bg-rgb), 0.96) 0%, rgba(14, 30, 58, 0.86) 55%, rgba(var(--bg-rgb), 0) 100%); }
-  .showcase-panel::before { display: none; }
-  .showcase-body h3 { font-size: 1.9rem; }
-  .showcase-summary { font-size: 0.9375rem; }
+  .demo-dock { inset: auto 0 0 0; align-items: flex-end; }
+  .demo-panel { width: 100%; height: auto; gap: 0.9rem; padding: 4.5rem var(--gutter) 5.2rem; background: linear-gradient(0deg, rgba(var(--bg-rgb), 0.96) 0%, rgba(14, 30, 58, 0.86) 55%, rgba(var(--bg-rgb), 0) 100%); }
+  .demo-panel::before { display: none; }
+  .demo-body h3 { font-size: 1.9rem; }
+  .demo-summary { font-size: 0.9375rem; }
   .tech-name { font-size: 2rem; }
   .tech-blurb { font-size: 0.9rem; }
   .contact-list a, .contact-pending { grid-template-columns: 1.25rem 5.5rem 1fr auto; }
