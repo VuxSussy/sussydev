@@ -468,7 +468,7 @@ export function PortfolioStory() {
                   <div className="demo-body" key={projectIndex} aria-live="polite">
                     <p className="card-meta"><span>{currentProject.year}</span><span>{currentProject.category}</span></p>
                     <h3 id="demo-title">{currentProject.title}</h3>
-                    <p className="demo-summary">{currentProject.summary}</p>
+                    {currentProject.summary && <p className="demo-summary">{currentProject.summary}</p>}
                     {caseStudies[currentProject.slug] ? (
                       <p className="card-foot"><Link prefetch={false} href={`/du-an/${currentProject.slug}`}>{t.readCase}</Link></p>
                     ) : (

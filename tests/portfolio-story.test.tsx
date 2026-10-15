@@ -116,7 +116,7 @@ describe("portfolio story", () => {
   });
 
   it("disposes the scene when the layout leaves the portfolio", async () => {
-    await renderRoute("/du-an/portfolio-3d");
+    await renderRoute("/du-an/demo-1");
     expect(scene.dispose).toHaveBeenCalledTimes(1);
   });
 

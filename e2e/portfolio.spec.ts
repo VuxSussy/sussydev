@@ -79,18 +79,19 @@ test.describe("portfolio story", () => {
     const stops = page.locator(".demo-stops li");
     const count = await stops.count();
     expect(count).toBeGreaterThan(1);
-    const titles: string[] = [];
+    const labels: string[] = [];
     for (let i = 0; i < count; i++) {
       // Put stop i on the viewport's centre line, where the story value is read.
       await stops.nth(i).evaluate((el) => { const r = el.getBoundingClientRect(); window.scrollBy(0, r.top + r.height / 2 - window.innerHeight / 2); });
       await expect(panel.locator(".demo-dots button").nth(i)).toHaveAttribute("aria-current", "true");
       await expect(panel).toBeInViewport();
-      titles.push((await panel.locator("h3").textContent()) ?? "");
+      // Placeholder projects can share a title, so tell them apart by the "Project NN / NN" eyebrow.
+      labels.push((await panel.locator(".eyebrow").textContent()) ?? "");
     }
-    expect(new Set(titles).size).toBe(count);
+    expect(new Set(labels).size).toBe(count);
     // The dots jump back to the first project.
     await panel.locator(".demo-dots button").first().click();
-    await expect(panel.locator("h3")).toHaveText(titles[0], { timeout: 10_000 });
+    await expect(panel.locator(".eyebrow")).toHaveText(labels[0], { timeout: 10_000 });
   });
 
   test("copy fades out before it slides under the fixed header", async ({ page }) => {
@@ -124,7 +125,7 @@ test.describe("portfolio story", () => {
   });
 
   test("has no horizontal overflow", async ({ page }) => {
-    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/sussy"]) {
+    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/demo-1"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, path).toBeLessThanOrEqual(0);
@@ -134,8 +135,8 @@ test.describe("portfolio story", () => {
 
 test.describe("secondary pages", () => {
   test("case study, changelog, CV and 404", async ({ page }) => {
-    await page.goto("/du-an/portfolio-3d");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Portfolio 3D này");
+    await page.goto("/du-an/demo-1");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Demo");
     await page.goto("/nhat-ky");
     await expect(page.locator(".release").first()).toBeVisible();
     await page.goto("/cv");

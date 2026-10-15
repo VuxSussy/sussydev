@@ -32,7 +32,6 @@ it("localises every profile string while keeping icons, colours and slugs from t
   expect(en.techStack.map((tech) => [tech.name, tech.group, tech.icon, tech.color])).toEqual(vi.techStack.map((tech) => [tech.name, tech.group, tech.icon, tech.color]));
   en.techStack.forEach((tech, index) => expect(tech.blurb).not.toBe(vi.techStack[index].blurb));
   expect(en.projects.map((project) => project.slug)).toEqual(vi.projects.map((project) => project.slug));
-  en.projects.forEach((project, index) => expect(project.summary).not.toBe(vi.projects[index].summary));
   expect(en.intro).not.toBe(vi.intro);
 });
 

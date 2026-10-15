@@ -127,12 +127,7 @@ const en: ProfileText = {
     Aseprite: { category: "Pixel art", blurb: "Icons, badges and pixel textures for in-game UI." },
     Git: { category: "Workflow", blurb: "Rojo + Git to manage code outside Studio." },
   },
-  projects: {
-    "animation-r6-len-web": { title: "R6 animation on the web", summary: "Extracted 15 KeyframeSequences from the Ultimate R6 Movement System pack (by Arczi) and replayed them on an R6 rig in Three.js.", impact: "Read the case study" },
-    sussy: { summary: "My avatar, taken from Roblox Studio into Blender and onto the web with an R6 rig.", impact: "Read the case study" },
-    "portfolio-3d": { title: "This 3D portfolio", summary: "A Roblox R6 character running to the rhythm of your scroll, animations taken straight from a .rbxm file.", impact: "Read the case study" },
-    "obby-nhieu-nguoi-choi": { title: "Multiplayer obby", summary: "Checkpoints, leaderboards and light effects for low-end devices.", impact: "Player numbers coming soon" },
-  },
+  projects: {},
   experience: [
     { period: "2023 – now", company: "Personal Roblox projects", role: "Roblox Developer", description: "Gameplay in Luau, map building and phone optimisation." },
     { period: "2022 – 2023", company: "Small game team", role: "Scripter", description: "Inventory, shop and UI for seasonal updates." },

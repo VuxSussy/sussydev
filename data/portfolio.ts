@@ -105,43 +105,12 @@ export const portfolio = {
       tech("Git", "tool", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
     ],
     workTitle: ["Những server", "đã từng mở."],
+    // Placeholder projects: every roadside screen shows the DEMO banner until real projects are added.
     projects: [
-      {
-        slug: "animation-r6-len-web",
-        // Screen on the roadside stop (a frame captured from this site).
-        image: "/projects/animation-r6-len-web.webp",
-        title: "Animation R6 lên web",
-        year: "2026",
-        category: "Luau · Animation · Tooling",
-        summary: "Trích 15 KeyframeSequence từ gói Ultimate R6 Movement System (của Arczi) và phát lại trên rig R6 bằng Three.js.",
-        impact: "Đọc case study",
-      },
-      {
-        slug: "sussy",
-        image: "/projects/sussy.webp",
-        title: "Sussy",
-        year: "2026",
-        category: "Avatar · Blender",
-        summary: "Nhân vật đại diện, đưa từ Roblox Studio sang Blender rồi lên web với rig R6.",
-        impact: "Đọc case study",
-      },
-      {
-        slug: "portfolio-3d",
-        image: "/projects/portfolio-3d.webp",
-        title: "Portfolio 3D này",
-        year: "2026",
-        category: "Three.js · Blender",
-        summary: "Nhân vật Roblox R6 chạy theo nhịp cuộn trang, animation lấy thẳng từ file .rbxm.",
-        impact: "Đọc case study",
-      },
-      {
-        slug: "obby-nhieu-nguoi-choi",
-        title: "Obby nhiều người chơi",
-        year: "2025",
-        category: "Gameplay · UI",
-        summary: "Checkpoint, bảng xếp hạng và hiệu ứng nhẹ cho máy cấu hình thấp.",
-        impact: "Số liệu người chơi sẽ được cập nhật",
-      },
+      { slug: "demo-1", title: "Demo", year: "2026", category: "Demo", summary: "" },
+      { slug: "demo-2", title: "Demo", year: "2026", category: "Demo", summary: "" },
+      { slug: "demo-3", title: "Demo", year: "2026", category: "Demo", summary: "" },
+      { slug: "demo-4", title: "Demo", year: "2026", category: "Demo", summary: "" },
     ],
     experience: [
       {

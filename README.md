@@ -37,8 +37,8 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Scroll-driven story** — every animation is a pure function of scroll position, so scrolling backwards looks identical. Sussy walks when you scroll slowly and runs when you scroll fast.
 - **Real Roblox animations** — R6 movement clips are extracted straight from `.rbxm` files and played back on a Three.js R6 rig.
 - **Tech demo** — a 3D conveyor of full-colour, extruded tech logos.
-- **Project demo screens** — roadside screens show each project's demo while a side panel describes it.
-- **Case studies, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
+- **Project demo screens** — roadside screens with a DEMO banner and a side panel for each project.
+- **Project pages, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
 - **Bilingual UI** — Vietnamese and English copy.
 - **Accessible** — respects `prefers-reduced-motion` and works on phones (bottom-sheet layout in portrait).
 
@@ -113,7 +113,6 @@ The current application lives on `main`; the `prototype` branch keeps the earlie
 ## Credits
 
 - The R6 avatar comes from Roblox Studio and is refined in Blender.
-- Movement animations come from the *Ultimate R6 Movement System* by Arczi; see [`tests/fixtures/README.md`](tests/fixtures/README.md).
 - Tech logos: [devicon](https://devicon.dev) (MIT), the official Luau and roblox-ts sites, Aseprite's app icon and [Simple Icons](https://simpleicons.org) (CC0).
 - The floating hammers, tools and bricks are modelled by `scripts/blender/build-props.py`.
 

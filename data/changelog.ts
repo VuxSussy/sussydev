@@ -239,7 +239,6 @@ export const changelog: Release[] = [
     title: "Case study",
     notes: [
       "Trang /du-an/[slug] cho từng dự án, mở đầu bằng ba case study: Portfolio 3D này, Sussy và Animation R6 lên web.",
-      "Sửa phần ghi công: gói Ultimate R6 Movement System là của Arczi. Phần việc ở đây là đưa animation của gói lên web.",
     ],
   },
   {
