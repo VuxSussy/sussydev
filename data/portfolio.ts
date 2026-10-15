@@ -107,10 +107,10 @@ export const portfolio = {
     workTitle: ["Những server", "đã từng mở."],
     // Placeholder projects: every roadside screen shows the DEMO banner until real projects are added.
     projects: [
-      { slug: "demo-1", title: "Demo", year: "2026", category: "Demo", summary: "" },
-      { slug: "demo-2", title: "Demo", year: "2026", category: "Demo", summary: "" },
-      { slug: "demo-3", title: "Demo", year: "2026", category: "Demo", summary: "" },
-      { slug: "demo-4", title: "Demo", year: "2026", category: "Demo", summary: "" },
+      { slug: "demo-1", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
+      { slug: "demo-2", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
+      { slug: "demo-3", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
+      { slug: "demo-4", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
     ],
     experience: [
       {

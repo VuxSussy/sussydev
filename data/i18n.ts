@@ -127,7 +127,12 @@ const en: ProfileText = {
     Aseprite: { category: "Pixel art", blurb: "Icons, badges and pixel textures for in-game UI." },
     Git: { category: "Workflow", blurb: "Rojo + Git to manage code outside Studio." },
   },
-  projects: {},
+  projects: {
+    "demo-1": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
+    "demo-2": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
+    "demo-3": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
+    "demo-4": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
+  },
   experience: [
     { period: "2023 – now", company: "Personal Roblox projects", role: "Roblox Developer", description: "Gameplay in Luau, map building and phone optimisation." },
     { period: "2022 – 2023", company: "Small game team", role: "Scripter", description: "Inventory, shop and UI for seasonal updates." },
