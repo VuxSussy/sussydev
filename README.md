@@ -1,6 +1,8 @@
 # sussydev
 
 A scroll-driven Roblox developer portfolio built with React, TypeScript and Three.js. Sussy moves through a studio, a tool showcase, project screens and a sunset landscape as the visitor scrolls.
+Website: https://sussydev.vercel.app/ (Not done yet - only finished prototype)
+
 
 ## Tech Stack
 
