@@ -1,14 +1,15 @@
 /**
- * Ambient music made in FL Studio (see assets-src/audio/README.md): a tech arpeggio loop for the studio and a
- * countryside pad with wind for the road and the sunset. Both loops play together and crossfade with the
+ * Chill ambient music made in FL Studio (see assets-src/audio/README.md): soft electric keys for the studio and a
+ * warm countryside pad with a light breeze for the road and the sunset. Both loops play together and crossfade with the
  * story's sunset mix. The AudioContext is only created after the visitor turns sound on (a user gesture).
  */
 const TRACKS = [
-  // `seconds` is the musical loop length (4 and 8 bars at 130 BPM); looping on it skips any MP3 padding.
-  { url: "/audio/tech.mp3", seconds: (4 * 4 * 60) / 130 },
+  // `seconds` is the musical loop length (8 bars at 130 BPM, played half-time); looping on it skips any MP3 padding.
+  { url: "/audio/tech.mp3", seconds: (8 * 4 * 60) / 130 },
   { url: "/audio/countryside.mp3", seconds: (8 * 4 * 60) / 130 },
 ] as const;
-const VOLUME = 0.6;
+/** Background level: the music should sit under the page, not on top of it. */
+const VOLUME = 0.4;
 
 export class Ambience {
   private context: AudioContext | null = null;
@@ -63,7 +64,7 @@ export class Ambience {
     void Promise.all(TRACKS.map((track) => this.load(ctx, track.url)))
       .then((buffers) => {
         if (this.context !== ctx) return;
-        // Started together, so the two loops stay in step (the countryside loop is exactly twice as long).
+        // Started together, so the two loops (the same length) stay in step and crossfade on the beat.
         const at = ctx.currentTime + 0.05;
         buffers.forEach((buffer, index) => {
           const source = ctx.createBufferSource();
