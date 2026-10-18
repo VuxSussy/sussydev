@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.7",
+    date: "2026-10-18",
+    title: "Nhạc tự bật",
+    notes: [
+      "Nhạc thử phát ngay khi trang tải xong, không cần bấm, ở những trình duyệt cho phép tự phát.",
+      "Trình duyệt nào chặn tự phát thì nhạc bật ở lần nhấn chuột, chạm hoặc gõ phím đầu tiên (cuộn trang không tính, đây là quy định của trình duyệt).",
+    ],
+  },
+  {
     version: "4.6",
     date: "2026-10-18",
     title: "Discord và favicon",

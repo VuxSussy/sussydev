@@ -40,7 +40,7 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Project demo screens** — roadside screens with a DEMO banner and a side panel for each project.
 - **Project pages, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
 - **Bilingual UI** — English first, with a Vietnamese toggle.
-- **Sound** — on by default (it starts at the first click, tap or key): a relaxing lofi loop that steps down once Sussy leaves the studio, and a soft countryside breeze that rises towards the sunset.
+- **Sound** — on by default: it starts on load where the browser allows autoplay, otherwise at the first click, tap or key: a relaxing lofi loop that steps down once Sussy leaves the studio, and a soft countryside breeze that rises towards the sunset.
 - **Click to hop** — Sussy only jumps when clicked.
 - **Mobile-friendly** — bottom-sheet layout in portrait.
 

@@ -1,6 +1,8 @@
 /**
- * Site audio (see assets-src/audio/README.md). On by default, but browsers only allow audio after a user gesture, so it
- * starts at the visitor's first click, tap or key press:
+ * Site audio (see assets-src/audio/README.md). On by default: it tries to start as soon as the page loads, which works
+ * wherever the browser allows autoplay (e.g. Chrome for a site the visitor has played media on before, or a site they
+ * allowed). Where autoplay is blocked it starts at the first mouse press, tap or key press, the earliest moment browsers
+ * permit (scrolling does not count):
  * - music: "Slowburn – Relaxing LoFi Background Music" by JoelFazhari (Pixabay Content License), a seamless 93 s loop
  *   streamed through an <audio> element so it is never decoded into memory;
  * - a soft countryside breeze that fades in towards the sunset.
@@ -11,8 +13,8 @@ const WIND = "/audio/countryside-wind.mp3";
 /** Levels: everything sits under the page, not on top of it. */
 const VOLUME = 0.5;
 const WIND_LEVEL = 0.55;
-/** Events that count as a user gesture for starting audio. */
-const GESTURES = ["pointerdown", "keydown", "touchend"] as const;
+/** Events that count as a user gesture for starting audio (scroll and wheel do not). */
+const GESTURES = ["pointerdown", "mousedown", "pointerup", "click", "keydown", "touchend"] as const;
 /** Music level outside the studio, relative to inside. */
 const OUTSIDE_MUSIC = 0.6;
 
@@ -30,21 +32,13 @@ export class Ambience {
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
-    if (enabled && !this.audio) {
-      // Before any gesture an AudioContext would start suspended and play() would be refused: wait for one.
-      if (navigator.userActivation && !navigator.userActivation.hasBeenActive) {
-        GESTURES.forEach((type) => window.addEventListener(type, this.onGesture, { capture: true, passive: true }));
-        return;
-      }
-      this.init();
-    }
+    if (enabled && !this.audio) this.init();
     const { audio, context, master } = this;
     if (!audio || !context || !master) return;
     window.clearTimeout(this.pauseTimer);
     master.gain.setTargetAtTime(enabled ? 1 : 0, context.currentTime, 0.4);
     if (enabled) {
-      void context.resume();
-      void audio.play().catch(() => { /* blocked or offline: stay silent */ });
+      this.start();
     } else {
       // Pause once faded out, so a muted page does not keep streaming or running the audio graph.
       this.pauseTimer = window.setTimeout(() => {
@@ -54,9 +48,25 @@ export class Ambience {
     }
   }
 
+  /** Try to play now; if the browser blocks autoplay, try again at the first gesture. */
+  private start() {
+    const { audio, context } = this;
+    if (!audio || !context) return;
+    void context.resume();
+    audio
+      .play()
+      // The <audio> element may be allowed while the AudioContext it plays through is still suspended (silent).
+      .then(() => { if (context.state !== "running") this.waitForGesture(); })
+      .catch(() => this.waitForGesture());
+  }
+
+  private waitForGesture() {
+    GESTURES.forEach((type) => window.addEventListener(type, this.onGesture, { capture: true, passive: true }));
+  }
+
   private onGesture = () => {
     GESTURES.forEach((type) => window.removeEventListener(type, this.onGesture, { capture: true }));
-    if (this.enabled && !this.audio) this.setEnabled(true);
+    if (this.enabled) this.start();
   };
 
   get isEnabled() {
