@@ -6,7 +6,7 @@ import './globals.css';
 const display = Archivo({ variable: '--font-display', subsets: ['latin', 'vietnamese'], weight: ['300', '400', '500', '600'] });
 const body = Space_Grotesk({ variable: '--font-body', subsets: ['latin', 'vietnamese'], weight: ['400', '500', '600'] });
 
-const title = 'Sussy / 001 — Roblox Developer Portfolio';
+const title = 'Sussy | Aspiring Roblox Developer';
 const description = 'A Roblox developer portfolio. Scroll to run with Sussy, an R6 character, past the toolkit and the projects, then sit down under a tree at sunset.';
 
 export const metadata: Metadata = {

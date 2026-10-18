@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ArrowLeft } from "lucide-react";
 import { changelog } from "@/data/changelog";
 import { portfolio } from "@/data/portfolio";
+import { BrandMark } from "@/components/story/brand-mark";
 
 export const metadata: Metadata = {
   title: "Nhật ký phát triển — Sussy",
@@ -15,7 +16,7 @@ export default function ChangelogPage() {
     <div className="site changelog-page">
       <header className="changelog-header">
         <a className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true" />
+          <BrandMark />
           <strong>{portfolio.character.toUpperCase()} / LOG</strong>
         </a>
         <a className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</a>

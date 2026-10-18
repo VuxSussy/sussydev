@@ -8,6 +8,16 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.6",
+    date: "2026-10-18",
+    title: "Discord và favicon",
+    notes: [
+      "Liên hệ: bỏ số điện thoại, thêm Discord.",
+      "Logo cạnh tên Sussy (header, loading, nhật ký, case study) giờ là favicon của trang: đầu Sussy đội mũ và đeo kính.",
+      "Tiêu đề tab: “Sussy | Aspiring Roblox Developer”.",
+    ],
+  },
+  {
     version: "4.5",
     date: "2026-10-18",
     title: "Sussy | Aspiring Roblox Developer",

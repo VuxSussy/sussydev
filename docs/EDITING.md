@@ -7,7 +7,7 @@ The site opens in English; Vietnamese is the toggle.
 | --- | --- | --- |
 | Your real name (CV title, page footer, search results) | `data/portfolio.ts` | `name` (still the placeholder "Tên của bạn") |
 | Header text "Sussy \| Aspiring Roblox Developer" | `data/portfolio.ts` | `character` and `profile.brandSub` |
-| Phone, Gmail, LinkedIn, Facebook, GitHub, Roblox | `data/portfolio.ts` | `contacts[].value` (empty shows "Coming soon") |
+| Discord, Gmail, LinkedIn, Facebook, GitHub, Roblox | `data/portfolio.ts` | `contacts[].value` (empty shows "Coming soon"; Discord takes a link such as `https://discord.com/users/<id>`) |
 | City and availability, **Vietnamese** | `data/portfolio.ts` | `location`, `availability` |
 | City and availability, **English** | `data/i18n.ts` | `ui.en.location`, `ui.en.availability` |
 | Headline, intro, section titles, About, Experience, **Vietnamese** | `data/portfolio.ts` | `profile.headline`, `intro`, `techTitle`, `workTitle`, `about`, `experience` |
@@ -21,6 +21,7 @@ The site opens in English; Vietnamese is the toggle.
 | Buttons and small labels | `data/i18n.ts` | `ui.vi` / `ui.en` |
 | Changelog page (`/nhat-ky`) | `data/changelog.ts` | add a release at the top of `changelog` |
 | Browser tab title and search/social description | `app/layout.tsx` | `title`, `description` |
+| Logo next to the name / favicon | `public/brand/sussy-icon.webp` (logo), `app/icon.png` (favicon) | replace the image files |
 | Background music and breeze | `public/audio/` | see `assets-src/audio/README.md` |
 
 After editing, run `npm run dev -- --port 3002` and open http://localhost:3002 to check, then commit and push: Vercel deploys `main`

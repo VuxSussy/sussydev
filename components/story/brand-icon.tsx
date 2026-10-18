@@ -1,8 +1,8 @@
-import { Phone } from "lucide-react";
-import { siFacebook, siGithub, siGmail, siRoblox } from "simple-icons";
+import { siDiscord, siFacebook, siGithub, siGmail, siRoblox } from "simple-icons";
 import type { ContactLink } from "@/data/portfolio";
 
 const PATHS: Partial<Record<ContactLink["kind"], string>> = {
+  discord: siDiscord.path,
   facebook: siFacebook.path,
   github: siGithub.path,
   gmail: siGmail.path,
@@ -11,7 +11,6 @@ const PATHS: Partial<Record<ContactLink["kind"], string>> = {
 
 /** Monochrome contact glyph (simple-icons paths; LinkedIn has no CC0 mark, so it uses a lettermark). */
 export function BrandIcon({ kind, size = 18 }: { kind: ContactLink["kind"]; size?: number }) {
-  if (kind === "phone") return <Phone aria-hidden="true" size={size} strokeWidth={1.6} />;
   if (kind === "linkedin") {
     return (
       <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24">

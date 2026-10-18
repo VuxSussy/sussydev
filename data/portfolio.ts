@@ -37,7 +37,7 @@ export type TechStack = {
 };
 
 export type ContactLink = {
-  kind: "phone" | "gmail" | "linkedin" | "facebook" | "github" | "roblox";
+  kind: "discord" | "gmail" | "linkedin" | "facebook" | "github" | "roblox";
   label: string;
   /** Leave empty until the real value is known — the UI shows it as "Đang cập nhật". */
   value: string;
@@ -72,10 +72,11 @@ export const portfolio = {
   availability: "Sẵn sàng cho những dự án phù hợp",
   resumeUrl: "",
   contacts: [
-    { kind: "phone", label: "Điện thoại", value: "" },
-    { kind: "gmail", label: "Gmail", value: "" },
+    // Discord: a profile link such as https://discord.com/users/<your user id>, or an invite link.
+    { kind: "discord", label: "Discord", value: "" },
+    { kind: "gmail", label: "Gmail", value: "voleanhvu736@gmail.com" },
     { kind: "linkedin", label: "LinkedIn", value: "" },
-    { kind: "facebook", label: "Facebook", value: "" },
+    { kind: "facebook", label: "Facebook", value: "https://facebook.com/vuxsussy" },
     { kind: "github", label: "GitHub", value: "https://github.com/VuxSussy" },
     { kind: "roblox", label: "Roblox", value: "https://www.roblox.com/users/11732948357/profile" },
   ] satisfies ContactLink[],
