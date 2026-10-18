@@ -40,7 +40,7 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Project demo screens** — roadside screens with a DEMO banner and a side panel for each project.
 - **Project pages, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
 - **Bilingual UI** — English first, with a Vietnamese toggle.
-- **Sound** — a relaxing lofi loop plus two sounds made in FL Studio: a tech chime as the conveyor changes tech, and a countryside wind that rises towards the sunset. Off until the visitor turns sound on.
+- **Sound** — a relaxing lofi loop that steps down once Sussy leaves the studio, and a countryside wind made in FL Studio that rises towards the sunset. Off until the visitor turns sound on.
 - **Click to hop** — Sussy only jumps when clicked.
 - **Mobile-friendly** — bottom-sheet layout in portrait.
 

@@ -2,28 +2,26 @@
  * Site audio (see assets-src/audio/README.md), all off until the visitor turns sound on:
  * - music: "Slowburn – Relaxing LoFi Background Music" by JoelFazhari (Pixabay Content License), a seamless 93 s loop
  *   streamed through an <audio> element so it is never decoded into memory;
- * - two sounds made in FL Studio: a soft tech chime when the focused tech changes, and a countryside wind bed
- *   (wind chimes over a breeze) that fades in as the studio gives way to the sunset.
+ * - a countryside wind bed made in FL Studio (wind chimes over a breeze) that fades in towards the sunset.
+ * Once Sussy is through the studio door the music steps down to OUTSIDE_MUSIC, leaving room for the wind.
  */
 const MUSIC = "/audio/ambient.mp3";
 const WIND = "/audio/countryside-wind.mp3";
-const CHIME = "/audio/tech-chime.mp3";
 /** Levels: everything sits under the page, not on top of it. */
 const VOLUME = 0.5;
 const WIND_LEVEL = 0.55;
-const CHIME_LEVEL = 0.35;
-/** A fast scroll through the conveyor should not machine-gun the chime. */
-const CHIME_GAP_MS = 220;
+/** Music level outside the studio, relative to inside. */
+const OUTSIDE_MUSIC = 0.6;
 
 export class Ambience {
   private audio: HTMLAudioElement | null = null;
   private context: AudioContext | null = null;
   private master: GainNode | null = null;
+  private music: GainNode | null = null;
   private wind: GainNode | null = null;
-  private chimeBuffer: AudioBuffer | null = null;
   private enabled = false;
   private mix = 0;
-  private lastChime = 0;
+  private outside = 0;
   private pauseTimer = 0;
   private abort = new AbortController();
 
@@ -50,25 +48,24 @@ export class Ambience {
     return this.enabled;
   }
 
-  /** 0 = studio, 1 = sunset countryside: how much of the wind bed is heard. */
-  setMix(mix: number) {
-    if (Math.abs(mix - this.mix) < 0.01 && mix !== 0 && mix !== 1) return;
+  /**
+   * @param mix 0 = studio, 1 = sunset countryside: how much of the wind bed is heard
+   * @param outside 0 = in the studio, 1 = through the door: the music eases down to OUTSIDE_MUSIC
+   */
+  setMix(mix: number, outside: number) {
+    const changed = (a: number, b: number) => Math.abs(a - b) >= 0.01 || ((b === 0 || b === 1) && a !== b);
+    if (!changed(this.mix, mix) && !changed(this.outside, outside)) return;
     this.mix = mix;
-    if (this.context && this.wind) this.wind.gain.setTargetAtTime(WIND_LEVEL * Math.min(Math.max(mix, 0), 1), this.context.currentTime, 0.3);
+    this.outside = outside;
+    this.applyLevels(0.3);
   }
 
-  /** The tech chime, for a newly focused tech on the conveyor. */
-  chime() {
-    const { context, master, chimeBuffer } = this;
-    const now = performance.now();
-    if (!this.enabled || !context || !master || !chimeBuffer || now - this.lastChime < CHIME_GAP_MS) return;
-    this.lastChime = now;
-    const source = context.createBufferSource();
-    source.buffer = chimeBuffer;
-    const gain = context.createGain();
-    gain.gain.value = CHIME_LEVEL;
-    source.connect(gain).connect(master);
-    source.start();
+  private applyLevels(smoothing: number) {
+    const { context, music, wind } = this;
+    if (!context || !music || !wind) return;
+    const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
+    music.gain.setTargetAtTime(VOLUME * (1 - (1 - OUTSIDE_MUSIC) * clamp(this.outside)), context.currentTime, smoothing);
+    wind.gain.setTargetAtTime(WIND_LEVEL * clamp(this.mix), context.currentTime, smoothing);
   }
 
   private init() {
@@ -82,17 +79,15 @@ export class Ambience {
     const audio = (this.audio = new Audio(MUSIC));
     audio.loop = true;
     audio.preload = "auto";
-    const music = context.createGain();
-    music.gain.value = VOLUME;
+    const music = (this.music = context.createGain());
     context.createMediaElementSource(audio).connect(music).connect(master);
 
     const wind = (this.wind = context.createGain());
-    wind.gain.value = WIND_LEVEL * this.mix;
     wind.connect(master);
-    void Promise.all([this.load(context, WIND), this.load(context, CHIME)])
-      .then(([windBuffer, chimeBuffer]) => {
+    this.applyLevels(0.01);
+    void this.load(context, WIND)
+      .then((windBuffer) => {
         if (this.context !== context) return;
-        this.chimeBuffer = chimeBuffer;
         const source = context.createBufferSource();
         source.buffer = windBuffer;
         source.loop = true;
