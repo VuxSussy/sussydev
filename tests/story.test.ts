@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CHAPTERS, chapterIndex, chapterJumpTime, chapterTarget, DOOR_STORY, doorFlood, journeyX, resetDemo, ROAD, setDemo, DEMO, demoIndex, speechBeat, stopStory, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
+import { CHAPTERS, chapterIndex, chapterTarget, DOOR_STORY, doorFlood, journeyX, resetDemo, ROAD, setDemo, DEMO, demoIndex, speechBeat, stopStory, clamp01, damp, studioExit, worldReveal, scrollTopForStory, sitMix, smoothstep, smootherstep, storyForTech, storyFromSections, sunsetMix, techPosition, techVisibility } from "../lib/story";
 
 const section = (top: number, height: number) => ({ getBoundingClientRect: () => ({ top, height }) }) as HTMLElement;
 
@@ -129,21 +129,5 @@ describe("tech conveyor and sunset", () => {
     expect([2.4, 2.55, 2.6, 2.67, 2.91, 3.2].map((s) => demoIndex(s, 4))).toEqual([0, 0, 0, 1, 3, 3]);
     expect(stopStory(3, 4)).toBeCloseTo(2.91);
     resetDemo();
-  });
-
-  it("scrubs chapter hops from story rather than elapsed frames", () => {
-    // Hops only in the studio: none on the road while Sussy walks past the screens.
-    expect(chapterJumpTime(2.66)).toBe(-1);
-    expect(chapterJumpTime(2.95)).toBe(-1);
-    for (const boundary of [0.65, 1.65]) {
-      expect(chapterJumpTime(boundary - 0.01)).toBe(-1);
-      expect(chapterJumpTime(boundary)).toBeCloseTo(0);
-      expect(chapterJumpTime(boundary + 0.09)).toBeCloseTo(0.475);
-      expect(chapterJumpTime(boundary + 0.181)).toBe(-1);
-    }
-    const steps = Array.from({ length: 401 }, (_, i) => i / 100);
-    const forward = steps.map(chapterJumpTime);
-    expect([...steps].reverse().map(chapterJumpTime).reverse()).toEqual(forward);
-    expect(chapterJumpTime(3.5)).toBe(-1);
   });
 });

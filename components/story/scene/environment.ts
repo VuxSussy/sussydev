@@ -819,7 +819,7 @@ export function createStudioProps() {
     },
     /**
      * Clone the named models from props.glb into place. `now` is the scene clock (props rise in from there);
-     * pass -Infinity to show them at once (reduced motion).
+     * pass -Infinity to show them at once.
      */
     addModels(models: THREE.Object3D, now: number) {
       if (placed.length) return;

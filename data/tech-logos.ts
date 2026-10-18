@@ -7,10 +7,10 @@ import { siRoblox, siRobloxstudio } from "simple-icons";
  *   so the white "TS" sits on the blue square, the C++ letters on the hexagon, and so on.
  *   `fills` maps a fill the SVG loader can't read (gradients) to `[from, to, angleDeg]` (a linear vertex-colour
  *   gradient, angle in SVG space with y down), or to `null` to drop that shape.
- * - `pixels`: pixel art (Aseprite's own app icon), built from one voxel per pixel.
+ * - `pixels`: pixel art, built from one voxel per pixel.
  *
  * Sources: devicon (MIT) for TypeScript, Python, C++, React, Three.js, Blender, Figma and Git; luau.org's favicon;
- * roblox-ts.com's logo; simple-icons (CC0) for Roblox and Roblox Studio; Aseprite's 16×16 app icon. The marks
+ * roblox-ts.com's logo; simple-icons (CC0) for Roblox and Roblox Studio. The marks
  * belong to their owners and are shown only to name the tools. Techs without an entry fall back to the
  * one-colour simple-icons path in `data/portfolio.ts`.
  */
@@ -34,25 +34,4 @@ export const TECH_LOGOS: Record<string, LogoSpec> = {
   // The 2022 "tilt" mark; drawn light, since the real black one would vanish on the dark studio floor.
   Roblox: { kind: "svg", svg: icon(siRoblox.path, "#eef0f2") },
   "Roblox Studio": { kind: "svg", svg: icon(siRobloxstudio.path, `#${siRobloxstudio.hex}`) },
-  Aseprite: {
-    kind: "pixels",
-    palette: { a: "#6d6a76", b: "#655561", c: "#ffffff", d: "#7d929e" },
-    rows: [
-      "..abbbbbbbbbba..",
-      ".abccccccccccba.",
-      ".bccccccccccccb.",
-      ".bccccccccccccb.",
-      ".bcccbccccbcccb.",
-      ".bcccbccccbcccb.",
-      ".bcccbccccbcccb.",
-      ".bcccbccccbcccb.",
-      ".bccccccccccccb.",
-      ".bccccccccccccb.",
-      ".bccccccccccccb.",
-      ".bdccccccccccdb.",
-      ".bddddddddddddb.",
-      ".abddddddddddba.",
-      "..abbbbbbbbbba..",
-    ],
-  },
 };

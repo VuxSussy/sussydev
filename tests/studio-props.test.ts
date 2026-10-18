@@ -66,7 +66,7 @@ it("rises the props in, keeps them in place afterwards and sinks them while the 
   expect((plastic.material as THREE.MeshStandardMaterial).color.getHexString()).toBe("ffffff");
 });
 
-it("shows the props at once with reduced motion", () => {
+it("shows the props at once when added with no rise-in", () => {
   const props = createStudioProps();
   props.addModels(models, -Infinity);
   props.update(0, 1);

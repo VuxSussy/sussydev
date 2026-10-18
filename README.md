@@ -39,8 +39,10 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Tech demo** — a 3D conveyor of full-colour, extruded tech logos.
 - **Project demo screens** — roadside screens with a DEMO banner and a side panel for each project.
 - **Project pages, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
-- **Bilingual UI** — Vietnamese and English copy.
-- **Accessible** — respects `prefers-reduced-motion` and works on phones (bottom-sheet layout in portrait).
+- **Bilingual UI** — English first, with a Vietnamese toggle.
+- **Sound** — a relaxing lofi loop plus two sounds made in FL Studio: a tech chime as the conveyor changes tech, and a countryside wind that rises towards the sunset. Off until the visitor turns sound on.
+- **Click to hop** — Sussy only jumps when clicked.
+- **Mobile-friendly** — bottom-sheet layout in portrait.
 
 ## Tech stack
 
@@ -113,8 +115,9 @@ The current application lives on `main`; the `prototype` branch keeps the earlie
 ## Credits
 
 - The R6 avatar comes from Roblox Studio and is refined in Blender.
-- Tech logos: [devicon](https://devicon.dev) (MIT), the official Luau and roblox-ts sites, Aseprite's app icon and [Simple Icons](https://simpleicons.org) (CC0).
+- Tech logos: [devicon](https://devicon.dev) (MIT), the official Luau and roblox-ts sites and [Simple Icons](https://simpleicons.org) (CC0).
 - The floating hammers, tools and bricks are modelled by `scripts/blender/build-props.py`.
+- Background music: "Slowburn – Relaxing LoFi Background Music" by [JoelFazhari](https://pixabay.com/users/joelfazhari/) (Pixabay Content License).
 
 Brand names and logos belong to their respective owners.
 

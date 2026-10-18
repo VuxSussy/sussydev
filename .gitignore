@@ -48,3 +48,6 @@ next-env.d.ts
 
 # TypeScript incremental cache
 *.tsbuildinfo
+
+# Licensed music downloads (see assets-src/audio/README.md)
+assets-src/audio/*.mp3
