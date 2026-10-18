@@ -39,8 +39,10 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Tech demo** — a 3D conveyor of full-colour, extruded tech logos.
 - **Project demo screens** — roadside screens with a DEMO banner and a side panel for each project.
 - **Project pages, changelog and CV** — `/du-an/[slug]`, `/nhat-ky` and `/cv` routes.
-- **Bilingual UI** — Vietnamese and English copy.
-- **Accessible** — respects `prefers-reduced-motion` and works on phones (bottom-sheet layout in portrait).
+- **Bilingual UI** — English first, with a Vietnamese toggle.
+- **Ambient music** — two loops made in FL Studio (a tech arpeggio in the studio, a countryside pad with wind outside) that crossfade as Sussy leaves the studio. Off until the visitor turns sound on.
+- **Click to hop** — Sussy only jumps when clicked.
+- **Mobile-friendly** — bottom-sheet layout in portrait.
 
 ## Tech stack
 
@@ -49,7 +51,7 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 | Framework | Vinext (Next.js App Router compatible), React 19, TypeScript |
 | 3D | Three.js (vanilla, no R3F), R6 rig and animation playback |
 | Styling | Tailwind CSS 4, Lucide icons, Simple Icons |
-| Assets | Roblox Studio, Blender (headless build scripts), glTF-Transform |
+| Assets | Roblox Studio, Blender (headless build scripts), glTF-Transform, FL Studio (music) |
 | Quality | Oxlint, Oxfmt, Vitest, Playwright, GitHub Actions CI |
 | Hosting | Vercel (via Nitro); Cloudflare Workers / Wrangler for local preview |
 
@@ -90,7 +92,7 @@ sussydev/
 ├── data/                # Portfolio content, translations, case studies, changelog
 ├── lib/                 # Scroll maths, audio and Roblox R6 rig logic
 ├── public/              # Optimized models, animations and images
-├── assets-src/          # Editable source assets
+├── assets-src/          # Editable source assets (3D, FL Studio renders and note data)
 ├── scripts/             # Asset conversion and Blender build scripts
 ├── docs/                # Design tokens and style reference
 ├── tests/               # Unit and regression tests
@@ -113,7 +115,7 @@ The current application lives on `main`; the `prototype` branch keeps the earlie
 ## Credits
 
 - The R6 avatar comes from Roblox Studio and is refined in Blender.
-- Tech logos: [devicon](https://devicon.dev) (MIT), the official Luau and roblox-ts sites, Aseprite's app icon and [Simple Icons](https://simpleicons.org) (CC0).
+- Tech logos: [devicon](https://devicon.dev) (MIT), the official Luau and roblox-ts sites and [Simple Icons](https://simpleicons.org) (CC0).
 - The floating hammers, tools and bricks are modelled by `scripts/blender/build-props.py`.
 
 Brand names and logos belong to their respective owners.

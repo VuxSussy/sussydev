@@ -15,7 +15,7 @@ test.describe("portfolio story", () => {
   test("the old /roblox link lands on the merged Roblox developer portfolio", async ({ page }) => {
     await page.goto("/roblox");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.locator("h1#intro-title")).toContainText("Dựng map.");
+    await expect(page.locator("h1#intro-title")).toContainText("Build maps.");
     await expect(page.locator(".mode-switch")).toHaveCount(0);
   });
 
@@ -32,15 +32,17 @@ test.describe("portfolio story", () => {
     expect(Date.now() - start).toBeGreaterThan(3500);
   });
 
-  test("toggles the interface language and remembers it", async ({ page }) => {
+  test("opens in English, toggles the interface language and remembers it", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("button", { name: /Ngôn ngữ/ }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.locator("h1#intro-title")).toContainText("Build maps.");
-    await page.reload();
     await expect(page.locator("h1#intro-title")).toContainText("Build maps.");
     await page.getByRole("button", { name: /Language/ }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "vi");
+    await expect(page.locator("h1#intro-title")).toContainText("Dựng map.");
+    await page.reload();
+    await expect(page.locator("h1#intro-title")).toContainText("Dựng map.");
+    await page.getByRole("button", { name: /Ngôn ngữ/ }).click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 
   test("J moves to the next chapter", async ({ page, isMobile }) => {
@@ -55,12 +57,12 @@ test.describe("portfolio story", () => {
     await page.goto("/");
     await expect(page.locator(".loader")).toHaveCount(0, { timeout: 30_000 });
     const chips = page.locator("#tech-stack .tech-chips");
-    for (const [name, first] of [["Ngôn ngữ", "Luau"], ["Framework", "Roblox"], ["Công cụ", "Roblox Studio"]]) {
+    for (const [name, first] of [["Languages", "Luau"], ["Frameworks", "Roblox"], ["Tools", "Roblox Studio"]]) {
       await expect(chips.getByRole("group", { name }).getByRole("button").first()).toHaveText(first);
     }
-    await chips.getByRole("group", { name: "Công cụ" }).getByRole("button", { name: "Blender" }).click();
+    await chips.getByRole("group", { name: "Tools" }).getByRole("button", { name: "Blender" }).click();
     await expect(page.locator(".tech-caption .tech-name")).toHaveText("Blender", { timeout: 10_000 });
-    await expect(page.locator(".tech-caption .tech-kind")).toHaveText("Công cụ");
+    await expect(page.locator(".tech-caption .tech-kind")).toHaveText("Tools");
   });
 
   test("the header contact link lands on the seated sunset scene", async ({ page }) => {
@@ -125,7 +127,7 @@ test.describe("portfolio story", () => {
   });
 
   test("has no horizontal overflow", async ({ page }) => {
-    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/demo-1"]) {
+    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/demo-2"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, path).toBeLessThanOrEqual(0);
@@ -135,7 +137,7 @@ test.describe("portfolio story", () => {
 
 test.describe("secondary pages", () => {
   test("case study, changelog, CV and 404", async ({ page }) => {
-    await page.goto("/du-an/demo-1");
+    await page.goto("/du-an/demo-2");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Demo");
     await page.goto("/nhat-ky");
     await expect(page.locator(".release").first()).toBeVisible();

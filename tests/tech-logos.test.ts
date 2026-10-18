@@ -18,7 +18,7 @@ it("has a real logo for every tech on the conveyor", () => {
 });
 
 it("builds each logo in its original colours, sized to fit the plinth", () => {
-  const multi = ["Luau", "TypeScript", "Python", "C++", "roblox-ts", "Blender", "Figma", "Aseprite"];
+  const multi = ["Luau", "TypeScript", "Python", "C++", "roblox-ts", "Blender", "Figma"];
   for (const [name, spec] of Object.entries(TECH_LOGOS)) {
     const { geometry } = buildLogo(spec);
     const size = geometry.boundingBox!.getSize(new THREE.Vector3());
