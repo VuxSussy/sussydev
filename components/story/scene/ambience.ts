@@ -1,6 +1,6 @@
 /**
- * Chill ambient music made in FL Studio (see assets-src/audio/README.md): soft electric keys for the studio and a
- * warm countryside pad with a light breeze for the road and the sunset. Both loops play together and crossfade with the
+ * Chill lofi made in FL Studio (see assets-src/audio/README.md): soft keys over a quiet beat for the studio, and
+ * strummed country guitar with a light breeze for the road and the sunset. Both loops play together and crossfade with the
  * story's sunset mix. The AudioContext is only created after the visitor turns sound on (a user gesture).
  */
 const TRACKS = [
