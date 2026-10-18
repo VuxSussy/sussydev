@@ -8,6 +8,18 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.3",
+    date: "2026-10-18",
+    title: "EasyVFX và nhạc nền",
+    notes: [
+      "Màn hình dự án đầu tiên giờ là EasyVFX, plugin VFX không cần code cho Roblox Studio, có ảnh chụp thật trong Studio và link GitHub.",
+      "Nút âm thanh phát hai đoạn nhạc làm trong FL Studio: vòng arpeggio công nghệ trong studio, chuyển dần sang pad đồng quê có tiếng gió khi Sussy ra đường. Tiếng bước chân đã bỏ.",
+      "Sussy chỉ nhảy khi được bấm chuột, không còn tự nhảy khi qua chương.",
+      "Bỏ nút giảm chuyển động. Trang mở bằng tiếng Anh trước, nút VI vẫn chuyển sang tiếng Việt.",
+      "Bỏ Aseprite khỏi tech stack.",
+    ],
+  },
+  {
     version: "4.2",
     date: "2026-10-13",
     title: "Đồ nghề thật",

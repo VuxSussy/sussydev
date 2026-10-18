@@ -4,9 +4,9 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { portfolio, type Project, type TechStack } from "@/data/portfolio";
 import { buildR6Rig, clipFromJson, createSitClip, emoteWeight, jointNode, poseSampler, type ClipJson, type Motor } from "@/lib/rbx/rig";
-import { arriveMix, chapterJumpTime, damp, DOOR_STORY, doorFlood, journeyX, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
+import { arriveMix, damp, DOOR_STORY, doorFlood, journeyX, sitMix, smoothstep, smootherstep, studioExit, sunsetMix, techPosition, techVisibility, worldReveal } from "@/lib/story";
 import { createBlobShadow, createDoorFlood, createSky, createStudioDoor, createStudioFloor, createStudioProps, createSunsetWorld, ROAD_START } from "./environment";
-import { Footsteps } from "./footsteps";
+import { Ambience } from "./ambience";
 import { Milestones } from "./milestones";
 import { TechCarousel } from "./tech-carousel";
 import { disposeObjects } from "./dispose";
@@ -14,7 +14,6 @@ import { disposeObjects } from "./dispose";
 export type StorySceneOptions = {
   canvas: HTMLCanvasElement;
   techs: readonly TechStack[];
-  reducedMotion: boolean;
   onProgress?: (fraction: number) => void;
   onTechHover?: (index: number) => void;
   onTechSelect?: (index: number) => void;
@@ -159,9 +158,7 @@ export class StoryScene {
   private headPoint = new THREE.Vector3();
   /** Distance Sussy has "run" on the treadmill, in studs (Roblox leaderstats). */
   studsRun = 0;
-  private footsteps = new Footsteps();
-  private lastRunTime = 0;
-  private lastHopTime = -1;
+  private ambience = new Ambience();
   private overCharacter = false;
   private character = new THREE.Group();
   private sky: ReturnType<typeof createSky>;
@@ -181,9 +178,7 @@ export class StoryScene {
   private storyTarget = 0;
   private hovered = -1;
   private treadmill = new THREE.Vector2();
-  private reducedMotion: boolean;
   private disposed = false;
-  private needsRender = true;
   private loadAbort = new AbortController();
   private pendingModel: THREE.Object3D | null = null;
   private environmentTarget: THREE.WebGLRenderTarget;
@@ -196,7 +191,6 @@ export class StoryScene {
 
   constructor(private options: StorySceneOptions) {
     const { canvas } = options;
-    this.reducedMotion = options.reducedMotion;
     this.sky = createSky();
     this.floor = createStudioFloor();
     this.studioRim.set("#6aa8ff");
@@ -256,7 +250,6 @@ export class StoryScene {
     if (this.disposed) return;
     this.environmentTarget.dispose();
     this.environmentTarget = this.buildEnvironment();
-    this.needsRender = true;
     this.options.onContextRestored?.();
   };
 
@@ -276,8 +269,7 @@ export class StoryScene {
         // Nothing of a late load has reached the GPU yet, so there is nothing to free after unmount. The clones
         // share the source geometry, which the scene's own dispose releases.
         if (this.disposed) return;
-        this.props.addModels(props.scene, this.reducedMotion ? -Infinity : this.timer.getElapsed());
-        this.needsRender = true;
+        this.props.addModels(props.scene, this.timer.getElapsed());
       })
       .catch(() => {});
     const [gltf, index, run, idle, jump, land, walk, wave] = await Promise.all([
@@ -337,12 +329,10 @@ export class StoryScene {
 
   /** Redraw on the next frame (e.g. after the demo stops were re-measured). */
   refresh() {
-    this.needsRender = true;
   }
 
   setStory(story: number) {
     if (story !== this.storyTarget) {
-      this.needsRender = true;
       // Scrolling moves the conveyor under a resting mouse: that is not the user pointing at a tech.
       this.pointerFresh = false;
     }
@@ -367,12 +357,11 @@ export class StoryScene {
   /** Localised project text for the roadside screens. */
   setProjects(projects: readonly Project[]) {
     this.milestones.setProjects(projects);
-    this.needsRender = true;
   }
 
-  /** Footstep audio (off by default; must be enabled from a user gesture). */
+  /** Ambient music, studio tech loop crossfading into countryside wind (off by default; enable from a user gesture). */
   setSound(enabled: boolean) {
-    this.footsteps.setEnabled(enabled);
+    this.ambience.setEnabled(enabled);
   }
 
   /**
@@ -392,17 +381,11 @@ export class StoryScene {
   frozen = false;
   private seeking = false;
 
-  setReducedMotion(value: boolean) {
-    this.reducedMotion = value;
-    this.needsRender = true;
-  }
-
   private applyPixelRatio() {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, this.quality.tiers[this.quality.tier]));
   }
 
   private resize() {
-    this.needsRender = true;
     const canvas = this.renderer.domElement;
     const width = canvas.clientWidth || window.innerWidth;
     const height = canvas.clientHeight || window.innerHeight;
@@ -426,14 +409,13 @@ export class StoryScene {
     this.raycaster.setFromCamera(this.pointer, this.camera);
     this.overCharacter = this.canHop() && this.raycaster.intersectObject(this.character, true).length > 0;
     if (this.hovered < 0) this.renderer.domElement.style.cursor = this.overCharacter ? "pointer" : "";
-    this.needsRender = true;
   }
 
   private canHop() {
-    return !this.reducedMotion && sitMix(this.story) < 0.05 && this.clickHopTime < 0;
+    return sitMix(this.story) < 0.05 && this.clickHopTime < 0;
   }
 
-  private onPointerLeave = () => { this.pointer.set(-10, -10); this.overCharacter = false; this.needsRender = true; };
+  private onPointerLeave = () => { this.pointer.set(-10, -10); this.overCharacter = false; };
 
   private onClick = (event: MouseEvent) => {
     // Hit-test at the click position (touch taps arrive without a preceding pointermove).
@@ -447,11 +429,10 @@ export class StoryScene {
 
   /** Sussy waves with the arm nearer the camera (layered over running or sitting). */
   wave() {
-    if (this.reducedMotion || !this.waveEmote) return;
+    if (!this.waveEmote) return;
     // Queued: it starts once the scene has caught up with the scroll (after a long jump the camera is still
     // travelling), and the goodbye only once Sussy has actually sat down.
     this.waveQueue = 3;
-    this.needsRender = true;
   }
 
   private startQueuedWave(dt: number) {
@@ -465,11 +446,10 @@ export class StoryScene {
     this.waveTime = 0;
   }
 
-  /** Make Sussy hop (click/tap on the character or the Space shortcut). Returns false when not possible. */
+  /** Make Sussy hop (only from a click/tap on the character). Returns false when not possible. */
   hop() {
     if (!this.canHop()) return false;
     this.clickHopTime = 0;
-    this.needsRender = true;
     return true;
   }
 
@@ -489,7 +469,6 @@ export class StoryScene {
       this.hovered = hovered;
       this.renderer.domElement.style.cursor = hovered >= 0 || this.overCharacter ? "pointer" : "";
       this.options.onTechHover?.(hovered);
-      this.needsRender = true;
     }
   }
 
@@ -518,21 +497,18 @@ export class StoryScene {
     if (this.frozen && !this.seeking) return;
     this.timer.update(timestamp);
     if (document.hidden || !this.actions || !this.mixer) return;
-    const reduced = this.reducedMotion;
-    if (reduced && !this.needsRender) return;
-    this.needsRender = false;
     const elapsed = this.timer.getDelta();
     const dt = Math.min(Math.max(elapsed, 0), 0.05);
-    const time = reduced ? 0 : this.timer.getElapsed();
-    this.story = reduced ? this.storyTarget : damp(this.story, this.storyTarget, 4.5, dt);
+    const time = this.timer.getElapsed();
+    this.story = damp(this.story, this.storyTarget, 4.5, dt);
     const s = this.story;
     const portrait = this.camera.aspect < 0.8;
 
     // Camera path + subtle pointer parallax.
     const key = sampleKeys(s, portrait);
-    const px = this.pointer.x > -2 && !reduced ? this.pointer.x : 0;
-    const py = this.pointer.y > -2 && !reduced ? this.pointer.y : 0;
-    this.parallax.set(reduced ? 0 : damp(this.parallax.x, px, 3, dt), reduced ? 0 : damp(this.parallax.y, py, 3, dt));
+    const px = this.pointer.x > -2 ? this.pointer.x : 0;
+    const py = this.pointer.y > -2 ? this.pointer.y : 0;
+    this.parallax.set(damp(this.parallax.x, px, 3, dt), damp(this.parallax.y, py, 3, dt));
     this.camera.position.set(key.cam[0] + this.parallax.x * 0.45, key.cam[1] + this.parallax.y * 0.25, key.cam[2]);
     this.lookAt.set(...key.target);
     if (this.debugView) {
@@ -546,12 +522,12 @@ export class StoryScene {
     const sit = sitMix(s);
     this.character.position.set(key.pos[0], 0, key.pos[1]);
     this.character.rotation.y = key.yaw;
-    const chapterHop = !reduced ? chapterJumpTime(s) : -1;
+    // Sussy only hops when clicked: scrolling between chapters never makes them jump on their own.
     if (this.clickHopTime >= 0) {
       this.clickHopTime += dt;
       if (this.clickHopTime > 0.95) this.clickHopTime = -1;
     }
-    const jumpTime = chapterHop >= 0 ? chapterHop : this.clickHopTime;
+    const jumpTime = this.clickHopTime;
     let hop = 0;
     let jumpW = 0;
     let landW = 0;
@@ -577,7 +553,7 @@ export class StoryScene {
     const greeting = this.waveTime >= 0 && !this.waveSeated && this.waveEmote ? emoteWeight(this.waveTime, this.waveEmote.duration, 0.3) : 0;
     let targetSpeed = Math.min(1, Math.max(this.scrollSpeed / RUN_SCROLL_SPEED, ground / (RUN_SPEED * 1.1)));
     if (s < INTRO_RUN_END) targetSpeed = 1;
-    if (reduced || greeting > 0) targetSpeed = 0;
+    if (greeting > 0) targetSpeed = 0;
     this.speed = damp(this.speed, targetSpeed, targetSpeed > this.speed ? 2.4 : greeting > 0 ? 6 : 3.2, dt);
     const runMix = smoothstep(0.42, 0.82, this.speed);
     const walkMix = smoothstep(0.02, 0.2, this.speed) * (1 - runMix);
@@ -587,9 +563,9 @@ export class StoryScene {
     const walking = upright * walkMix;
     this.actions.jump.setEffectiveWeight(jumpW);
     this.actions.land.setEffectiveWeight(landW);
-    this.actions.run.setEffectiveWeight(reduced ? 0 : moving);
-    this.actions.walk.setEffectiveWeight(reduced ? 0 : walking);
-    this.actions.idle.setEffectiveWeight(reduced ? upright : upright - moving - walking);
+    this.actions.run.setEffectiveWeight(moving);
+    this.actions.walk.setEffectiveWeight(walking);
+    this.actions.idle.setEffectiveWeight(upright - moving - walking);
     this.actions.sit.setEffectiveWeight(sit);
     // Cadence rises with speed so the feet keep up with the ground.
     // On the road Sussy really moves, so the steps follow the ground speed and the feet do not slide.
@@ -598,31 +574,28 @@ export class StoryScene {
     this.actions.walk.timeScale = cadence + (THREE.MathUtils.clamp(ground / WALK_SPEED, 0.7, 2.2) - cadence) * road;
     const stride = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
     this.actions.run.timeScale = stride + (THREE.MathUtils.clamp(ground / RUN_SPEED, 0.75, 1.6) - stride) * road * (1 - smoothstep(3.15, 3.42, s));
-    if (reduced) this.mixer.setTime(0);
-    else this.mixer.update(dt);
-    if (!reduced) this.playFootsteps(moving, sunset, jumpTime);
+    this.mixer.update(dt);
+    this.ambience.setMix(sunset);
     // Procedural layers start from scratch every frame (absolute values, nothing accumulates).
     for (const offset of this.offsets) {
       offset.quaternion.identity();
       offset.position.set(0, 0, 0);
     }
-    if (!reduced) this.startQueuedWave(dt);
+    this.startQueuedWave(dt);
     if (this.waveTime >= 0 && this.waveEmote) {
-      this.waveTime = reduced ? -1 : this.waveTime + dt;
+      this.waveTime += dt;
       if (this.waveTime >= 0) this.applyWave(this.waveTime);
       if (this.waveTime > this.waveEmote.duration) this.waveTime = -1;
     }
-    if (!reduced) this.applyLook(s, sit, greeting, dt);
+    this.applyLook(s, sit, greeting, dt);
 
     // Treadmill: the floor grid flows opposite to the running direction while in the studio.
     // Facing is (-sin yaw, 0, -cos yaw); the floor plane's local Y maps to world -Z.
-    if (!reduced) {
-      const speed = (RUN_SPEED * moving * this.actions.run.timeScale + WALK_SPEED * walking * this.actions.walk.timeScale) * (1 - reveal) * dt;
-      // Studs: treadmill distance in the studio, real distance along the road afterwards.
-      this.studsRun += speed + Math.abs(key.pos[0] - this.lastX);
-      this.treadmill.x -= Math.sin(key.yaw) * speed;
-      this.treadmill.y += Math.cos(key.yaw) * speed;
-    }
+    const treadSpeed = (RUN_SPEED * moving * this.actions.run.timeScale + WALK_SPEED * walking * this.actions.walk.timeScale) * (1 - reveal) * dt;
+    // Studs: treadmill distance in the studio, real distance along the road afterwards.
+    this.studsRun += treadSpeed + Math.abs(key.pos[0] - this.lastX);
+    this.treadmill.x -= Math.sin(key.yaw) * treadSpeed;
+    this.treadmill.y += Math.cos(key.yaw) * treadSpeed;
     this.lastX = key.pos[0];
     this.floor.material.uniforms.uOffset.value.copy(this.treadmill);
     this.floor.material.uniforms.uOpacity.value = 1 - exit;
@@ -646,7 +619,7 @@ export class StoryScene {
 
     // Studio → sunset.
     this.sky.material.uniforms.uMix.value = sunset;
-    const seated = sit > 0.95 && !reduced;
+    const seated = sit > 0.95;
     this.dusk = damp(this.dusk, seated ? 1 : 0, seated ? 0.07 : 1.5, dt);
     this.sky.material.uniforms.uNight.value = this.dusk * sunset;
     this.sky.material.uniforms.uTime.value = time;
@@ -676,11 +649,10 @@ export class StoryScene {
     this.floodCenter.copy(this.door.opening).project(this.camera);
     this.flood.update(flood.spread, flood.strength, this.floodCenter, this.camera.aspect);
 
-    if (!reduced) this.adaptQuality(elapsed);
+    this.adaptQuality(elapsed);
     this.renderer.render(this.scene, this.camera);
   };
 
-  /** Right foot lands near t=0.00s and left near t=0.31s of the 0.63s `run v4` cycle. */
   /**
    * Layer the wave emote over the mixer result with Roblox's fade in/out. Standing, it drives every joint it
    * animates (like an Action-priority track); seated, only the right arm so Sussy stays sitting.
@@ -752,24 +724,9 @@ export class StoryScene {
     this.scrollAccum += Math.abs(pixels);
   }
 
-  private playFootsteps(moving: number, surface: number, hopTime: number) {
-    const run = this.actions!.run;
-    const duration = run.getClip().duration;
-    const t = run.time % duration;
-    const previous = this.lastRunTime;
-    this.lastRunTime = t;
-    if (this.footsteps.isEnabled && moving > 0.6) {
-      const crossed = (mark: number) => (previous <= t ? previous < mark && t >= mark : previous < mark || t >= mark);
-      if (crossed(0.01)) this.footsteps.step(surface, 1, 0.9 * moving);
-      if (crossed(0.31)) this.footsteps.step(surface, -1, 0.9 * moving);
-    }
-    if (this.lastHopTime >= 0 && this.lastHopTime < 0.6 && (hopTime >= 0.6 || hopTime < 0)) this.footsteps.step(surface, 0, 1.4);
-    this.lastHopTime = hopTime;
-  }
-
   dispose() {
     if (this.disposed) return;
-    this.footsteps.dispose();
+    this.ambience.dispose();
     this.milestones.dispose();
     this.disposed = true;
     this.loadAbort.abort();

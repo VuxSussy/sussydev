@@ -1,0 +1,180 @@
+{
+ "bpm": 130,
+ "instrument": "FLEX",
+ "notes": [
+  {
+   "midi": 50,
+   "time": 0,
+   "duration": 7.8,
+   "velocity": 0.55
+  },
+  {
+   "midi": 57,
+   "time": 0,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 62,
+   "time": 0,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 64,
+   "time": 0,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 66,
+   "time": 0,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 50,
+   "time": 8,
+   "duration": 7.8,
+   "velocity": 0.55
+  },
+  {
+   "midi": 55,
+   "time": 8,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 59,
+   "time": 8,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 62,
+   "time": 8,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 67,
+   "time": 8,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 47,
+   "time": 16,
+   "duration": 7.8,
+   "velocity": 0.55
+  },
+  {
+   "midi": 54,
+   "time": 16,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 57,
+   "time": 16,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 62,
+   "time": 16,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 66,
+   "time": 16,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 45,
+   "time": 24,
+   "duration": 7.8,
+   "velocity": 0.55
+  },
+  {
+   "midi": 52,
+   "time": 24,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 57,
+   "time": 24,
+   "duration": 7.8,
+   "velocity": 0.5
+  },
+  {
+   "midi": 62,
+   "time": 24,
+   "duration": 3.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 61,
+   "time": 28,
+   "duration": 3.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 64,
+   "time": 24,
+   "duration": 7.8,
+   "velocity": 0.45
+  },
+  {
+   "midi": 74,
+   "time": 2,
+   "duration": 2,
+   "velocity": 0.42
+  },
+  {
+   "midi": 76,
+   "time": 5,
+   "duration": 1.5,
+   "velocity": 0.38
+  },
+  {
+   "midi": 78,
+   "time": 10,
+   "duration": 3,
+   "velocity": 0.42
+  },
+  {
+   "midi": 74,
+   "time": 14,
+   "duration": 2,
+   "velocity": 0.36
+  },
+  {
+   "midi": 71,
+   "time": 18,
+   "duration": 3,
+   "velocity": 0.4
+  },
+  {
+   "midi": 69,
+   "time": 22,
+   "duration": 2,
+   "velocity": 0.36
+  },
+  {
+   "midi": 76,
+   "time": 26,
+   "duration": 2,
+   "velocity": 0.4
+  },
+  {
+   "midi": 74,
+   "time": 29,
+   "duration": 2.5,
+   "velocity": 0.36
+  }
+ ]
+}

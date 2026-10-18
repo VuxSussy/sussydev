@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Pause, Play, Volume2, VolumeX } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Volume2, VolumeX } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
 import { currentVersion } from "@/data/changelog";
 import { chatLines, contactLabel, localizedProfile, ui, type Locale } from "@/data/i18n";
@@ -19,40 +19,18 @@ const CONTEXT_RESTORE_MS = 4000;
 const LOCALE_KEY = "sussy-locale";
 const LOCALE_EVENT = "sussy-locale-change";
 
-/** Interface language: the visitor's remembered choice, Vietnamese by default. */
+/** Interface language: the visitor's remembered choice, English by default. */
 function readLocale(): Locale {
   try {
-    return window.localStorage.getItem(LOCALE_KEY) === "en" ? "en" : "vi";
+    return window.localStorage.getItem(LOCALE_KEY) === "vi" ? "vi" : "en";
   } catch {
-    return "vi";
+    return "en";
   }
 }
 
 function subscribeLocale(callback: () => void) {
   window.addEventListener(LOCALE_EVENT, callback);
   return () => window.removeEventListener(LOCALE_EVENT, callback);
-}
-
-const MOTION_KEY = "sussy-reduced-motion";
-const MOTION_EVENT = "sussy-motion-change";
-
-/** Reduced motion: the user's remembered toggle, else the OS preference. */
-function readReducedMotion() {
-  try {
-    const stored = window.localStorage.getItem(MOTION_KEY);
-    if (stored !== null) return stored === "1";
-  } catch { /* storage unavailable */ }
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function subscribeReducedMotion(callback: () => void) {
-  const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-  query.addEventListener("change", callback);
-  window.addEventListener(MOTION_EVENT, callback);
-  return () => {
-    query.removeEventListener("change", callback);
-    window.removeEventListener(MOTION_EVENT, callback);
-  };
 }
 
 function contactHref(contact: ContactLink) {
@@ -63,7 +41,7 @@ function contactHref(contact: ContactLink) {
 }
 
 function contactText(contact: ContactLink) {
-  if (!contact.value) return "Đang cập nhật";
+  if (!contact.value) return "Coming soon";
   return contact.value.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
 }
 
@@ -71,7 +49,7 @@ function contactText(contact: ContactLink) {
 const techs = portfolio.profile.techStack;
 
 export function PortfolioStory() {
-  const locale = useSyncExternalStore(subscribeLocale, readLocale, () => "vi" as Locale);
+  const locale = useSyncExternalStore(subscribeLocale, readLocale, () => "en" as Locale);
   const profile = useMemo(() => localizedProfile(locale), [locale]);
   const t = ui[locale];
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -80,8 +58,6 @@ export function PortfolioStory() {
   const readoutRef = useRef<HTMLSpanElement>(null);
   const chipsRef = useRef<HTMLFieldSetElement>(null);
   const stopsRef = useRef<HTMLOListElement>(null);
-  const reducedMotion = useSyncExternalStore(subscribeReducedMotion, readReducedMotion, () => false);
-  const reducedRef = useRef(reducedMotion);
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
   const [webglFailed, setWebglFailed] = useState(false);
@@ -97,11 +73,11 @@ export function PortfolioStory() {
   useEffect(() => {
     const timer = window.setInterval(() => {
       const studs = sceneRef.current?.studsRun ?? 0;
-      if (studsRef.current) studsRef.current.textContent = Math.floor(studs).toLocaleString("vi-VN");
+      if (studsRef.current) studsRef.current.textContent = Math.floor(studs).toLocaleString("en-US");
     }, 250);
     return () => window.clearInterval(timer);
   }, []);
-  // Footstep audio is off by default; turning it on is the user gesture that unlocks Web Audio.
+  // Ambient music is off by default; turning it on is the user gesture that unlocks Web Audio.
   const [sound, setSound] = useState(false);
   const [bubble, setBubble] = useState<{ text: string; id: number } | null>(null);
 
@@ -143,24 +119,14 @@ export function PortfolioStory() {
     sceneRef.current?.setSound(next);
   };
 
-  useEffect(() => {
-    reducedRef.current = reducedMotion;
-    sceneRef.current?.setReducedMotion(reducedMotion);
-  }, [reducedMotion]);
-
-  const toggleMotion = () => {
-    try { window.localStorage.setItem(MOTION_KEY, reducedMotion ? "0" : "1"); } catch { /* ignore */ }
-    window.dispatchEvent(new Event(MOTION_EVENT));
-  };
-
   const scrollToStory = useCallback((story: number) => {
     const top = scrollTopForStory(story, sectionRefs.current, window.innerHeight, window.scrollY);
-    if (top !== null) window.scrollTo({ top, behavior: reducedRef.current ? "instant" : "smooth" });
+    if (top !== null) window.scrollTo({ top, behavior: "smooth" });
   }, []);
 
   const selectTech = useCallback((index: number) => scrollToStory(storyForTech(index, techs.length) + 0.001), [scrollToStory]);
 
-  // Keyboard shortcuts: J / K next / previous chapter, H makes Sussy hop. Ignored while typing or with modifiers.
+  // Keyboard shortcuts: J / K next / previous chapter. Ignored while typing or with modifiers.
   const onShortcut = useEffectEvent((event: KeyboardEvent) => {
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     const target = event.target;
@@ -168,7 +134,6 @@ export function PortfolioStory() {
     const key = event.key.toLowerCase();
     if (key === "j" && chapter < CHAPTERS.length - 1) scrollToStory(chapterTarget(chapter + 1));
     else if (key === "k" && chapter > 0) scrollToStory(chapterTarget(chapter - 1));
-    else if (key === "h") sceneRef.current?.hop();
   });
   useEffect(() => {
     const listener = (event: KeyboardEvent) => onShortcut(event);
@@ -250,7 +215,6 @@ export function PortfolioStory() {
         scene = new StoryScene({
           canvas,
           techs,
-          reducedMotion: reducedRef.current,
           onProgress: (value) => !disposed && setProgress(value),
           onTechHover: (index) => !disposed && setHoveredTech(index),
           onTechSelect: (index) => selectSceneTech(index),
@@ -282,8 +246,8 @@ export function PortfolioStory() {
         scene.setStory(storyFromSections(sectionRefs.current, window.innerHeight));
         await scene.load();
         if (disposed) return;
-        // The loader's roll takes at least LOADER_MIN_MS (less when motion is reduced).
-        const wait = Math.max(0, (reducedRef.current ? 400 : LOADER_MIN_MS) - (performance.now() - start));
+        // The loader's roll takes at least LOADER_MIN_MS.
+        const wait = Math.max(0, LOADER_MIN_MS - (performance.now() - start));
         readyTimer = window.setTimeout(() => !disposed && setReady(true), wait);
       })
       .catch(() => {
@@ -326,15 +290,15 @@ export function PortfolioStory() {
     if (!row || !chip || row.scrollWidth <= row.clientWidth) return;
     // Measured against the row itself: the chips sit inside their group, so offsetLeft is no longer row-relative.
     const left = row.scrollLeft + chip.getBoundingClientRect().left - row.getBoundingClientRect().left;
-    row.scrollTo({ left: left - row.clientWidth / 2 + chip.offsetWidth / 2, behavior: reducedRef.current ? "auto" : "smooth" });
+    row.scrollTo({ left: left - row.clientWidth / 2 + chip.offsetWidth / 2, behavior: "smooth" });
   }, [focusIndex]);
   const gmail = portfolio.contacts.find((c) => c.kind === "gmail")?.value ?? "";
   const pad = (n: number) => String(n).padStart(2, "0");
   const atEnd = chapter === CHAPTERS.length - 1;
 
   return (
-    <div className="site" data-reduced-motion={reducedMotion}>
-      <LoadingScreen progress={progress} done={ready} reducedMotion={reducedMotion} label={profile.loadingLabel} />
+    <div className="site">
+      <LoadingScreen progress={progress} done={ready} label={profile.loadingLabel} />
       <a className="skip-link" href="#main">{t.skip}</a>
 
       <div className={`stage${webglFailed ? " is-fallback" : ""}`} aria-hidden="true">
@@ -359,10 +323,6 @@ export function PortfolioStory() {
           <button type="button" className="motion-toggle" aria-pressed={sound} onClick={toggleSound} title={t.soundTitle}>
             {sound ? <Volume2 aria-hidden="true" size={15} /> : <VolumeX aria-hidden="true" size={15} />}
             <span>{sound ? t.soundOff : t.soundOn}</span>
-          </button>
-          <button type="button" className="motion-toggle" aria-pressed={reducedMotion} onClick={toggleMotion}>
-            {reducedMotion ? <Play aria-hidden="true" size={14} /> : <Pause aria-hidden="true" size={14} />}
-            <span>{reducedMotion ? t.motionOn : t.motionOff}</span>
           </button>
           <a className="outline-button" href="#lien-he" onClick={(event) => { event.preventDefault(); scrollToStory(chapterTarget(CHAPTERS.length - 1)); }}>{t.contact} <ArrowUpRight aria-hidden="true" size={16} /></a>
         </div>
@@ -471,6 +431,8 @@ export function PortfolioStory() {
                     {currentProject.summary && <p className="demo-summary">{currentProject.summary}</p>}
                     {caseStudies[currentProject.slug] ? (
                       <p className="card-foot"><Link prefetch={false} href={`/du-an/${currentProject.slug}`}>{t.readCase}</Link></p>
+                    ) : currentProject.url ? (
+                      <p className="card-foot"><a href={currentProject.url} target="_blank" rel="noreferrer">{t.viewProject}</a> · {currentProject.impact}</p>
                     ) : (
                       currentProject.impact && <p className="card-foot">{currentProject.impact}</p>
                     )}
@@ -543,7 +505,7 @@ export function PortfolioStory() {
           <strong>{profile.footerMeta}</strong>
           <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link> · <Link prefetch={false} href="/cv">CV</Link></span>
         </div>
-        <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" }) : scrollToStory(chapterTarget(chapter + 1)))}>
+        <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: "smooth" }) : scrollToStory(chapterTarget(chapter + 1)))}>
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}
         </button>
         <p className="hud-readout"><span>STORY</span><span ref={readoutRef}>000%</span></p>

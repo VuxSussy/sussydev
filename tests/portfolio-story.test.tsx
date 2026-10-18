@@ -2,6 +2,7 @@
 import { act, createElement, type ComponentProps } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { localizedProfile } from "../data/i18n";
 import { portfolio } from "../data/portfolio";
 import { resetDemo, stopStory, storyForTech } from "../lib/story";
 import type { StorySceneOptions } from "../components/story/scene/story-scene";
@@ -9,7 +10,7 @@ import type { StorySceneOptions } from "../components/story/scene/story-scene";
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 const scene = vi.hoisted(() => ({
   constructor: vi.fn(), load: vi.fn(async () => {}), dispose: vi.fn(), setStory: vi.fn(),
-  setReducedMotion: vi.fn(), setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(), wave: vi.fn(), headScreenPosition: vi.fn(() => null),
+  setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(), wave: vi.fn(), headScreenPosition: vi.fn(() => null),
 }));
 let options: StorySceneOptions;
 
@@ -21,7 +22,6 @@ vi.mock("../components/story/scene/story-scene", () => ({ StoryScene: class {
   load = scene.load;
   dispose = scene.dispose;
   setStory = scene.setStory;
-  setReducedMotion = scene.setReducedMotion;
   setProjects = scene.setProjects;
   refresh = scene.refresh;
   addScroll = scene.addScroll;
@@ -81,12 +81,13 @@ afterEach(async () => {
 });
 
 describe("portfolio story", () => {
-  it("keeps the loader up for its minimum roll, then hands the scene its projects", async () => {
+  it("keeps the loader up for its minimum roll, then hands the scene its projects in English", async () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(2000); });
     expect(host.querySelector(".loader")?.classList.contains("is-done")).toBe(false);
     await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
     expect(host.querySelector(".loader")?.classList.contains("is-done")).toBe(true);
-    expect(scene.setProjects).toHaveBeenCalledWith(portfolio.profile.projects);
+    expect(scene.setProjects).toHaveBeenCalledWith(localizedProfile("en").projects);
+    expect(document.documentElement.lang).toBe("en");
     await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
     expect(host.querySelector(".loader")).toBeNull();
   });
@@ -116,7 +117,7 @@ describe("portfolio story", () => {
   });
 
   it("disposes the scene when the layout leaves the portfolio", async () => {
-    await renderRoute("/du-an/demo-1");
+    await renderRoute("/du-an/demo-2");
     expect(scene.dispose).toHaveBeenCalledTimes(1);
   });
 

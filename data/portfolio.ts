@@ -1,5 +1,5 @@
 import {
-  siAseprite, siBlender, siCplusplus, siFigma, siGit, siLua, siPython,
+  siBlender, siCplusplus, siFigma, siGit, siLua, siPython,
   siReact, siRoblox, siRobloxstudio, siThreedotjs, siTypescript,
 } from "simple-icons";
 
@@ -101,13 +101,21 @@ export const portfolio = {
       tech("Roblox Studio", "tool", "Engine · IDE", "Dựng map, rig R6/R15, animation và test nhiều người chơi.", siRobloxstudio),
       tech("Blender", "tool", "3D", "Model, UV, rig và giữ số tam giác vừa sức điện thoại.", siBlender),
       tech("Figma", "tool", "UI", "Vẽ HUD, menu và luồng onboarding trước khi dựng.", siFigma),
-      tech("Aseprite", "tool", "Pixel art", "Icon, badge và texture pixel cho UI trong game.", siAseprite),
       tech("Git", "tool", "Workflow", "Rojo + Git để quản lý mã nguồn ngoài Studio.", siGit),
     ],
     workTitle: ["Những server", "đã từng mở."],
-    // Placeholder projects: every roadside screen shows the DEMO banner until real projects are added.
+    // Projects without an `image` show the DEMO banner on their roadside screen until real projects are added.
     projects: [
-      { slug: "demo-1", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
+      {
+        slug: "easyvfx",
+        title: "EasyVFX",
+        year: "2026",
+        category: "Plugin Roblox Studio",
+        summary: "Plugin VFX không cần code: chọn object, bấm một hiệu ứng, chỉnh màu và thanh trượt, rồi chọn lúc nó chạy. 45 hiệu ứng (chém, phép thuật, dark fantasy), trình tạo hiệu ứng dạng khối và runtime nhẹ phía client.",
+        impact: "Mã nguồn mở · MIT",
+        image: "/projects/easyvfx.webp",
+        url: "https://github.com/VuxSussy/EasyVFX",
+      },
       { slug: "demo-2", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
       { slug: "demo-3", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
       { slug: "demo-4", title: "Demo", year: "2026", category: "Đang phát triển", summary: "Dự án đang được hoàn thiện. Bản demo sẽ sớm được cập nhật tại đây.", impact: "Sắp ra mắt" },
