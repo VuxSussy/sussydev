@@ -1,7 +1,8 @@
 # Site audio
 
-Sound is on by default and starts at the visitor's first click, tap or key press (browsers block audio before a
-gesture); turning it off is remembered. See `components/story/scene/ambience.ts`.
+Sound is on by default. It tries to start as soon as the page loads (this works where the browser allows autoplay)
+and otherwise starts at the first mouse press, tap or key press; browsers block audio before a gesture and scrolling
+does not count. Turning it off is remembered. See `components/story/scene/ambience.ts`.
 
 ## Music: `public/audio/ambient.mp3`
 
