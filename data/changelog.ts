@@ -13,7 +13,7 @@ export const changelog: Release[] = [
     title: "EasyVFX và nhạc nền",
     notes: [
       "Màn hình dự án đầu tiên giờ là EasyVFX, plugin VFX không cần code cho Roblox Studio, có ảnh chụp thật trong Studio và link GitHub.",
-      "Nút âm thanh phát hai đoạn lofi chill làm trong FL Studio: phím đàn nhẹ trên nhịp lofi trong studio, chuyển dần sang guitar đồng quê có gió nhẹ khi Sussy ra đường. Tiếng bước chân đã bỏ.",
+      "Nút âm thanh giờ phát nhạc lofi thư giãn (Slowburn của JoelFazhari, Pixabay), lặp liền mạch. Tiếng bước chân đã bỏ.",
       "Sussy chỉ nhảy khi được bấm chuột, không còn tự nhảy khi qua chương.",
       "Bỏ nút giảm chuyển động. Trang mở bằng tiếng Anh trước, nút VI vẫn chuyển sang tiếng Việt.",
       "Bỏ Aseprite khỏi tech stack.",

@@ -359,7 +359,7 @@ export class StoryScene {
     this.milestones.setProjects(projects);
   }
 
-  /** Ambient music, studio tech loop crossfading into countryside wind (off by default; enable from a user gesture). */
+  /** Background lofi music (off by default; enable from a user gesture). */
   setSound(enabled: boolean) {
     this.ambience.setEnabled(enabled);
   }
@@ -575,7 +575,6 @@ export class StoryScene {
     const stride = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
     this.actions.run.timeScale = stride + (THREE.MathUtils.clamp(ground / RUN_SPEED, 0.75, 1.6) - stride) * road * (1 - smoothstep(3.15, 3.42, s));
     this.mixer.update(dt);
-    this.ambience.setMix(sunset);
     // Procedural layers start from scratch every frame (absolute values, nothing accumulates).
     for (const offset of this.offsets) {
       offset.quaternion.identity();
