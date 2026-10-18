@@ -8,6 +8,15 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.4",
+    date: "2026-10-18",
+    title: "Yên tĩnh hơn",
+    notes: [
+      "Bỏ tiếng chuông khi rê chuột hay cuộn qua tech stack.",
+      "Ra khỏi cánh cổng studio, nhạc nền nhỏ lại còn 60% để nghe rõ gió đồng quê.",
+    ],
+  },
+  {
     version: "4.3",
     date: "2026-10-18",
     title: "EasyVFX và nhạc nền",
