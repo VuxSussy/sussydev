@@ -74,21 +74,18 @@ button, a[href] { cursor: pointer; }
 .chat-bubble p { position: relative; max-width: 15rem; padding: 0.55rem 0.95rem; border-radius: 12px; background: #ffffff; font-weight: 500; color: #141416; font-size: 0.9rem; line-height: 1.35; text-align: center; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35); animation: bubble-in 320ms var(--ease-out) both; }
 .chat-bubble p::after { content: ""; position: absolute; left: 50%; bottom: -7px; width: 14px; height: 14px; background: inherit; transform: translateX(-50%) rotate(45deg); border-radius: 2px; }
 @keyframes bubble-in { from { opacity: 0; transform: translateY(8px) scale(0.92); } to { opacity: 1; transform: none; } }
-.site[data-reduced-motion="true"] .chat-bubble p { animation: none; }
 
 /* Text movement: copy blocks rise in as they enter the view and fade out before they slide under the fixed HUD
    (header on top, footer at the bottom), so scrolling text never overlaps the logo or the controls.
    Scroll-driven, so it follows the scrollbar exactly in both directions; browsers without support skip it. */
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .chapter-copy > *, .work-inner > .eyebrow, .work-inner > h2, .work-inner > .glass-card, .contact-panel {
-      animation: copy-in linear both, copy-out linear forwards;
-      animation-timeline: view(block 7rem 6rem), view(block 7rem 6rem);
-      animation-range: entry 0% entry 70%, exit 0% exit 45%;
-    }
+  .chapter-copy > *, .work-inner > .eyebrow, .work-inner > h2, .work-inner > .glass-card, .contact-panel {
+    animation: copy-in linear both, copy-out linear forwards;
+    animation-timeline: view(block 7rem 6rem), view(block 7rem 6rem);
+    animation-range: entry 0% entry 70%, exit 0% exit 45%;
   }
   /* Phones: the header wraps onto two rows, so the fade line sits lower. */
-  @media (prefers-reduced-motion: no-preference) and (max-width: 560px) {
+  @media (max-width: 560px) {
     .chapter-copy > *, .work-inner > .eyebrow, .work-inner > h2, .work-inner > .glass-card, .contact-panel {
       animation-timeline: view(block 8.5rem 5.5rem), view(block 8.5rem 5.5rem);
     }
@@ -96,7 +93,6 @@ button, a[href] { cursor: pointer; }
 }
 @keyframes copy-in { from { opacity: 0; translate: 0 1.75rem; } }
 @keyframes copy-out { to { opacity: 0; translate: 0 -0.75rem; } }
-.site[data-reduced-motion="true"] *, .site[data-reduced-motion="true"] *::before, .site[data-reduced-motion="true"] *::after { transition: none !important; animation: none !important; }
 
 /* ---------- Stage ---------- */
 .stage { position: fixed; inset: 0; z-index: 0; background: radial-gradient(ellipse at 50% 40%, var(--bg-raise), var(--background) 70%); }
@@ -206,8 +202,6 @@ button, a[href] { cursor: pointer; }
 .demo-stops { list-style: none; margin: 0; padding: 0; }
 /* 1100 px per stop: 3300 px from the first screen to the last, about 3.5 s at a full-run scroll (RUN_SCROLL_SPEED). */
 .demo-stops li { height: 1100px; }
-.site[data-reduced-motion="true"] .demo-body { animation: none; }
-.site[data-reduced-motion="true"] .demo-dock { transition: none; }
 .glass-card { background: var(--surface); border: 1px solid var(--border); backdrop-filter: blur(14px) saturate(120%); -webkit-backdrop-filter: blur(14px) saturate(120%); padding: clamp(1.25rem, 2.4vw, 2rem); border-radius: 4px; display: grid; gap: 0.7rem; transition: border-color 300ms, transform 500ms var(--ease-out); }
 .glass-card:hover { border-color: var(--border-strong); }
 .glass-card h3 { font-size: clamp(1.35rem, 2vw, 1.75rem); font-weight: 500; letter-spacing: -0.03em; }
@@ -399,9 +393,4 @@ button, a[href] { cursor: pointer; }
   .hud-readout span:first-child { display: none; }
   .experience-card li { grid-template-columns: 1fr; gap: 0.2rem; }
   .lede { font-size: 0.95rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loader-head, .loader-shadow { animation: none; }
-  *, *::before, *::after { transition-duration: 1ms !important; }
 }

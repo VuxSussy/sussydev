@@ -182,10 +182,3 @@ export const chapterTarget = (index: number) => (index <= 0 ? 0 : index >= CHAPT
  */
 const SPEECH_BEATS = [0, 0.65, 1.98, 3.55] as const;
 export const speechBeat = (story: number) => SPEECH_BEATS.reduce<number>((beat, start, index) => (story >= start ? index : beat), 0);
-
-/** Scrub a chapter hop from scroll progress so the same frame also plays backwards. */
-export function chapterJumpTime(story: number) {
-  const chapter = chapterIndex(story);
-  const local = story - (chapter - 0.35);
-  return chapter > 0 && local >= 0 && local <= 0.18 ? (local / 0.18) * 0.95 : -1;
-}

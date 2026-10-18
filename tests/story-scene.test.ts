@@ -50,7 +50,6 @@ let geometry: THREE.BoxGeometry;
 let material: THREE.MeshStandardMaterial;
 let texture: THREE.Texture;
 let timestamp: number;
-let resize: () => void;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -59,7 +58,6 @@ beforeEach(() => {
   Object.defineProperty(document, "hidden", { configurable: true, value: false });
   Object.defineProperty(window, "devicePixelRatio", { configurable: true, value: 2 });
   vi.stubGlobal("ResizeObserver", class {
-    constructor(callback: () => void) { resize = callback; }
     observe() {} disconnect() {}
   });
   vi.stubGlobal("fetch", vi.fn(async (url: string) => ({ ok: true, json: async () => JSON.parse(readFileSync(new NodeURL(`../public${url}`, import.meta.url), "utf8")) })));
@@ -74,7 +72,7 @@ beforeEach(() => {
   }
   assetPromise = Promise.resolve({ scene: asset });
   canvas = document.createElement("canvas");
-  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack, reducedMotion: false });
+  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack });
 });
 
 afterEach(() => {
@@ -84,51 +82,37 @@ afterEach(() => {
 
 const tick = () => { timestamp += 16.7; frame?.(timestamp); };
 
-it("prewarms shaders, skips unchanged reduced-motion frames and invalidates on scroll and resize", async () => {
-  scene.setReducedMotion(true);
+it("prewarms shaders once and renders every visible frame", async () => {
   await scene.load();
   expect(gpu.compile).toHaveBeenCalledTimes(1);
-  tick();
-  expect(gpu.render).toHaveBeenCalledTimes(1);
-  for (let i = 0; i < 30; i++) tick();
-  expect(gpu.render).toHaveBeenCalledTimes(1);
-  scene.setStory(1.5);
-  tick();
-  expect(gpu.render).toHaveBeenCalledTimes(2);
-  scene.setStory(1.5);
-  tick();
-  expect(gpu.render).toHaveBeenCalledTimes(2);
-  resize();
-  tick();
-  expect(gpu.render).toHaveBeenCalledTimes(3);
-  scene.setReducedMotion(false);
   tick(); tick();
-  expect(gpu.render).toHaveBeenCalledTimes(5);
+  expect(gpu.render).toHaveBeenCalledTimes(2);
   Object.defineProperty(document, "hidden", { configurable: true, value: true });
   tick();
-  expect(gpu.render).toHaveBeenCalledTimes(5);
+  expect(gpu.render).toHaveBeenCalledTimes(2);
+  Object.defineProperty(document, "hidden", { configurable: true, value: false });
 });
 
-it("keeps chapter hop height reversible when jumping back and forth", async () => {
+it("only hops when Sussy is clicked, never on a chapter change", async () => {
   await scene.load();
   const rootY = () => {
     const call = gpu.render.mock.lastCall;
     if (!call) throw new Error("No rendered frame");
     return (call[0] as THREE.Scene).getObjectByName("HumanoidRootPart")!.position.y;
   };
-  scene.seek(1.71, 0);
+  scene.seek(0.4, 0);
   tick();
-  const initial = rootY();
-  expect(initial).toBeGreaterThan(3);
-  scene.seek(2.72, 0);
-  tick();
-  scene.seek(1.71, 0);
-  tick();
-  expect(rootY()).toBeCloseTo(initial, 10);
+  const standing = rootY();
+  // Crossing the chapter boundaries (0.65, 1.65) used to scrub an automatic hop.
+  for (const story of [0.65, 0.7, 0.74, 1.65, 1.7, 1.74]) {
+    scene.seek(story, 0);
+    tick();
+    expect(rootY(), `story ${story}`).toBeCloseTo(standing, 5);
+  }
+  expect(scene.hop()).toBe(true);
+  for (let i = 0; i < 18; i++) tick();
+  expect(rootY()).toBeGreaterThan(standing + 0.5);
   expect(gpu.dispose).not.toHaveBeenCalled();
-  scene.setReducedMotion(true);
-  tick();
-  expect(rootY()).toBe(3);
 });
 
 it("disposes a late avatar and never starts a render loop after unmount", async () => {
@@ -259,7 +243,7 @@ it("reports a lost WebGL context and rebuilds the reflections when it comes back
   const lost = vi.fn();
   const restored = vi.fn();
   scene.dispose();
-  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack, reducedMotion: true, onContextLost: lost, onContextRestored: restored });
+  scene = new StoryScene({ canvas, techs: portfolio.profile.techStack, onContextLost: lost, onContextRestored: restored });
   await scene.load();
   const state = scene as unknown as { environmentTarget: THREE.WebGLRenderTarget; scene: THREE.Scene };
   const before = state.environmentTarget;
@@ -273,7 +257,7 @@ it("reports a lost WebGL context and rebuilds the reflections when it comes back
   expect(freed).toHaveBeenCalledTimes(1);
   expect(state.environmentTarget).not.toBe(before);
   expect(state.scene.environment).toBe(state.environmentTarget.texture);
-  // Reduced motion only draws when something changed: the restore must force a frame.
+  // Drawing resumes right after the restore.
   tick();
   expect(gpu.render.mock.calls.length).toBe(renders + 1);
   scene.dispose();

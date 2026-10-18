@@ -4,7 +4,7 @@ import Image from "next/image";
 import { SUSSY_EGG_SRC } from "@/lib/brand";
 import { useEffect, useRef, useState } from "react";
 
-type LoadingScreenProps = { progress: number; done: boolean; reducedMotion: boolean; label: string };
+type LoadingScreenProps = { progress: number; done: boolean; label: string };
 
 /** The loader stays up at least this long, so the roll reads as a moment rather than a flicker. */
 export const LOADER_MIN_MS = 3500;
@@ -18,7 +18,7 @@ const STUDS = 12;
  * rolling along a row of Roblox studs. The head's position is the progress (never ahead of the minimum duration),
  * so it rolls rather than slides: rotation follows distance in CSS.
  */
-export function LoadingScreen({ progress, done, reducedMotion, label }: LoadingScreenProps) {
+export function LoadingScreen({ progress, done, label }: LoadingScreenProps) {
   const [hidden, setHidden] = useState(false);
   const [shown, setShown] = useState(0);
   const start = useRef<number | null>(null);
@@ -36,20 +36,20 @@ export function LoadingScreen({ progress, done, reducedMotion, label }: LoadingS
       start.current ??= now;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      const cap = reducedMotion ? 1 : Math.min(1, (now - start.current) / LOADER_MIN_MS);
+      const cap = Math.min(1, (now - start.current) / LOADER_MIN_MS);
       const goal = Math.min(target.current, cap);
-      setShown((value) => (reducedMotion ? goal : value + (goal - value) * (1 - Math.exp(-6 * dt))));
+      setShown((value) => value + (goal - value) * (1 - Math.exp(-6 * dt)));
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [hidden, reducedMotion]);
+  }, [hidden]);
 
   useEffect(() => {
     if (!done) return;
-    const timer = window.setTimeout(() => setHidden(true), reducedMotion ? 0 : 900);
+    const timer = window.setTimeout(() => setHidden(true), 900);
     return () => window.clearTimeout(timer);
-  }, [done, reducedMotion]);
+  }, [done]);
 
   if (hidden) return null;
   const percent = Math.round(Math.min(shown, progress) * 100);
