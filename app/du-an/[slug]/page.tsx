@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
@@ -31,11 +30,11 @@ export default async function CaseStudyPage({ params }: Params) {
   return (
     <div className="site case-page">
       <header className="changelog-header">
-        <Link prefetch={false} className="brand" href="/">
+        <a className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / CASE</strong>
-        </Link>
-        <Link prefetch={false} className="outline-button" href="/#du-an"><ArrowLeft aria-hidden="true" size={16} /> Về dự án</Link>
+        </a>
+        <a className="outline-button" href="/#du-an"><ArrowLeft aria-hidden="true" size={16} /> Về dự án</a>
       </header>
       <main className="changelog-main case-main">
         <p className="eyebrow">{project.year} <span className="eyebrow-line" aria-hidden="true" /> {project.category.toUpperCase()}</p>
@@ -55,14 +54,14 @@ export default async function CaseStudyPage({ params }: Params) {
             ))}
           </>
         ) : (
-          <p className="case-pending">Case study cho dự án này đang được viết. Khi xong sẽ có ghi trong <Link prefetch={false} href="/nhat-ky">Nhật ký</Link>.</p>
+          <p className="case-pending">Case study cho dự án này đang được viết. Khi xong sẽ có ghi trong <a href="/nhat-ky">Nhật ký</a>.</p>
         )}
         {others.length > 0 && (
           <nav className="case-others" aria-label="Case study khác">
             <p className="eyebrow">ĐỌC TIẾP</p>
             <ul>
               {others.map(({ project: other }) => (
-                <li key={other.slug}><Link prefetch={false} href={`/du-an/${other.slug}`}><span>{other.title}</span><span>{other.category}</span><ArrowUpRight aria-hidden="true" size={16} /></Link></li>
+                <li key={other.slug}><a href={`/du-an/${other.slug}`}><span>{other.title}</span><span>{other.category}</span><ArrowUpRight aria-hidden="true" size={16} /></a></li>
               ))}
             </ul>
           </nav>

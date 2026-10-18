@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowUp, ArrowUpRight, Check, Copy, Volume2, VolumeX } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
@@ -31,6 +30,23 @@ function readLocale(): Locale {
 function subscribeLocale(callback: () => void) {
   window.addEventListener(LOCALE_EVENT, callback);
   return () => window.removeEventListener(LOCALE_EVENT, callback);
+}
+
+const SOUND_KEY = "sussy-sound";
+const SOUND_EVENT = "sussy-sound-change";
+
+/** Sound: on unless the visitor turned it off (remembered). */
+function readSound() {
+  try {
+    return window.localStorage.getItem(SOUND_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
+
+function subscribeSound(callback: () => void) {
+  window.addEventListener(SOUND_EVENT, callback);
+  return () => window.removeEventListener(SOUND_EVENT, callback);
 }
 
 function contactHref(contact: ContactLink) {
@@ -77,8 +93,14 @@ export function PortfolioStory() {
     }, 250);
     return () => window.clearInterval(timer);
   }, []);
-  // Ambient music is off by default; turning it on is the user gesture that unlocks Web Audio.
-  const [sound, setSound] = useState(false);
+  // Sound is on by default (it starts at the visitor's first click, tap or key, as browsers require); turning it off
+  // is remembered.
+  const sound = useSyncExternalStore(subscribeSound, readSound, () => true);
+  const soundRef = useRef(sound);
+  useEffect(() => {
+    soundRef.current = sound;
+    sceneRef.current?.setSound(sound);
+  }, [sound]);
   const [bubble, setBubble] = useState<{ text: string; id: number } | null>(null);
 
   useEffect(() => {
@@ -114,9 +136,8 @@ export function PortfolioStory() {
     window.dispatchEvent(new Event(LOCALE_EVENT));
   };
   const toggleSound = () => {
-    const next = !sound;
-    setSound(next);
-    sceneRef.current?.setSound(next);
+    try { window.localStorage.setItem(SOUND_KEY, sound ? "0" : "1"); } catch { /* ignore */ }
+    window.dispatchEvent(new Event(SOUND_EVENT));
   };
 
   const scrollToStory = useCallback((story: number) => {
@@ -232,6 +253,7 @@ export function PortfolioStory() {
           },
         });
         sceneRef.current = scene;
+        scene.setSound(soundRef.current);
         if (process.env.NODE_ENV !== "production" && new URLSearchParams(window.location.search).has("debug")) {
           const debug = window as unknown as { __sussyScene?: StoryScene; __go?: (story: number, seconds?: number) => number };
           debug.__sussyScene = scene;
@@ -311,14 +333,14 @@ export function PortfolioStory() {
       <header className="hud-header">
         <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — ${t.toTop}`}>
           <span className="brand-mark" aria-hidden="true" />
-          <strong>{portfolio.character.toUpperCase()} / {profile.code}</strong>
+          <strong>{portfolio.character}</strong>
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-sub">{profile.brandSub}</span>
         </a>
         <div className="hud-actions">
           <button type="button" className="lang-toggle" onClick={toggleLocale} aria-label={`${t.language}: ${locale === "vi" ? "English" : "Tiếng Việt"}`}>
-            <span aria-hidden="true" data-active={locale === "vi"}>VI</span>
             <span aria-hidden="true" data-active={locale === "en"}>EN</span>
+            <span aria-hidden="true" data-active={locale === "vi"}>VI</span>
           </button>
           <button type="button" className="motion-toggle" aria-pressed={sound} onClick={toggleSound} title={t.soundTitle}>
             {sound ? <Volume2 aria-hidden="true" size={15} /> : <VolumeX aria-hidden="true" size={15} />}
@@ -430,7 +452,7 @@ export function PortfolioStory() {
                     <h3 id="demo-title">{currentProject.title}</h3>
                     {currentProject.summary && <p className="demo-summary">{currentProject.summary}</p>}
                     {caseStudies[currentProject.slug] ? (
-                      <p className="card-foot"><Link prefetch={false} href={`/du-an/${currentProject.slug}`}>{t.readCase}</Link></p>
+                      <p className="card-foot"><a href={`/du-an/${currentProject.slug}`}>{t.readCase}</a></p>
                     ) : currentProject.url ? (
                       <p className="card-foot"><a href={currentProject.url} target="_blank" rel="noreferrer">{t.viewProject}</a> · {currentProject.impact}</p>
                     ) : (
@@ -503,7 +525,7 @@ export function PortfolioStory() {
       <footer className="hud-footer">
         <div className="hud-meta">
           <strong>{profile.footerMeta}</strong>
-          <span>R6 · {portfolio.character} · <Link prefetch={false} href="/nhat-ky">v{currentVersion} · {t.changelog}</Link> · <Link prefetch={false} href="/cv">CV</Link></span>
+          <span>R6 · {portfolio.character} · <a href="/nhat-ky">v{currentVersion} · {t.changelog}</a> · <a href="/cv">CV</a></span>
         </div>
         <button type="button" className="hud-next" onClick={() => (atEnd ? window.scrollTo({ top: 0, behavior: "smooth" }) : scrollToStory(chapterTarget(chapter + 1)))}>
           {atEnd ? <>{t.restart} <ArrowUp aria-hidden="true" size={16} /></> : <>{t.scrollWith(portfolio.character)} <ArrowDown aria-hidden="true" size={16} /></>}

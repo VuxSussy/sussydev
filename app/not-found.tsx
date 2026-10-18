@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { SUSSY_EGG_SRC } from "@/lib/brand";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 export default function NotFound() {
@@ -15,8 +14,8 @@ export default function NotFound() {
         <h1>Sussy chạy lạc<br />khỏi bản đồ rồi.</h1>
         <p className="lede">Trang bạn tìm không tồn tại hoặc đã được dời đi.</p>
         <nav className="lost-links" aria-label="Quay lại">
-          <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
-          <Link prefetch={false} className="outline-button" href="/nhat-ky">Nhật ký</Link>
+          <a className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</a>
+          <a className="outline-button" href="/nhat-ky">Nhật ký</a>
         </nav>
       </main>
     </div>

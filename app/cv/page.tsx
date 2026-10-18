@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { PrintButton } from "@/components/story/print-button";
 import { portfolio, TECH_GROUPS } from "@/data/portfolio";
@@ -18,7 +17,7 @@ export default function CvPage() {
   return (
     <div className="site cv-page">
       <header className="changelog-header cv-toolbar">
-        <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
+        <a className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</a>
         <PrintButton label="In / Lưu PDF" />
       </header>
       <main className="cv-sheet">
