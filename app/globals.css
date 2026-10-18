@@ -116,7 +116,7 @@ button, a[href] { cursor: pointer; }
 .brand-mark { width: 1.6rem; height: 1.6rem; border: 2px solid var(--text-primary); border-radius: 46% 54% 50% 50%; position: relative; }
 .brand-mark::after { content: ""; position: absolute; inset: 0.22rem 0.3rem 0.22rem 0.42rem; border: 1.5px solid var(--text-primary); border-radius: 50%; opacity: 0.7; }
 .brand-divider { width: 1px; height: 1.1rem; background: var(--border-strong); }
-.brand-sub { font-size: 0.75rem; letter-spacing: 0.18em; color: var(--text-secondary); }
+.brand-sub { font-size: 0.875rem; letter-spacing: 0.02em; color: var(--text-secondary); }
 .hud-actions { display: flex; align-items: center; gap: 1.5rem; }
 .motion-toggle { display: inline-flex; align-items: center; gap: 0.6rem; color: var(--text-secondary); font-size: 0.875rem; transition: color 200ms; min-height: 44px; }
 .motion-toggle:hover { color: var(--text-primary); }
@@ -242,7 +242,8 @@ button, a[href] { cursor: pointer; }
 .release-body h2 { font-size: 1.35rem; font-weight: 500; letter-spacing: -0.02em; margin-bottom: 0.7rem; }
 .release-body ul { margin: 0; padding-left: 1.1rem; display: grid; gap: 0.45rem; color: var(--text-secondary); }
 .release:first-child .release-version { color: var(--accent); }
-.hud-meta a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); transition: color 200ms; }
+/* Plain <a> links (full page loads): the framework's client-side <Link> navigation fails in the production build. Padded so the small footer links are easy to hit. */
+.hud-meta a { display: inline-block; padding: 0.4rem 0.15rem; margin: -0.4rem -0.15rem; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border-strong); transition: color 200ms; }
 .hud-meta a:hover { color: var(--text-primary); }
 @media (max-width: 640px) { .release { grid-template-columns: 1fr; gap: 0.6rem; } }
 

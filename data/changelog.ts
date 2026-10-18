@@ -8,6 +8,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.5",
+    date: "2026-10-18",
+    title: "Sussy | Aspiring Roblox Developer",
+    notes: [
+      "Header đổi thành “Sussy | Aspiring Roblox Developer”, nút ngôn ngữ để EN trước VI.",
+      "Âm thanh bật sẵn (bắt đầu ở lần bấm, chạm hoặc gõ phím đầu tiên, vì trình duyệt yêu cầu vậy). Tắt thì trang nhớ lựa chọn.",
+      "Chỉ còn nhạc lofi và gió: bỏ tiếng chuông gió nghe như tiếng bốp ở gốc cây.",
+      "Link CV, Nhật ký và case study bấm được trên bản deploy (link nội bộ giờ tải trang bình thường).",
+    ],
+  },
+  {
     version: "4.4",
     date: "2026-10-18",
     title: "Yên tĩnh hơn",

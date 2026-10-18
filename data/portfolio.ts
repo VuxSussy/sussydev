@@ -49,8 +49,6 @@ const tech = (name: string, group: TechGroup, category: string, blurb: string, i
 
 /** The portfolio's copy and content (one profile: Roblox developer). */
 export type Profile = {
-  /** "001" next to the character name. */
-  code: string;
   brandSub: string;
   role: string;
   headline: readonly [string, string];
@@ -82,8 +80,7 @@ export const portfolio = {
     { kind: "roblox", label: "Roblox", value: "https://www.roblox.com/users/11732948357/profile" },
   ] satisfies ContactLink[],
   profile: {
-    code: "001",
-    brandSub: "A ROBLOX RUN",
+    brandSub: "Aspiring Roblox Developer",
     role: "Roblox Developer",
     headline: ["Dựng map.", "Viết luật chơi."],
     intro:

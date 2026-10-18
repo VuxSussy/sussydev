@@ -1,8 +1,9 @@
 /**
- * Site audio (see assets-src/audio/README.md), all off until the visitor turns sound on:
+ * Site audio (see assets-src/audio/README.md). On by default, but browsers only allow audio after a user gesture, so it
+ * starts at the visitor's first click, tap or key press:
  * - music: "Slowburn – Relaxing LoFi Background Music" by JoelFazhari (Pixabay Content License), a seamless 93 s loop
  *   streamed through an <audio> element so it is never decoded into memory;
- * - a countryside wind bed made in FL Studio (wind chimes over a breeze) that fades in towards the sunset.
+ * - a soft countryside breeze that fades in towards the sunset.
  * Once Sussy is through the studio door the music steps down to OUTSIDE_MUSIC, leaving room for the wind.
  */
 const MUSIC = "/audio/ambient.mp3";
@@ -10,6 +11,8 @@ const WIND = "/audio/countryside-wind.mp3";
 /** Levels: everything sits under the page, not on top of it. */
 const VOLUME = 0.5;
 const WIND_LEVEL = 0.55;
+/** Events that count as a user gesture for starting audio. */
+const GESTURES = ["pointerdown", "keydown", "touchend"] as const;
 /** Music level outside the studio, relative to inside. */
 const OUTSIDE_MUSIC = 0.6;
 
@@ -27,7 +30,14 @@ export class Ambience {
 
   setEnabled(enabled: boolean) {
     this.enabled = enabled;
-    if (enabled && !this.audio) this.init();
+    if (enabled && !this.audio) {
+      // Before any gesture an AudioContext would start suspended and play() would be refused: wait for one.
+      if (navigator.userActivation && !navigator.userActivation.hasBeenActive) {
+        GESTURES.forEach((type) => window.addEventListener(type, this.onGesture, { capture: true, passive: true }));
+        return;
+      }
+      this.init();
+    }
     const { audio, context, master } = this;
     if (!audio || !context || !master) return;
     window.clearTimeout(this.pauseTimer);
@@ -43,6 +53,11 @@ export class Ambience {
       }, 1500);
     }
   }
+
+  private onGesture = () => {
+    GESTURES.forEach((type) => window.removeEventListener(type, this.onGesture, { capture: true }));
+    if (this.enabled && !this.audio) this.setEnabled(true);
+  };
 
   get isEnabled() {
     return this.enabled;
@@ -116,6 +131,7 @@ export class Ambience {
   };
 
   dispose() {
+    GESTURES.forEach((type) => window.removeEventListener(type, this.onGesture, { capture: true }));
     this.abort.abort();
     window.clearTimeout(this.pauseTimer);
     document.removeEventListener("visibilitychange", this.onVisibility);

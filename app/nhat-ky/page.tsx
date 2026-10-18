@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { changelog } from "@/data/changelog";
 import { portfolio } from "@/data/portfolio";
@@ -15,11 +14,11 @@ export default function ChangelogPage() {
   return (
     <div className="site changelog-page">
       <header className="changelog-header">
-        <Link prefetch={false} className="brand" href="/">
+        <a className="brand" href="/">
           <span className="brand-mark" aria-hidden="true" />
           <strong>{portfolio.character.toUpperCase()} / LOG</strong>
-        </Link>
-        <Link prefetch={false} className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</Link>
+        </a>
+        <a className="outline-button" href="/"><ArrowLeft aria-hidden="true" size={16} /> Về portfolio</a>
       </header>
       <main className="changelog-main">
         <p className="eyebrow">NHẬT KÝ <span className="eyebrow-line" aria-hidden="true" /> {changelog.length} PHIÊN BẢN</p>
