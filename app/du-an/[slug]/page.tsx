@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 import { caseStudies } from "@/data/case-studies";
 import { portfolio } from "@/data/portfolio";
+import { BrandMark } from "@/components/story/brand-mark";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -31,7 +32,7 @@ export default async function CaseStudyPage({ params }: Params) {
     <div className="site case-page">
       <header className="changelog-header">
         <a className="brand" href="/">
-          <span className="brand-mark" aria-hidden="true" />
+          <BrandMark />
           <strong>{portfolio.character.toUpperCase()} / CASE</strong>
         </a>
         <a className="outline-button" href="/#du-an"><ArrowLeft aria-hidden="true" size={16} /> Về dự án</a>

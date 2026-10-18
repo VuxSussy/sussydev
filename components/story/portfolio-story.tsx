@@ -10,6 +10,7 @@ import { portfolio, TECH_GROUPS, type ContactLink } from "@/data/portfolio";
 import { CHAPTERS, chapterIndex, chapterTarget, scrollTopForStory, setDemo, demoActive, demoIndex, speechBeat, stopStory, storyForTech, storyFromSections, techPosition } from "@/lib/story";
 import type { StoryScene } from "./scene/story-scene";
 import { BrandIcon } from "./brand-icon";
+import { BrandMark } from "./brand-mark";
 import { ChatBubble } from "./chat-bubble";
 import { LOADER_MAX_MS, LOADER_MIN_MS, LoadingScreen } from "./loading-screen";
 /** A lost WebGL context that has not come back after this long falls back to the static page. */
@@ -51,7 +52,6 @@ function subscribeSound(callback: () => void) {
 
 function contactHref(contact: ContactLink) {
   if (!contact.value) return undefined;
-  if (contact.kind === "phone") return `tel:${contact.value.replace(/\s+/g, "")}`;
   if (contact.kind === "gmail") return `mailto:${contact.value}`;
   return contact.value;
 }
@@ -332,7 +332,7 @@ export function PortfolioStory() {
 
       <header className="hud-header">
         <a className="brand" href="#mo-dau" aria-label={`${portfolio.character} — ${t.toTop}`}>
-          <span className="brand-mark" aria-hidden="true" />
+          <BrandMark />
           <strong>{portfolio.character}</strong>
           <span className="brand-divider" aria-hidden="true" />
           <span className="brand-sub">{profile.brandSub}</span>

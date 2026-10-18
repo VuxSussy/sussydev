@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { SUSSY_EGG_SRC } from "@/lib/brand";
+import { BrandMark } from "./brand-mark";
 import { useEffect, useRef, useState } from "react";
 
 type LoadingScreenProps = { progress: number; done: boolean; label: string };
@@ -56,7 +57,7 @@ export function LoadingScreen({ progress, done, label }: LoadingScreenProps) {
   const lit = Math.floor(shown * STUDS + 0.35);
   return (
     <output className={`loader${done ? " is-done" : ""}`} aria-live="polite" aria-label={`${label}, ${percent}%`}>
-      <p className="loader-brand" aria-hidden="true"><span className="brand-mark" /><strong>SUSSY / 001</strong></p>
+      <p className="loader-brand" aria-hidden="true"><BrandMark /><strong>Sussy</strong></p>
       <div className="loader-corner" aria-hidden="true" style={{ "--p": shown } as React.CSSProperties}>
         <div className="loader-track">
           <span className="loader-ball">

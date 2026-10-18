@@ -78,7 +78,7 @@ export const ui = {
 } as const;
 
 const contactLabelsEn: Record<ContactLink["kind"], string> = {
-  phone: "Phone", gmail: "Gmail", linkedin: "LinkedIn", facebook: "Facebook", github: "GitHub", roblox: "Roblox",
+  discord: "Discord", gmail: "Gmail", linkedin: "LinkedIn", facebook: "Facebook", github: "GitHub", roblox: "Roblox",
 };
 
 export const contactLabel = (contact: ContactLink, locale: Locale) => (locale === "en" ? contactLabelsEn[contact.kind] : contact.label);
