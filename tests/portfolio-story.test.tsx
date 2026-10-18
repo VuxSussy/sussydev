@@ -10,7 +10,7 @@ import type { StorySceneOptions } from "../components/story/scene/story-scene";
 const navigation = vi.hoisted(() => ({ pathname: "/" }));
 const scene = vi.hoisted(() => ({
   constructor: vi.fn(), load: vi.fn(async () => {}), dispose: vi.fn(), setStory: vi.fn(),
-  setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(), wave: vi.fn(), chime: vi.fn(), headScreenPosition: vi.fn(() => null),
+  setProjects: vi.fn(), refresh: vi.fn(), addScroll: vi.fn(), wave: vi.fn(), headScreenPosition: vi.fn(() => null),
 }));
 let options: StorySceneOptions;
 
@@ -26,7 +26,6 @@ vi.mock("../components/story/scene/story-scene", () => ({ StoryScene: class {
   refresh = scene.refresh;
   addScroll = scene.addScroll;
   wave = scene.wave;
-  chime = scene.chime;
   headScreenPosition = scene.headScreenPosition;
 } }));
 

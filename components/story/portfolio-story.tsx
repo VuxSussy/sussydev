@@ -283,11 +283,6 @@ export function PortfolioStory() {
   const focusTech = profile.techStack[focusIndex];
   const currentProject = profile.projects[projectIndex] ?? profile.projects[0];
 
-  // A soft chime as each tech comes into focus on the conveyor (only in the tech chapter, and only with sound on).
-  useEffect(() => {
-    if (chapter === 1) sceneRef.current?.chime();
-  }, [focusIndex, chapter]);
-
   // Keep the active chip centred when the chip row scrolls horizontally (mobile).
   useEffect(() => {
     const row = chipsRef.current;

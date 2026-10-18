@@ -359,14 +359,9 @@ export class StoryScene {
     this.milestones.setProjects(projects);
   }
 
-  /** Lofi music, the countryside wind and the tech chime (off by default; enable from a user gesture). */
+  /** Lofi music and the countryside wind (off by default; enable from a user gesture). */
   setSound(enabled: boolean) {
     this.ambience.setEnabled(enabled);
-  }
-
-  /** The tech chime (FL Studio), when the focused tech changes. Silent unless sound is on. */
-  chime() {
-    this.ambience.chime();
   }
 
   /**
@@ -580,7 +575,7 @@ export class StoryScene {
     const stride = (0.82 + 0.3 * this.speed) * (1 - 0.3 * smoothstep(3.15, 3.42, s));
     this.actions.run.timeScale = stride + (THREE.MathUtils.clamp(ground / RUN_SPEED, 0.75, 1.6) - stride) * road * (1 - smoothstep(3.15, 3.42, s));
     this.mixer.update(dt);
-    this.ambience.setMix(sunset);
+    this.ambience.setMix(sunset, smoothstep(DOOR_STORY - 0.05, DOOR_STORY + 0.1, s));
     // Procedural layers start from scratch every frame (absolute values, nothing accumulates).
     for (const offset of this.offsets) {
       offset.quaternion.identity();
