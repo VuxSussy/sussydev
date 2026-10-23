@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./public/brand/og-roblox.jpg" alt="sussydev — a scroll-driven Roblox developer portfolio" width="100%" />
+<img src="./docs/readme-sussy-tree.jpg" alt="Sussy, an R6 Roblox avatar, sitting under a tree at sunset — the last scene of the sussydev portfolio" width="100%" />
 
 # sussydev
 
@@ -24,6 +24,7 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 ## Table of contents
 
 - [Features](#features)
+- [Projects](#projects)
 - [Tech stack](#tech-stack)
 - [Getting started](#getting-started)
 - [Scripts](#scripts)
@@ -43,6 +44,19 @@ Sussy, an R6 avatar, walks out of a studio, past a tech demo and roadside projec
 - **Sound** — on by default: it starts on load where the browser allows autoplay, otherwise at the first click, tap or key: a relaxing lofi loop that steps down once Sussy leaves the studio, and a soft countryside breeze that rises towards the sunset.
 - **Click to hop** — Sussy only jumps when clicked.
 - **Mobile-friendly** — bottom-sheet layout in portrait.
+
+## Projects
+
+The roadside screens in the Work chapter show these projects (content lives in `data/portfolio.ts`).
+
+| Project | Type | Status |
+| --- | --- | --- |
+| [EasyVFX](https://github.com/VuxSussy/EasyVFX) | Roblox Studio plugin — no-code VFX, 45 effects | Open source · MIT |
+| **The Gate Beneath** | Roblox game — dark fantasy adventure | Unreleased |
+
+<p align="center">
+  <img src="./public/projects/the-gate-beneath.webp" alt="The Gate Beneath — a Roblox avatar with a sword and cape before a towering stone gate" width="100%" />
+</p>
 
 ## Tech stack
 

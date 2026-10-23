@@ -130,7 +130,11 @@ const en: ProfileText = {
       summary: "A no-code VFX plugin: pick an object, click an effect, tweak colours and sliders, then choose when it plays. 45 effects (slashes, magic, dark fantasy), a block-based effect creator and a lightweight client-side runtime.",
       impact: "Open source · MIT",
     },
-    "demo-2": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
+    "the-gate-beneath": {
+      category: "Roblox game · Unreleased",
+      summary: "A dark fantasy adventure: a sword-carrying wanderer stands before a towering stone gate, and the light spilling through the crack leads down to the world beneath.",
+      impact: "Unreleased",
+    },
     "demo-3": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
     "demo-4": { category: "In development", summary: "This project is still in the works. A demo will be added here soon.", impact: "Coming soon" },
   },

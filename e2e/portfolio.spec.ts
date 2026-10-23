@@ -127,7 +127,7 @@ test.describe("portfolio story", () => {
   });
 
   test("has no horizontal overflow", async ({ page }) => {
-    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/demo-2"]) {
+    for (const path of ["/", "/nhat-ky", "/cv", "/du-an/demo-3"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(overflow, path).toBeLessThanOrEqual(0);
@@ -137,7 +137,7 @@ test.describe("portfolio story", () => {
 
 test.describe("secondary pages", () => {
   test("case study, changelog, CV and 404", async ({ page }) => {
-    await page.goto("/du-an/demo-2");
+    await page.goto("/du-an/demo-3");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Demo");
     await page.goto("/nhat-ky");
     await expect(page.locator(".release").first()).toBeVisible();

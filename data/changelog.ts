@@ -8,6 +8,14 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    version: "4.8",
+    date: "2026-10-23",
+    title: "The Gate Beneath",
+    notes: [
+      "Màn hình dự án thứ hai giờ là The Gate Beneath, game phiêu lưu dark fantasy trên Roblox (chưa phát hành), có ảnh poster.",
+    ],
+  },
+  {
     version: "4.7",
     date: "2026-10-18",
     title: "Nhạc tự bật",
